@@ -125,6 +125,51 @@ eurorule-radar/
 
 ---
 
+## 4.5 当前实际的部署模式(2026-07-14 起)
+
+仓库已经配置好 **双仓 + custom domain** 自动部署,**本节先于 §5 读**,
+避免被后面的"项目页默认部署"误导。
+
+- **源码仓**:`zhou-212/eurorule-radar`(public)
+  - `main` 分支:全部 Astro 源码 + `.github/workflows/deploy.yml`
+  - push 触发 GitHub Actions
+- **构建产物仓**:`zhou-212/zhou-212.github.io`(public,user page)
+  - `main` 分支:由 Actions 自动同步的 `dist/` 内容 + `CNAME`(custom domain) + `.nojekyll`
+  - GitHub Pages 从这个 user page 仓部署到 **https://weiread.com**
+- **Custom domain**:`weiread.com`(DNS 4 条 A 记录指向 GitHub Pages IP,CNAME 文件写 `weiread.com`)
+- **Workflow**:
+  - `npm ci` → `npm run build:fast` (`SITE=https://weiread.com`, `BASE=/`) → 推 `dist/` 到 user page 仓
+  - 保留 user page 仓的 `CNAME` / `.nojekyll`,其他文件被 `dist` 覆盖
+  - 跳过的 dist 文件:`CNAME.example`(文档占位)、`runtime-config.example.js`(后端集成模板,等后端部署时手动 cp)
+
+### 4.5.1 日常开发流程
+
+```bash
+# 改源码 → 提交 → push,Actions 自动 build + 同步到 user page
+cd D:\OU\eurorule-radar
+# ... 改源码 ...
+git add -A
+git commit -m "feat: ..."
+git push origin main
+# 等 1-2 分钟 → https://weiread.com 看到改动
+```
+
+### 4.5.2 故障排查
+
+| 现象 | 看什么 |
+|---|---|
+| push 后没反应 | `gh run list --repo zhou-212/eurorule-radar --limit 3` 看 workflow 状态 |
+| workflow 跑成功但 weiread.com 没变 | 看 `git log --oneline origin/main` 确认 user page 仓 HEAD 是不是更新了;GitHub Pages 缓存通常 1 分钟内刷新 |
+| custom domain 失效 | 确认 user page 仓 `CNAME` 内容还是 `weiread.com`(workflow 保留它,但手动操作可能删) |
+| `PAGES_PUSH_TOKEN` 失效 | 重新 `gh auth token` 拿 token,然后 `gh secret set PAGES_PUSH_TOKEN --repo zhou-212/eurorule-radar --body <token>` |
+
+### 4.5.3 如果你想换部署模式
+
+- 换 custom domain:改 `deploy.yml` 第 60 行 `SITE: https://weiread.com`,改 user page 仓的 `CNAME`,改 DNS A 记录
+- 改回项目页(不推荐,URL 路径会变成 `weiread.com/eurorule-radar/`):用 §5.0 模式 B + 改 deploy.yml 用 `actions/deploy-pages@v4` 部署到本仓 Pages
+
+---
+
 ## 5. 部署到 GitHub Pages
 
 ### 5.0 部署前必读:SITE 与 BASE
