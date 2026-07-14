@@ -1,0 +1,692 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '名词解释', item: siteStr ? `${siteStr}glossary/` : undefined },
+  ],
+};
+
+/* ============================================================
+   8 大名词数据(SSR 阶段直接渲染,客户端按 data-attrs 过滤)
+   ------------------------------------------------------------
+   - id:英文缩写,作 DOM id + data-key 用
+   - searchTags:额外匹配关键词(中文/品类词),用户输入"电池"也能匹配
+   - href:对应 radar 详情页(规则主卡),没主卡的指向 guide-8-terms 兜底
+   ============================================================ */
+const terms = [
+  {
+    id: 'gpsr',
+    acronym: 'GPSR',
+    fullName: '通用产品安全法规',
+    oneLiner: '欧盟 2024-12-13 起强制, 亚马逊欧洲站卖家必须显示"欧盟责任人"信息。',
+    relation: '你在亚马逊欧洲站卖任何非食品类商品, 都要在 listing 上写"欧盟责任人"的姓名 + 联系方式. 没写就下架.',
+    when: '2024-12-13 已生效',
+    fine: '最高 1000 万欧 或 5% 全球营收',
+    href: '/radar/eu-gpsr-responsible-person/',
+    searchTags: '欧代 责任人 responsible person 安全 general product safety regulation',
+  },
+  {
+    id: 'ce',
+    acronym: 'CE',
+    fullName: '合格证标识',
+    oneLiner: '产品上必须有这个标志, 证明它"在欧洲可以卖"。',
+    relation: '几乎所有非食品类商品 (电子/玩具/机械/医疗器械) 都要打. 没打, 亚马逊会下架, 海关会扣货.',
+    when: '一直强制, 不是新规',
+    fine: '最高 50 万欧',
+    href: '/radar/guide-ce-marking/',
+    searchTags: '合格 标志 认证 玩具 电子 机械 医疗 conformité européenne china export',
+  },
+  {
+    id: 'epr',
+    acronym: 'EPR',
+    fullName: '生产者延伸责任',
+    oneLiner: '你卖的产品包装用完了, 你要负责回收。',
+    relation: '在德国 / 法国 / 西班牙卖任何带包装的商品, 都要注册 EPR 编号, 亚马逊强制要求. 不注册就下架.',
+    when: '一直在执行',
+    fine: '各国不同, 最高 20 万欧 (德国)',
+    href: '/radar/de-lucid-packaging/',
+    searchTags: '包装 回收 德国 lucid 法国 citeo 意大利 conai extended producer responsibility weee',
+  },
+  {
+    id: 'vat',
+    acronym: 'VAT',
+    fullName: '增值税',
+    oneLiner: '欧洲的"消费税", 卖东西要交的税。',
+    relation: '你是中国卖家, 卖到欧洲, 货值 ≤ €150 要注册 IOSS, > €150 走标准 VAT. 没注册 IOSS, 客户清关时被收两次税.',
+    when: '一直强制',
+    fine: '各国不同, 补税 + 滞纳金',
+    href: '/radar/eu-ioss-vat/',
+    searchTags: '税 增值税 value added tax 远程销售 fba 申报 德国vat 法国vat',
+  },
+  {
+    id: 'eprel',
+    acronym: 'EPREL',
+    fullName: '能效标签数据库',
+    oneLiner: '卖电气电子产品要在欧盟的数据库登记"能效信息"。',
+    relation: '卖冰箱 / 洗衣机 / 电视 / 显示器 / 灯 / 吸尘器等电气电子, 都要在 EPREL 注册产品能效数据, 亚马逊强制.',
+    when: '2019 起分阶段',
+    fine: '各国不同',
+    href: '/radar/eu-eprel-energy-label/',
+    searchTags: '能效 标签 电气 电子 家电 冰箱 洗衣机 电视 european product registry energy labelling',
+  },
+  {
+    id: 'ioss',
+    acronym: 'IOSS',
+    fullName: '进口一站式申报',
+    oneLiner: '小包裹 (≤€150) 的 VAT 申报服务。',
+    relation: '你从中国发小包到欧盟消费者, 注册 IOSS 后, 客户结账时已含 VAT, 清关无障碍. 没注册, 客户清关时被收税 + 处理费.',
+    when: '2021-07-01 已生效',
+    fine: '没注册 → 不能享受简化申报',
+    href: '/radar/eu-ioss-vat/',
+    searchTags: '小包 跨境 150 欧元 进口 一站式 import one-stop shop 自发货',
+  },
+  {
+    id: 'ppwr',
+    acronym: 'PPWR',
+    fullName: '包装与包装废弃物法规',
+    oneLiner: '2026-08-12 起所有欧盟市场包装要满足"最小化 + 可回收 + 标签"新要求。',
+    relation: '2026-08-12 后, 你的产品包装要: ① 物质限制 (不能含某些重金属) ② 最小化 ③ 标签 (可回收标志) ④ 可回收/再生原料. 亚马逊 / TEMU / 速卖通都已通知.',
+    when: '2026-08-12 全面实施',
+    fine: '各国不同',
+    href: '/radar/eu-ppwr-2025-40/',
+    searchTags: '包装 回收 可回收 标签 物质 限制 packaging waste regulation 2026',
+  },
+  {
+    id: 'eudr',
+    acronym: 'EUDR',
+    fullName: '反毁林法规',
+    oneLiner: '你卖的商品如果涉及"森林", 要证明它"不是来自毁林地区"。',
+    relation: '卖牛肉 / 可可 / 咖啡 / 棕榈油 / 橡胶 / 大豆 / 木及衍生品 (e.g. 木家具, 纸, 橡胶玩具), 要上传"尽职调查声明 (DDS) + 地块地理坐标". 亚马逊已通知.',
+    when: '2025-12-30 大企业全面适用',
+    fine: '最高 4% 全球营收',
+    href: '/radar/guide-eudr-basics/',
+    searchTags: '森林 砍伐 毁林 牛 可可 咖啡 棕榈油 橡胶 大豆 木材 尽职调查 dds eu deforestation',
+  },
+];
+
+// 客户端过滤要用的 key(把每张卡可匹配的字符串压成一行,客户端直接 indexOf)
+const termsForClient = terms.map((t) => ({
+  id: t.id,
+  haystack: [t.acronym, t.fullName, t.oneLiner, t.relation, t.when, t.searchTags]
+    .join(' ')
+    .toLowerCase(),
+}));
+---
+
+<BaseLayout
+  title="8 大合规名词解释 · GPSR / CE / EPR / VAT"
+  description="亚马逊欧洲站新手必读, 5 分钟搞清楚 GPSR / CE / EPR / VAT / EPREL / IOSS / PPWR / EUDR 8 大英文缩写都在说啥。每个名词配 1 句话定义 + 跟你关系 + 截止日期 + 罚款。"
+  jsonLd={breadcrumb}
+>
+  <div class="container glossary-wrap">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>名词解释</span>
+    </nav>
+
+    <!-- Hero(克制,小标题) -->
+    <header class="glossary-hero">
+      <p class="glossary-eyebrow" aria-hidden="true">📖 名词解释 · 独立页</p>
+      <h1>8 大名词先搞懂</h1>
+      <p class="glossary-sub">
+        亚马逊欧洲站新手必读, 5 分钟搞清楚这些英文缩写都在说啥。
+      </p>
+    </header>
+
+    <!-- 模式提示横幅 -->
+    <p class="mode-banner mode-banner-beginner" data-show-on="beginner" role="note">
+      <span class="mode-banner-icon" aria-hidden="true">🌱</span>
+      <span>新手看这里就够, <strong>每个名词 1 句话</strong> 讲清楚"它跟你啥关系"</span>
+    </p>
+    <p class="mode-banner mode-banner-expert" data-show-on="expert" role="note">
+      <span class="mode-banner-icon" aria-hidden="true">⚡</span>
+      <span>直接<strong>搜索</strong>你要查的缩写 (如 "GPSR" / "电池") — 客户端实时过滤</span>
+    </p>
+
+    <!-- 搜索框(顶部) -->
+    <div class="glossary-search">
+      <label class="sr-only" for="glossary-search-input">搜索名词</label>
+      <span class="glossary-search-icon" aria-hidden="true">🔍</span>
+      <input
+        id="glossary-search-input"
+        type="search"
+        class="input glossary-search-input"
+        placeholder="搜索: GPSR / CE / 电池 / 包装…"
+        autocomplete="off"
+        spellcheck="false"
+        data-glossary-search
+      />
+      <button
+        type="button"
+        class="glossary-search-clear"
+        data-glossary-clear
+        hidden
+        aria-label="清除搜索"
+      >✕</button>
+      <span class="glossary-search-count" data-glossary-count aria-live="polite">
+        显示 {terms.length} / {terms.length} 个
+      </span>
+    </div>
+
+    <!-- 8 张名词卡 -->
+    <div class="glossary-grid" data-glossary-grid>
+      {terms.map((t, i) => (
+        <article
+          class="glossary-card"
+          id={`term-${t.id}`}
+          data-glossary-card
+          data-acronym={t.acronym}
+          style={`--card-accent: var(--color-primary-${i % 2 === 0 ? '500' : 'accent-500'});`}
+        >
+          <header class="glossary-card-head">
+            <div class="glossary-card-head-main">
+              <span class="glossary-card-acronym">{t.acronym}</span>
+              <span class="glossary-card-sep" aria-hidden="true">—</span>
+              <span class="glossary-card-name">{t.fullName}</span>
+            </div>
+            <span class="glossary-card-index" aria-hidden="true">#{i + 1}</span>
+          </header>
+
+          <p class="glossary-card-oneliner">{t.oneLiner}</p>
+
+          <dl class="glossary-card-dl">
+            <div class="glossary-card-row">
+              <dt>🛒 它跟你啥关系</dt>
+              <dd>{t.relation}</dd>
+            </div>
+            <div class="glossary-card-row">
+              <dt>📅 什么时候管</dt>
+              <dd>{t.when}</dd>
+            </div>
+            <div class="glossary-card-row">
+              <dt>💸 罚款多少</dt>
+              <dd>{t.fine}</dd>
+            </div>
+          </dl>
+
+          <a href={withBase(t.href)} class="glossary-card-link">
+            看完整版 →
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <!-- 空状态(搜索无结果时由 client 显示) -->
+    <div class="glossary-empty" data-glossary-empty hidden>
+      <p class="glossary-empty-icon" aria-hidden="true">🔎</p>
+      <p class="glossary-empty-text">
+        没找到匹配的名词。<br />
+        试试搜 <button type="button" class="glossary-empty-tag" data-glossary-tag="GPSR">GPSR</button>、
+        <button type="button" class="glossary-empty-tag" data-glossary-tag="CE">CE</button>、
+        <button type="button" class="glossary-empty-tag" data-glossary-tag="EPR">EPR</button>、
+        <button type="button" class="glossary-empty-tag" data-glossary-tag="包装">包装</button>、
+        <button type="button" class="glossary-empty-tag" data-glossary-tag="电池">电池</button>。
+      </p>
+    </div>
+
+    <!-- 底部 CTA -->
+    <section class="glossary-cta" aria-labelledby="glossary-cta-title">
+      <h2 id="glossary-cta-title">搞懂了?测一下你适不适合做欧洲站 →</h2>
+      <p>3 步测试, 5 分钟, 看看你的品类 + 时间 + 预算, 撑不撑得起合规这条线。</p>
+      <div class="glossary-cta-actions">
+        <a href={withBase('/self-check/')} class="btn btn-primary">🎯 开始测试</a>
+        <a href={withBase('/radar/guide-8-terms/')} class="btn btn-ghost">📖 看完整版名词解释</a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .glossary-wrap { max-width: 1080px; }
+
+  /* Hero(小) */
+  .glossary-hero {
+    margin: 0 0 1.4rem 0;
+  }
+  .glossary-eyebrow {
+    display: inline-block;
+    color: var(--color-primary-700);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin: 0 0 0.4em 0;
+    text-transform: uppercase;
+  }
+  .glossary-hero h1 {
+    font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+    margin: 0 0 0.3em 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .glossary-sub {
+    color: var(--color-ink-700);
+    font-size: 1.05rem;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  /* 搜索框 */
+  .glossary-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff;
+    border: 2px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 0.55rem 0.9rem 0.55rem 2.4rem;
+    margin: 0 0 1.6rem 0;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .glossary-search:focus-within {
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  }
+  .glossary-search-icon {
+    position: absolute;
+    left: 0.9rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.05rem;
+    line-height: 1;
+    color: var(--color-ink-500);
+  }
+  .glossary-search-input {
+    flex: 1 1 auto;
+    border: 0;
+    padding: 0.3em 0;
+    background: transparent;
+    font-size: 1rem;
+    color: var(--color-ink-900);
+    min-width: 0;
+  }
+  .glossary-search-input:focus {
+    outline: none;
+    border: 0;
+    box-shadow: none;
+  }
+  .glossary-search-clear {
+    background: transparent;
+    border: 0;
+    color: var(--color-ink-500);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.25em 0.5em;
+    border-radius: var(--radius);
+    line-height: 1;
+  }
+  .glossary-search-clear:hover {
+    color: var(--color-ink-900);
+    background: var(--color-ink-100);
+  }
+  .glossary-search-count {
+    flex: 0 0 auto;
+    font-size: 0.85rem;
+    color: var(--color-ink-500);
+    padding-left: 0.4em;
+    border-left: 1px solid var(--color-ink-200);
+    white-space: nowrap;
+  }
+
+  /* 卡片网格 */
+  .glossary-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.1rem;
+    margin: 0 0 1.6rem 0;
+  }
+  @media (max-width: 720px) {
+    .glossary-grid { grid-template-columns: 1fr; }
+  }
+
+  /* 卡片本体 */
+  .glossary-card {
+    --card-accent: var(--color-primary-500);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-left: 4px solid var(--card-accent);
+    border-radius: var(--radius-lg);
+    padding: 1.15rem 1.25rem 1.1rem 1.25rem;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+  }
+  .glossary-card:hover {
+    border-color: var(--color-ink-300);
+    border-left-color: var(--card-accent);
+    box-shadow: var(--shadow);
+    transform: translateY(-1px);
+  }
+  .glossary-card[hidden] { display: none !important; }
+
+  .glossary-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.6rem;
+    margin-bottom: 0.6em;
+  }
+  .glossary-card-head-main {
+    display: flex;
+    align-items: baseline;
+    gap: 0.45em;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .glossary-card-acronym {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--card-accent);
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+  .glossary-card-sep {
+    color: var(--color-ink-400);
+    font-size: 1.05rem;
+  }
+  .glossary-card-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-ink-900);
+    line-height: 1.3;
+  }
+  .glossary-card-index {
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    color: var(--color-ink-400);
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+
+  .glossary-card-oneliner {
+    margin: 0 0 0.95em 0;
+    color: var(--color-ink-900);
+    font-size: 0.98rem;
+    line-height: 1.55;
+    font-weight: 500;
+    padding: 0.55em 0.75em;
+    background: var(--color-bg-soft);
+    border-radius: var(--radius);
+    border: 1px solid var(--color-ink-200);
+  }
+
+  .glossary-card-dl {
+    margin: 0 0 1em 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55em;
+  }
+  .glossary-card-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55em;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .glossary-card-row dt {
+    flex: 0 0 auto;
+    color: var(--color-ink-700);
+    font-weight: 600;
+    min-width: 6.5em;
+  }
+  .glossary-card-row dd {
+    flex: 1 1 auto;
+    margin: 0;
+    color: var(--color-ink-700);
+  }
+
+  .glossary-card-link {
+    margin-top: auto;
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    color: var(--color-primary-700);
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.4em 0.85em;
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius);
+    background: var(--color-primary-50);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .glossary-card-link:hover {
+    background: var(--color-primary-700);
+    color: #fff;
+    border-color: var(--color-primary-700);
+  }
+
+  /* 空状态 */
+  .glossary-empty {
+    text-align: center;
+    background: #fff;
+    border: 1px dashed var(--color-ink-300);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1.4rem;
+    margin: 0 0 1.6rem 0;
+  }
+  .glossary-empty-icon {
+    font-size: 2rem;
+    margin: 0 0 0.4em 0;
+  }
+  .glossary-empty-text {
+    color: var(--color-ink-700);
+    margin: 0;
+    line-height: 1.7;
+  }
+  .glossary-empty-tag {
+    display: inline-block;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 999px;
+    padding: 0.1em 0.7em;
+    font-size: 0.88em;
+    font-weight: 600;
+    margin: 0 0.15em;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .glossary-empty-tag:hover {
+    background: var(--color-primary-700);
+    color: #fff;
+    border-color: var(--color-primary-700);
+  }
+
+  /* 底部 CTA */
+  .glossary-cta {
+    background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-accent-50) 100%);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-lg);
+    padding: 1.8rem 1.6rem 1.6rem 1.6rem;
+    text-align: center;
+    margin: 1rem 0 0 0;
+  }
+  .glossary-cta h2 {
+    margin: 0 0 0.4em 0;
+    font-size: clamp(1.2rem, 2.4vw, 1.5rem);
+    color: var(--color-ink-900);
+  }
+  .glossary-cta p {
+    color: var(--color-ink-700);
+    margin: 0 0 1.2em 0;
+    line-height: 1.55;
+  }
+  .glossary-cta-actions {
+    display: flex;
+    gap: 0.7rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ====================================================
+     模式适配
+     - 新手 (beginner): 卡片浅黄底 + 字号大 + 行高松
+     - 老手 (expert):   卡片白底 + 字号紧凑 + 信息密度高
+     ==================================================== */
+
+  /* 新手模式:浅黄渐变底,字号 + 行高放大 */
+  body[data-mode='beginner'] .glossary-card {
+    background: #fffbeb;
+    border-color: #fde68a;
+    border-left-width: 5px;
+    padding: 1.4rem 1.5rem 1.3rem 1.5rem;
+  }
+  body[data-mode='beginner'] .glossary-card-oneliner {
+    font-size: 1.08rem;
+    line-height: 1.65;
+    background: #fff;
+    border-color: #fde68a;
+  }
+  body[data-mode='beginner'] .glossary-card-acronym {
+    font-size: 1.6rem;
+  }
+  body[data-mode='beginner'] .glossary-card-name {
+    font-size: 1.15rem;
+  }
+  body[data-mode='beginner'] .glossary-card-row {
+    font-size: 0.98rem;
+    line-height: 1.6;
+  }
+  body[data-mode='beginner'] .glossary-card-row dt {
+    min-width: 7.5em;
+  }
+  body[data-mode='beginner'] .glossary-hero h1 {
+    font-size: clamp(2rem, 4vw, 2.6rem);
+  }
+  body[data-mode='beginner'] .glossary-sub {
+    font-size: 1.15rem;
+  }
+  body[data-mode='beginner'] .glossary-search {
+    padding: 0.7rem 1rem 0.7rem 2.6rem;
+  }
+  body[data-mode='beginner'] .glossary-search-input {
+    font-size: 1.1rem;
+  }
+
+  /* 老手模式:白底,字号紧凑,信息密度高 */
+  body[data-mode='expert'] .glossary-card {
+    background: #fff;
+    padding: 1rem 1.1rem 0.95rem 1.1rem;
+  }
+  body[data-mode='expert'] .glossary-card-oneliner {
+    font-size: 0.92rem;
+    padding: 0.45em 0.65em;
+    line-height: 1.5;
+  }
+  body[data-mode='expert'] .glossary-card-acronym {
+    font-size: 1.25rem;
+  }
+  body[data-mode='expert'] .glossary-card-name {
+    font-size: 0.98rem;
+  }
+  body[data-mode='expert'] .glossary-card-row {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+  body[data-mode='expert'] .glossary-card-row dt {
+    min-width: 6em;
+    font-size: 0.82rem;
+  }
+  body[data-mode='expert'] .glossary-grid {
+    gap: 0.9rem;
+  }
+
+  @media (max-width: 480px) {
+    .glossary-search-count { display: none; }
+    .glossary-card-row {
+      flex-direction: column;
+      gap: 0.15em;
+    }
+    .glossary-card-row dt { min-width: 0; }
+  }
+</style>
+
+<script is:inline define:vars={{ terms: termsForClient }}>
+  (function () {
+    const input = document.querySelector('[data-glossary-search]');
+    const clearBtn = document.querySelector('[data-glossary-clear]');
+    const countEl = document.querySelector('[data-glossary-count]');
+    const emptyEl = document.querySelector('[data-glossary-empty]');
+    const grid = document.querySelector('[data-glossary-grid]');
+    if (!input || !grid) return;
+
+    // 查 DOM 拿到 card 元素,与数据数组按 data-acronym 对齐
+    const cards = Array.from(grid.querySelectorAll('[data-glossary-card]'));
+    const total = cards.length;
+
+    function setCount(visible) {
+      if (countEl) countEl.textContent = '显示 ' + visible + ' / ' + total + ' 个';
+    }
+
+    function filter(q) {
+      const needle = (q || '').trim().toLowerCase();
+      let visible = 0;
+      cards.forEach((card) => {
+        const acronym = (card.getAttribute('data-acronym') || '').toLowerCase();
+        if (!needle) {
+          card.hidden = false;
+          visible++;
+          return;
+        }
+        // 先按 acronym 精确/前缀,再按 haystack 包含
+        const term = terms.find((t) => t.id === card.id.replace(/^term-/, ''));
+        const haystack = term ? term.haystack : acronym;
+        const match = acronym.includes(needle) || haystack.includes(needle);
+        card.hidden = !match;
+        if (match) visible++;
+      });
+      setCount(visible);
+      if (emptyEl) emptyEl.hidden = visible !== 0;
+      if (clearBtn) clearBtn.hidden = !needle;
+    }
+
+    // 输入过滤(简单 debounce 避免快速输入卡顿)
+    let timer = null;
+    input.addEventListener('input', () => {
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => filter(input.value), 60);
+    });
+
+    // 清除按钮
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        input.value = '';
+        filter('');
+        input.focus();
+      });
+    }
+
+    // 空状态里的快捷标签
+    document.querySelectorAll('[data-glossary-tag]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tag = btn.getAttribute('data-glossary-tag') || '';
+        input.value = tag;
+        filter(tag);
+        input.focus();
+      });
+    });
+
+    // Esc 清空
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && input.value) {
+        input.value = '';
+        filter('');
+      }
+    });
+
+    // 初始
+    setCount(total);
+  })();
+</script>

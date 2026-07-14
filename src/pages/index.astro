@@ -88,11 +88,15 @@ const jsonLd = {
   description={SITE_DEFAULTS.description}
   jsonLd={jsonLd}
 >
-  <!-- Hero -->
-  <section class="section hero">
+  <!-- ============================================
+       老手模式 Hero(默认/现状)
+       - 标题强调"公告变清单",适合已有经验的老卖家
+       - 含搜索框(下拉浮在 hero 之外)
+       ============================================ -->
+  <section class="section hero" data-show-on="expert" aria-labelledby="hero-expert-title">
     <div class="container">
       <p class="hero-eyebrow">面向中国亚马逊欧洲站中小卖家</p>
-      <h1 class="hero-title">欧洲站规则更新太快?把公告变成你今天能完成的行动清单。</h1>
+      <h1 id="hero-expert-title" class="hero-title">欧洲站规则更新太快?把公告变成你今天能完成的行动清单。</h1>
       <p class="hero-sub">追踪亚马逊欧洲站、欧盟法规、成员国官方公告 → 判断是否影响你的店铺、类目和库存 → 输出今天能做的行动 + 截止日期。</p>
       <div class="hero-cta">
         <a href={withBase('/radar/')} class="btn btn-primary">免费查看本周规则</a>
@@ -105,7 +109,7 @@ const jsonLd = {
         <li>✓ 行动清单可勾选、可打印</li>
       </ul>
 
-      <!-- 🆕 首页搜索(消费 /search.json 端点,客户端过滤) -->
+      <!-- 首页搜索(消费 /search.json 端点,客户端过滤) — 仅老手模式 -->
       <div
         class="radar-search"
         data-radar-search-root
@@ -153,26 +157,36 @@ const jsonLd = {
           输入时显示前 5 条匹配规则;按上下键切换,Enter 打开,Esc 关闭。
         </p>
       </div>
-
-      <!-- 🆕 新手模式 CTA:仅在 body[data-mode="beginner"] 时显示 -->
-      <aside class="beginner-cta" data-show-on="beginner" aria-label="新手入门引导">
-        <div class="beginner-cta-icon" aria-hidden="true">🌱</div>
-        <div class="beginner-cta-body">
-          <p class="beginner-cta-title">你是新手? 30 分钟 4 步开始</p>
-          <p class="beginner-cta-desc">
-            不需要先啃 12 条法规 —— 先走一遍<strong>新卖家 90 天路线图</strong>,
-            每周 1-2 件事,从 0 走到基本合规。
-          </p>
-        </div>
-        <a href={withBase('/radar/guide-seller-90days/')} class="btn btn-primary beginner-cta-btn">
-          开始 30 分钟起步 →
-        </a>
-      </aside>
     </div>
   </section>
 
-  <!-- 🆕 近期更新(紧凑卡片,最多 3 张,带"距生效日期 X 天"倒计时)
-       老手模式:关注最新法规变化;新手模式:不展示,改推入门引导 -->
+  <!-- ============================================
+       新手模式 Hero(完全不同的视觉与文案)
+       - 浅黄→浅绿渐变底,品牌色 token 已自动切换
+       - 2 个大 CTA:测一下 / 看 5 步走
+       ============================================ -->
+  <section class="section hero-beginner" data-show-on="beginner" aria-labelledby="hero-beginner-title">
+    <div class="container">
+      <p class="hero-beginner-eyebrow">🌱 新手起步 · 第一次卖欧洲站</p>
+      <h1 id="hero-beginner-title" class="hero-beginner-title">我是新手, 怎么开始卖欧洲站?</h1>
+      <p class="hero-beginner-sub">3 步测你适不适合, 5 篇文章带你上路, 8 个名词先搞懂 —— 别急着啃法规, 先把节奏走顺。</p>
+      <div class="hero-beginner-cta">
+        <a href={withBase('/self-check/')} class="btn btn-beginner-primary">🌱 我是新手, 测一下</a>
+        <a href={withBase('/radar/guide-seller-90days/')} class="btn btn-beginner-secondary">📚 看新手起步 5 步走</a>
+      </div>
+      <ul class="hero-beginner-points">
+        <li>✓ 30 分钟起步, 不需要先懂法规</li>
+        <li>✓ 全程中文 + 大白话, 没用过也看得懂</li>
+        <li>✓ 每步都给"今天能做什么"的具体动作</li>
+        <li>✓ 走完能直接进欧洲站后台操作</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============================================
+       老手模式专属:近期更新(紧凑卡片,最多 3 张)
+       新手模式:不展示,改推下面的"新手起步 5 步走"
+       ============================================ -->
   {recentUpdatesTop3.length > 0 && (
     <section class="section section-tight section-bg" id="recent-top" aria-labelledby="recent-top-title" data-show-on="expert">
       <div class="container">
@@ -214,11 +228,73 @@ const jsonLd = {
     </section>
   )}
 
-  <!-- 近期更新 / 基础规则 -->
-  <section class="section section-tight" id="latest">
+  <!-- ============================================
+       新手模式专属:🌱 新手起步 5 步走
+       5 张卡片,每张是一个 guide-* 详情页
+       每张有数字徽标 + 标题 + 一句话简介 + 阅读时长
+       ============================================ -->
+  <section class="section section-tight" data-show-on="beginner" aria-labelledby="beginner-5steps-title">
+    <div class="container">
+      <div class="beginner-block beginner-5steps">
+        <div class="beginner-block-header">
+          <span class="beginner-block-icon" aria-hidden="true">🌱</span>
+          <h2 class="beginner-block-title" id="beginner-5steps-title">新手起步 5 步走</h2>
+        </div>
+        <p class="beginner-block-sub">按顺序读,每周 1-2 篇,大约 3-4 周走完。第一步就决定要不要开始, 不要一口气啃完。</p>
+        <div class="beginner-5steps-grid">
+          <a href={withBase('/radar/guide-seller-90days/')} class="guide-step">
+            <span class="guide-step-num" aria-hidden="true">1</span>
+            <span class="guide-step-body">
+              <span class="guide-step-title">新卖家 90 天路线图</span>
+              <span class="guide-step-desc">从 0 走到"基本能开卖",每周 1-2 件事,告诉你每一步在后台哪个页面点哪个按钮。</span>
+              <span class="guide-step-time">⏱ 约 8 分钟阅读 · 第 1 周</span>
+            </span>
+          </a>
+          <a href={withBase('/radar/guide-8-terms/')} class="guide-step">
+            <span class="guide-step-num" aria-hidden="true">2</span>
+            <span class="guide-step-body">
+              <span class="guide-step-title">8 大合规名词一次搞懂</span>
+              <span class="guide-step-desc">GPSR / CE / EPR / VAT / EPREL / IOSS / PPWR / EUDR, 8 个最常听到的缩写, 大白话讲清楚。</span>
+              <span class="guide-step-time">⏱ 约 3 分钟阅读 · 第 1 周</span>
+            </span>
+          </a>
+          <a href={withBase('/radar/guide-amazon-gpsr-email/')} class="guide-step">
+            <span class="guide-step-num" aria-hidden="true">3</span>
+            <span class="guide-step-body">
+              <span class="guide-step-title">Amazon GPSR 责任人邮箱怎么填</span>
+              <span class="guide-step-desc">GPSR 是 2024 年底生效的硬性要求, 没填就会被下架。这一步是开卖前必做。</span>
+              <span class="guide-step-time">⏱ 约 5 分钟阅读 · 第 2 周</span>
+            </span>
+          </a>
+          <a href={withBase('/radar/guide-pick-first-country/')} class="guide-step">
+            <span class="guide-step-num" aria-hidden="true">4</span>
+            <span class="guide-step-body">
+              <span class="guide-step-title">新手选第一个欧洲站卖哪个国家</span>
+              <span class="guide-step-desc">德国 / 法国 / 意大利 / 西班牙各有门槛, 给新手的建议是"先一个站打透"。</span>
+              <span class="guide-step-time">⏱ 约 4 分钟阅读 · 第 2 周</span>
+            </span>
+          </a>
+          <a href={withBase('/radar/guide-ce-marking/')} class="guide-step">
+            <span class="guide-step-num" aria-hidden="true">5</span>
+            <span class="guide-step-body">
+              <span class="guide-step-title">CE 标志到底要不要贴?怎么贴?</span>
+              <span class="guide-step-desc">不是所有商品都需要 CE, 但需要时贴错位置会被海关扣。一张图讲清楚。</span>
+              <span class="guide-step-time">⏱ 约 6 分钟阅读 · 第 3 周</span>
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       老手模式专属:近期更新(已核对) / 基础规则
+       新手模式:不展示(信息量过大,新手会劝退)
+       ============================================ -->
+  <section class="section section-tight" id="latest" data-show-on="expert" aria-labelledby="latest-title">
     <div class="container">
       <div class="section-head">
-        <h2>近期更新(已核对)</h2>
+        <h2 id="latest-title">近期更新(已核对)</h2>
         <a href={withBase('/radar/')} class="section-head-link">查看全部 →</a>
       </div>
       {recentUpdates.length === 0 ? (
@@ -251,11 +327,49 @@ const jsonLd = {
     </div>
   </section>
 
-  <!-- 截止日历(预览) -->
-  <section class="section section-tight section-bg">
+  <!-- ============================================
+       新手模式专属:📖 8 大名词先搞懂(大区块)
+       直接链到 /radar/guide-8-terms/ —— "我先记 8 个缩写再继续"
+       ============================================ -->
+  <section class="section section-tight" data-show-on="beginner" aria-labelledby="beginner-terms-title">
+    <div class="container">
+      <div class="beginner-block beginner-terms">
+        <div class="beginner-block-header">
+          <span class="beginner-block-icon" aria-hidden="true">📖</span>
+          <h2 class="beginner-block-title" id="beginner-terms-title">8 大名词先搞懂</h2>
+        </div>
+        <p class="beginner-block-sub">走进欧洲站后台前, 先认熟 8 个最常听到的缩写 —— 不然开账号 / 看公告 / 找客服都像听天书。</p>
+        <div class="terms-cta">
+          <div class="terms-cta-body">
+            <p class="terms-cta-title">3 分钟扫盲, 不留知识盲点</p>
+            <p class="terms-cta-desc">GPSR / CE / EPR / VAT / EPREL / IOSS / PPWR / EUDR —— 一张卡讲清楚"是谁关心, 什么时候要管"。</p>
+            <ul class="terms-cta-tags" aria-label="本卡涵盖的名词">
+              <li class="terms-cta-tag">GPSR</li>
+              <li class="terms-cta-tag">CE</li>
+              <li class="terms-cta-tag">EPR</li>
+              <li class="terms-cta-tag">VAT</li>
+              <li class="terms-cta-tag">EPREL</li>
+              <li class="terms-cta-tag">IOSS</li>
+              <li class="terms-cta-tag">PPWR</li>
+              <li class="terms-cta-tag">EUDR</li>
+            </ul>
+          </div>
+          <a href={withBase('/radar/guide-8-terms/')} class="terms-cta-btn">
+            🚀 现在去记 8 个名词
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       老手模式专属:截止日历(预览) + 核心价值 + 行动清单 + 自测 + 订阅
+       全部仅老手模式可见
+       ============================================ -->
+  <section class="section section-tight section-bg" data-show-on="expert" aria-labelledby="calendar-title">
     <div class="container">
       <div class="section-head">
-        <h2>未来 90 天重点节点</h2>
+        <h2 id="calendar-title">未来 90 天重点节点</h2>
         <a href={withBase('/calendar/')} class="section-head-link">完整日历 →</a>
       </div>
       {realUpcoming.length === 0 ? (
@@ -271,10 +385,9 @@ const jsonLd = {
     </div>
   </section>
 
-  <!-- 核心价值 -->
-  <section class="section">
+  <section class="section" data-show-on="expert" aria-labelledby="value-title">
     <div class="container">
-      <h2 class="value-title">我们解决什么</h2>
+      <h2 id="value-title" class="value-title">我们解决什么</h2>
       <div class="grid grid-3">
         <div class="card value-card">
           <h3>追踪变化</h3>
@@ -292,11 +405,10 @@ const jsonLd = {
     </div>
   </section>
 
-  <!-- 行动清单(预览) -->
-  <section class="section section-bg">
+  <section class="section section-bg" data-show-on="expert" aria-labelledby="checklists-title">
     <div class="container">
       <div class="section-head">
-        <h2>常用行动清单</h2>
+        <h2 id="checklists-title">常用行动清单</h2>
         <a href={withBase('/checklists/')} class="section-head-link">查看全部 →</a>
       </div>
       <div class="grid grid-3">
@@ -305,12 +417,11 @@ const jsonLd = {
     </div>
   </section>
 
-  <!-- 影响自测(简版) -->
-  <section class="section">
+  <section class="section" data-show-on="expert" aria-labelledby="selfcheck-promo-title">
     <div class="container">
       <div class="grid grid-2 self-check-promo">
         <div>
-          <h2>不确定你该先看哪条规则?</h2>
+          <h2 id="selfcheck-promo-title">不确定你该先看哪条规则?</h2>
           <p>3-5 题,基于你的销售国家、商品类目、合规经验,给出"优先关注主题"和"推荐阅读清单"。</p>
           <p>结果只作导航建议,<strong>不构成法律或合规结论</strong>。</p>
           <a href={withBase('/self-check/')} class="btn btn-primary">开始自测</a>
@@ -327,12 +438,11 @@ const jsonLd = {
     </div>
   </section>
 
-  <!-- 订阅 -->
-  <section class="section section-bg" id="subscribe">
+  <section class="section section-bg" id="subscribe" data-show-on="expert" aria-labelledby="subscribe-title">
     <div class="container sub-section">
       <div class="grid grid-2">
         <div>
-          <h2>每周一封邮件,把本周规则和截止日期发给你</h2>
+          <h2 id="subscribe-title">每周一封邮件,把本周规则和截止日期发给你</h2>
           <p>
             <strong>订阅功能当前尚未启用。</strong>
             启用后你将收到:
@@ -354,11 +464,64 @@ const jsonLd = {
     </div>
   </section>
 
-  <!-- 来源透明 + 免责声明 -->
-  <section class="section section-tight">
+  <!-- ============================================
+       新手模式专属:🌱 还有这些新手课(3 张大卡片)
+       广告 / 选品 / 物流 — 起步后立刻要面对的 3 件事
+       ============================================ -->
+  <section class="section" data-show-on="beginner" aria-labelledby="beginner-more-title">
+    <div class="container">
+      <div class="beginner-block beginner-more">
+        <div class="beginner-block-header">
+          <span class="beginner-block-icon" aria-hidden="true">🌱</span>
+          <h2 class="beginner-block-title" id="beginner-more-title">还有这些新手课</h2>
+        </div>
+        <p class="beginner-block-sub">5 步走完不算完, 起步后立刻要面对的 3 件事 —— 广告怎么开 / 选品怎么选 / 物流怎么发。</p>
+        <div class="beginner-more-grid">
+          <a href={withBase('/radar/guide-amazon-ads/')} class="beginner-more-card">
+            <span class="beginner-more-card-icon" aria-hidden="true">📣</span>
+            <span class="beginner-more-card-title">广告怎么开 — Amazon Ads 新手入门</span>
+            <span class="beginner-more-card-desc">SP / SB / SD 3 种广告的区别, 新店第一周应该投哪种, 预算怎么定, 看完能直接后台开广告。</span>
+            <span class="beginner-more-card-link">看广告指南 →</span>
+          </a>
+          <a href={withBase('/radar/guide-product-pitfalls/')} class="beginner-more-card">
+            <span class="beginner-more-card-icon" aria-hidden="true">🎯</span>
+            <span class="beginner-more-card-title">选品怎么选 — 欧洲站 7 大常见坑</span>
+            <span class="beginner-more-card-desc">带电池、带液体、带木包装、带食品成分、带磁铁…… 一类一类的合规雷区, 选品前先扫一遍。</span>
+            <span class="beginner-more-card-link">看选品指南 →</span>
+          </a>
+          <a href={withBase('/radar/guide-fba-vs-fbm/')} class="beginner-more-card">
+            <span class="beginner-more-card-icon" aria-hidden="true">📦</span>
+            <span class="beginner-more-card-title">物流怎么发 — FBA vs FBM 怎么选</span>
+            <span class="beginner-more-card-desc">欧洲 FBA 仓要提前备货 / 自发货要小心 VAT 和退货 / 多渠道配送怎么走, 看完能选模式。</span>
+            <span class="beginner-more-card-link">看物流指南 →</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       新手模式专属:信任条(底部) — 来源透明 / 免责声明
+       新手也要知道"这站不会乱说",但表达更友好
+       ============================================ -->
+  <section class="section section-tight" data-show-on="beginner" aria-labelledby="beginner-trust-title">
+    <div class="container">
+      <div class="beginner-trust">
+        <h2 class="beginner-trust-title" id="beginner-trust-title">🔒 这站不会乱说</h2>
+        <p><strong>来源:</strong> 所有信息都来自 Amazon Seller Central、欧盟委员会 / EUR-Lex、成员国主管机构原文, 每条都标了核对日期。</p>
+        <p><strong>边界:</strong> 本站是信息整理和入门导航, <strong>不构成法律 / 税务 / 认证意见</strong>。 真要做合规决策, 请找有欧盟 / 成员国资质的律师或认证机构。</p>
+        <p><strong>看完了?</strong> 直接 <a href={withBase('/self-check/')}>3 题测一下</a>, 或 <a href={withBase('/about/')}>了解我们</a>。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================
+       老手模式专属:来源透明 + 免责声明(底部)
+       ============================================ -->
+  <section class="section section-tight" data-show-on="expert" aria-labelledby="transparency-title">
     <div class="container">
       <div class="transparency">
-        <h2>来源透明与免责声明</h2>
+        <h2 id="transparency-title">来源透明与免责声明</h2>
         <p><strong>来源白名单:</strong>Amazon Seller Central、欧盟委员会 / EUR-Lex、各成员国主管机构、官方认证机构原文。</p>
         <p><strong>编辑原则:</strong>每条规则附原始来源 + 核对日期;未核实的标注"示例 / 待核实";不杜撰法规结论、链接、日期或处罚后果。</p>
         <p><strong>边界:</strong>本站是信息整理和辅助判断工具,<strong>不构成法律、税务、认证或专业合规意见</strong>。具体执行请咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。</p>
@@ -410,55 +573,8 @@ const jsonLd = {
     color: var(--color-ink-700);
   }
 
-  /* 🆕 新手模式 CTA(hero 内部,仅 beginner 模式可见) */
-  .beginner-cta {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1.5rem 0 0 0;
-    padding: 1rem 1.2rem;
-    background: var(--color-accent-50);
-    border: 1px solid var(--color-accent-100);
-    border-left: 4px solid var(--color-accent-500);
-    border-radius: var(--radius-lg);
-    max-width: 720px;
-    flex-wrap: wrap;
-  }
-  .beginner-cta-icon {
-    font-size: 1.8rem;
-    line-height: 1;
-    flex: 0 0 auto;
-  }
-  .beginner-cta-body {
-    flex: 1 1 280px;
-    min-width: 0;
-  }
-  .beginner-cta-title {
-    margin: 0 0 0.2em 0;
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--color-accent-700);
-    line-height: 1.4;
-  }
-  .beginner-cta-desc {
-    margin: 0;
-    color: var(--color-ink-700);
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  .beginner-cta-desc strong {
-    color: var(--color-ink-900);
-  }
-  .beginner-cta-btn {
-    flex: 0 0 auto;
-  }
-  @media (max-width: 540px) {
-    .beginner-cta {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    .beginner-cta-btn { width: 100%; justify-content: center; }
-  }
+  /* 新手模式专属块(hero-beginner / beginner-block)样式在 global.css,
+     这里只保留老手模式的 .section-head / .value-card / .self-check-promo 等 */
 
   .section-head {
     display: flex;

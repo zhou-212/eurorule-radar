@@ -15,6 +15,7 @@ sourceName: "Citeo / ADEME / Amazon Seller Central"
 sourceUrl: "https://www.citeo.com/financer-le-recyclage/reglementation"
 sourceType: "官方公告"
 disclaimerLevel: "high"
+beginnerHint: "这个法规要求你在法国卖的所有带包装/电子/电池/纺织等商品, 都必须注册法国 EPR 编号 (Citeo 包装 / Ecologic 电子 / Screlec 电池 等等), 还要在包装上印 Triman 标志. 没注册亚马逊法国站会限制你的 FBA 库存, 最高罚几万欧. 你去 citeo.com 注册一个包装 EPR, 然后在 Amazon FR 后台填编号."
 featured: true
 draft: false
 example: false

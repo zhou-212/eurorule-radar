@@ -67,6 +67,56 @@ const deadlineBadge: DeadlineBadge | null = (() => {
   return null;
 })();
 
+// 截止日期是否紧(<=30 天)用于 expert 模式红底白字
+const deadlineUrgent: boolean =
+  !!d.deadlineDate && (() => {
+    const days = daysFromNow(d.deadlineDate);
+    return days > 0 && days <= 30;
+  })();
+
+/**
+ * 解析 markdown 的 H2 列表(SSR 阶段)
+ *   - 用于生成"老手模式快速跳转"导航
+ *   - 同步给 client script 用,知道哪些 H2 要在新手模式 wrap 进 <details>
+ *   - id 走 Astro 默认的 slug 规则(中文字符保留;Astro 直接把原文塞进 id)
+ *
+ * 返回: { text: string; id: string; fold: boolean }[]
+ *   fold: true 表示该 H2 段在新手模式要折叠(对应"关键时间线 / 核心义务 /
+ *        你现在要做什么 / 不处理的潜在影响 / 常见问题 / 官方 / 亚马逊相关
+ *        动作 / 亚马逊 DoC / 相关规则 / 相关清单 / 核对日期 / 免责声明")
+ */
+function extractH2List(md: string): { text: string; id: string; fold: boolean }[] {
+  if (!md) return [];
+  const FOLD_KEYWORDS = [
+    '核心义务', '关键时间线', '你现在要做什么', '不处理的潜在影响',
+    '常见问题', '常见误区', '官方', '亚马逊相关动作', '亚马逊',
+    '相关规则', '相关清单', '核对日期', '风险提示与免责声明',
+    '合规清单', '5 维对比表', '三国对比表', '新卖家',
+    '包装最小化', '物质限制', '标签与溯源', '可回收',
+    '数字电池护照', '碳足迹', '回收效率',
+  ];
+  const out: { text: string; id: string; fold: boolean }[] = [];
+  const lines = md.split(/\r?\n/);
+  for (const line of lines) {
+    const m = /^##\s+(.+?)\s*$/.exec(line);
+    if (!m) continue;
+    const text = m[1].trim();
+    const id = text; // Astro 渲染出的 id 就是原文
+    const fold = FOLD_KEYWORDS.some((kw) => text.includes(kw));
+    out.push({ text, id, fold });
+  }
+  return out;
+}
+const h2List = extractH2List(entry.body || '');
+// 给 client script 用的纯文本 fold key 列表(序列化进 data-attr)
+const foldKeys = h2List.filter((h) => h.fold).map((h) => h.text);
+
+// 始终展开的关键 H2 列表(用于 quick-jump 排除) — 一句话结论 / 适用范围
+// 在新手 / 老手都展开,不放进 fold
+const quickJumpH2s = h2List.filter(
+  (h) => !h.text.includes('一句话结论'),
+);
+
 // 相关规则:同 categories 交集
 const allRadars = (await getCollection('radar', ({ data }) => !data.draft))
   .filter((r) => r.id !== entry.id);
@@ -76,6 +126,29 @@ const related = allRadars
 
 const siteStr = siteAsDir(Astro.site);
 const slug = entry.id.replace(/\.(md|mdx)$/, '');
+
+/**
+ * 新手提示区(SSR 算好,无 hydration):
+ *   - schema 没加 beginnerHint 字段,走 fallback 模板
+ *   - 用 categories[0] 推"产品类目",countries 推"销售国家"
+ *   - "做什么"用 summary 前 30 字(已是产品的合规要求概述)
+ *   - "最高罚"若无 deadlineDate 不显示
+ */
+const beginnerHint = (() => {
+  const productType = d.categories[0] || '在欧盟销售的商品';
+  const region = d.countries.join(' / ');
+  const summaryShort = d.summary.replace(/^[^:：]+[:：]\s*/, '').slice(0, 40);
+  const action = summaryShort || '满足该法规的合规要求';
+  const deadline = d.deadlineDate
+    ? `,截止 ${formatDate(d.deadlineDate)}`
+    : '';
+  return {
+    productType,
+    region,
+    action,
+    deadline,
+  };
+})();
 
 const breadcrumb = {
   '@context': 'https://schema.org',
@@ -113,7 +186,7 @@ const articleJsonLd = {
   modifiedDate={d.verifiedDate}
   jsonLd={[breadcrumb, articleJsonLd]}
 >
-  <article class="container">
+  <article class="container detail-page">
     <nav class="breadcrumb" aria-label="面包屑">
       <a href={withBase('/')}>首页</a>
       <span class="breadcrumb-sep">/</span>
@@ -122,15 +195,25 @@ const articleJsonLd = {
       <span>{d.title}</span>
     </nav>
 
-    <!-- 🆕 模式提示横幅:仅在对应模式显示
-         (用 body[data-mode] + [data-show-on] 通用规则控制) -->
-    <p class="mode-banner mode-banner-beginner" data-show-on="beginner" role="note">
+    <!--
+      模式提示横幅:
+        - 大黄横幅(新手) / 深色横幅(老手)
+        - 文案 / 颜色 / 圆角 / 字号都不同
+        - 由 body[data-mode] 通过 mode-novice-only / mode-expert-only 控制显示
+    -->
+    <p class="mode-banner mode-banner-novice mode-novice-only" role="note">
       <span class="mode-banner-icon" aria-hidden="true">🌱</span>
-      <span>新手模式:这一法规用大白话讲,重点看"<strong>你要做什么</strong>"那一段</span>
+      <span>
+        新手模式:这一法规用大白话讲,重点看"<strong>你要做什么</strong>"那一段;
+        不懂的字用<em>斜体</em>标了
+      </span>
     </p>
-    <p class="mode-banner mode-banner-expert" data-show-on="expert" role="note">
+    <p class="mode-banner mode-banner-expert mode-expert-only" role="note">
       <span class="mode-banner-icon" aria-hidden="true">⚡</span>
-      <span>老手模式:看执行细节、期限、原文链接</span>
+      <span>
+        老手模式:看<strong>条款号</strong>、<strong>截止日期</strong>、<strong>原文链接</strong>。
+        左侧目录可快速跳到任一节
+      </span>
     </p>
 
     <header class="radar-detail-head">
@@ -138,6 +221,11 @@ const articleJsonLd = {
         <span class={`risk ${getRiskClass(d.riskLevel)}`}>风险:{d.riskLevel}</span>
         <span class={`status ${getStatusClass(d.status)}`}>{d.status}</span>
         <span class={`kind ${getContentKindClass(d.contentKind)}`}>内容状态:{d.contentKind}</span>
+        {deadlineUrgent && (
+          <span class="deadline-urgent-badge mode-expert-only" role="status" aria-label="截止日期紧迫">
+            ⏰ 截止:{d.deadlineDate ? formatDate(d.deadlineDate) : ''}
+          </span>
+        )}
       </div>
       <div class="radar-detail-title-row">
         <h1>
@@ -168,6 +256,17 @@ const articleJsonLd = {
         </button>
       </div>
       <p class="radar-detail-summary">{d.summary}</p>
+
+      <!-- 一句话结论:新手模式放大高亮,老手模式普通字号
+           - firstPara 是从 markdown body 解析的首段,首行是 ## 标题时为空
+           - 用 firstPara 优先,空时回落到 d.summary(frontmatter 一句话简介) -->
+      {(firstPara || d.summary) && (
+        <div class="detail-elevator mode-novice-only" aria-label="一句话结论">
+          <span class="detail-elevator-tag">🌱 一句话结论</span>
+          <p class="detail-elevator-text">{firstPara || d.summary}</p>
+        </div>
+      )}
+
       <dl class="radar-detail-meta">
         <div><dt>内容状态</dt><dd>{d.contentKind}</dd></div>
         <div><dt>适用范围</dt><dd>{d.countries.join('、')}</dd></div>
@@ -177,6 +276,7 @@ const articleJsonLd = {
         {d.deadlineDate && <div><dt>截止日期</dt><dd><time datetime={d.deadlineDate.toISOString()}>{formatDate(d.deadlineDate)}</time></dd></div>}
         <div><dt>来源</dt><dd><a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">{d.sourceName}</a></dd></div>
       </dl>
+
       {d.contentKind === '基础规则' && (
         <p class="content-kind-note">
           <strong>这是基础规则 / 常驻要求</strong>。本站是基础规则 + 近期更新两类内容,本卡属于前者:
@@ -204,13 +304,38 @@ const articleJsonLd = {
       )}
     </header>
 
+    <!--
+      老手模式"快速跳转"导航(只在 expert 模式显示)
+      - 行内 anchor 链接,跳到各 H2
+      - 由 SSR 阶段从 markdown 解析 H2 列表生成
+    -->
+    {quickJumpH2s.length > 0 && (
+      <nav class="quick-jump mode-expert-only" aria-label="快速跳转">
+        <span class="quick-jump-label">📑 快速跳转</span>
+        <ol class="quick-jump-list">
+          {quickJumpH2s.map((h) => (
+            <li><a href={`#${h.id}`}>{h.text}</a></li>
+          ))}
+        </ol>
+      </nav>
+    )}
+
     {d.example && d.contentKind !== '示例' && (
       <div class="notice notice-warn">
         <strong>这是示例 / 演示内容</strong>,用于展示"待核实"内容的视觉标记和编辑模板,不代表任何具体新规。具体执行请按你产品适用指令查原文,或咨询专业律师 / 认证机构。
       </div>
     )}
 
-    <div class="prose">
+    <!--
+      prose 主体:
+        - 把要 fold 的 H2 段名序列化进 data-fold-keys,给 client script 读
+        - 切换模式时:beginner → wrap 进 <details>;expert → unwrap
+    -->
+    <div
+      class="prose detail-prose"
+      data-prose-fold
+      data-fold-keys={JSON.stringify(foldKeys)}
+    >
       <Content />
     </div>
 
@@ -237,12 +362,128 @@ const articleJsonLd = {
       <a href={withBase('/checklists/compliance-notice-48h/')}>《48 小时应对清单》</a>
       登记你的执行进度,有助于团队协作和复盘。
     </div>
+
+    <!--
+      新手模式底部:新手提示 + "你还想知道什么?" 3 跳转
+      - 整块在 mode-novice-only 下显示
+      - SSR 阶段生成
+    -->
+    <aside class="beginner-footer mode-novice-only" data-beginner-hint>
+      <div class="beginner-hint">
+        <div class="beginner-hint-head">
+          <span class="beginner-hint-emoji" aria-hidden="true">🌱</span>
+          <h2 class="beginner-hint-title">新手还要知道</h2>
+        </div>
+        <p class="beginner-hint-text">
+          这个法规要求 <strong>{beginnerHint.productType}</strong> 在
+          <strong>{beginnerHint.region}</strong> 通过
+          <strong>{beginnerHint.action}</strong> 才能卖
+          {beginnerHint.deadline && <span>({beginnerHint.deadline.slice(1)})</span>}。
+          不做的话亚马逊会下架你的 listing,严重时还要被罚钱。
+        </p>
+        <p class="beginner-hint-text beginner-hint-cta">
+          想先弄懂几个词?去看
+          <a href={withBase('/glossary/')}>名词解释</a> ·
+          想确认这条规则跟你有没有关系?去做
+          <a href={withBase('/self-check/')}>适不适合自检</a> ·
+          头 30 天不知道从哪开始?看
+          <a href={withBase('/checklists/first-30-days-survival/')}>新手救命清单</a>
+        </p>
+      </div>
+
+      <div class="beginner-next">
+        <h3 class="beginner-next-title">📚 你还想知道什么?</h3>
+        <ul class="beginner-next-list">
+          <li>
+            <a href={withBase('/glossary/')}>
+              <span class="beginner-next-emoji" aria-hidden="true">📖</span>
+              <span class="beginner-next-text">
+                <strong>名词解释</strong>
+                <small>看不懂的法规术语,这里有人话版</small>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href={withBase('/self-check/')}>
+              <span class="beginner-next-emoji" aria-hidden="true">✅</span>
+              <span class="beginner-next-text">
+                <strong>适不适合自检</strong>
+                <small>5 道题,看这条规则跟你有没有关系</small>
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href={withBase('/checklists/first-30-days-survival/')}>
+              <span class="beginner-next-emoji" aria-hidden="true">🆘</span>
+              <span class="beginner-next-text">
+                <strong>头 30 天救命清单</strong>
+                <small>刚开欧洲站,前 30 天必做 10 件事</small>
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!--
+      老手模式底部:参考链接紧凑表格 + 亚马逊相关动作快捷入口
+      - mode-expert-only
+    -->
+    <aside class="expert-footer mode-expert-only">
+      <h2 class="expert-footer-title">🔗 参考链接 / 跳转</h2>
+      <table class="table expert-refs-table">
+        <thead>
+          <tr>
+            <th>类别</th>
+            <th>名称</th>
+            <th>类型</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>法规原文</td>
+            <td><a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">{d.sourceName}</a></td>
+            <td><code>外部</code></td>
+          </tr>
+          <tr>
+            <td>核对日期</td>
+            <td><time datetime={d.verifiedDate.toISOString()}>{formatDate(d.verifiedDate)}</time></td>
+            <td><code>站点</code></td>
+          </tr>
+          {d.effectiveDate && (
+            <tr>
+              <td>生效日期</td>
+              <td><time datetime={d.effectiveDate.toISOString()}>{formatDate(d.effectiveDate)}</time></td>
+              <td><code>站点</code></td>
+            </tr>
+          )}
+          {d.deadlineDate && (
+            <tr>
+              <td>截止日期</td>
+              <td><time datetime={d.deadlineDate.toISOString()}>{formatDate(d.deadlineDate)}</time></td>
+              <td><code class={deadlineUrgent ? 'ref-urgent' : ''}>{deadlineUrgent ? '紧迫' : '站点'}</code></td>
+            </tr>
+          )}
+          <tr>
+            <td>规则中心</td>
+            <td><a href={withBase('/radar/')}>所有规则雷达</a></td>
+            <td><code>站内</code></td>
+          </tr>
+          <tr>
+            <td>清单中心</td>
+            <td><a href={withBase('/checklists/')}>执行清单</a></td>
+            <td><code>站内</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </aside>
   </article>
 </BaseLayout>
 
 <script>
-  // 复制 Markdown 摘要:vanilla JS + navigator.clipboard
-  // 每个详情页有且仅有一个 .copy-summary-btn 按钮
+  // ==========================================================================
+  // 复制 Markdown 摘要(沿用原逻辑)
+  // ==========================================================================
   const btn = document.querySelector<HTMLButtonElement>('.copy-summary-btn');
   if (btn) {
     const label = btn.querySelector<HTMLSpanElement>('.copy-default') || btn;
@@ -284,14 +525,12 @@ const articleJsonLd = {
 
     btn.addEventListener('click', async () => {
       const text = build();
-      // 优先用 navigator.clipboard
       try {
         if (navigator.clipboard && window.isSecureContext) {
           await navigator.clipboard.writeText(text);
           setState('✅ 已复制', 'ok');
           return;
         }
-        // 兜底:临时 textarea + execCommand('copy')
         const ta = document.createElement('textarea');
         ta.value = text;
         ta.setAttribute('readonly', '');
@@ -313,11 +552,201 @@ const articleJsonLd = {
       }
     });
   }
+
+  // ==========================================================================
+  // 模式感知:H2 段在新手模式折叠(<details>),老手模式展开
+  // --------------------------------------------------------------------------
+  // 策略:
+  //   1. SSR 渲染时 markdown 的所有 H2 都直接展开在 .prose 内
+  //   2. client script 启动时 + 每次 body[data-mode] 变化时:
+  //      - 如果当前是 beginner:把 foldKeys 对应的 H2 段(它和后续到下个 H2 之前
+  //        的兄弟节点)wrap 进 <details><summary>...</summary>...</details>
+  //      - 如果当前是 expert:把所有已 wrap 的 <details> 拆开,把 children 还原
+  //        回 prose 容器
+  //   3. 用 data-astro-cid 区分原 markdown 节点 vs 包装节点,避免重复 wrap
+  //   4. mode 初始值从 body[data-mode] 读,与 BaseLayout 的 anti-FOUC 对齐
+  // ==========================================================================
+  const prose = document.querySelector<HTMLElement>('[data-prose-fold]');
+  if (prose) {
+    let foldKeys: string[] = [];
+    try {
+      foldKeys = JSON.parse(prose.dataset.foldKeys || '[]');
+    } catch {
+      foldKeys = [];
+    }
+    const foldSet = new Set(foldKeys);
+    // 已经 wrap 的 H2 缓存(避免重复 wrap)
+    const wrappedMap = new WeakMap<HTMLHeadingElement, { details: HTMLDetailsElement; parent: Node; siblings: Node[] }>();
+
+    /** 把 h2 节点 + 它之后到下一个 H2 之前的兄弟节点 wrap 进 details */
+    function wrapSection(h2: HTMLHeadingElement): void {
+      if (wrappedMap.has(h2)) return;
+      const parent = h2.parentNode;
+      if (!parent || parent !== prose) return;
+      const details = document.createElement('details');
+      details.className = 'mode-fold-block';
+      const summary = document.createElement('summary');
+      summary.className = 'mode-fold-summary';
+      // 在 H2 文本前加 emoji 装饰
+      const text = h2.textContent || '';
+      const emoji = pickEmoji(text);
+      summary.innerHTML =
+        `<span class="mode-fold-emoji" aria-hidden="true">${emoji}</span>` +
+        `<span class="mode-fold-title">${text}</span>` +
+        `<span class="mode-fold-hint" aria-hidden="true">点击展开 / 收起</span>`;
+      details.appendChild(summary);
+      // 收集从 h2 之后到下一个 H2 之前的节点(包含 H2 自身一并搬入)
+      const siblings: Node[] = [];
+      let cur: ChildNode | null = h2;
+      while (cur) {
+        const next: ChildNode | null = cur.nextSibling;
+        const isH2 = cur.nodeType === 1 && (cur as Element).tagName === 'H2';
+        siblings.push(cur);
+        if (next && next.nodeType === 1 && (next as Element).tagName === 'H2') {
+          // 下一个兄弟是 H2,停止收集(不包括它)
+          break;
+        }
+        if (!next) break;
+        cur = next;
+      }
+      for (const node of siblings) {
+        details.appendChild(node);
+      }
+      // 把 details 插到 h2 原本的位置
+      parent.insertBefore(details, h2);
+      // h2 已被搬走,缓存占位节点以便 unwrap
+      wrappedMap.set(h2, { details, parent, siblings });
+    }
+
+    function unwrapAll(): void {
+      // 找到所有 mode-fold-block 并还原
+      const blocks = prose.querySelectorAll<HTMLDetailsElement>('.mode-fold-block');
+      blocks.forEach((details) => {
+        const parent = details.parentNode;
+        if (!parent) return;
+        // 把 details 里的所有子节点(从 summary 后开始)搬回 parent,
+        // 然后 details 本身移除
+        const frag = document.createDocumentFragment();
+        // 跳过 summary,只搬内容
+        Array.from(details.childNodes).forEach((n) => {
+          if (n.nodeType === 1 && (n as Element).classList.contains('mode-fold-summary')) return;
+          frag.appendChild(n);
+        });
+        parent.insertBefore(frag, details);
+        parent.removeChild(details);
+      });
+    }
+
+    function pickEmoji(text: string): string {
+      if (text.includes('时间线')) return '⏰';
+      if (text.includes('核心义务')) return '📋';
+      if (text.includes('你现在要做什么') || text.includes('你要做什么')) return '✅';
+      if (text.includes('不处理')) return '⚠️';
+      if (text.includes('常见问题') || text.includes('常见误区')) return '❓';
+      if (text.includes('亚马逊')) return '🛒';
+      if (text.includes('官方') || text.includes('原始来源')) return '🔗';
+      if (text.includes('相关规则')) return '🔗';
+      if (text.includes('相关清单')) return '📋';
+      if (text.includes('核对日期')) return '📅';
+      if (text.includes('风险') || text.includes('免责声明')) return '⚠️';
+      if (text.includes('合规清单')) return '✔️';
+      if (text.includes('物质限制')) return '🧪';
+      if (text.includes('最小化')) return '📦';
+      if (text.includes('标签')) return '🏷️';
+      if (text.includes('可回收') || text.includes('再生')) return '♻️';
+      if (text.includes('电池护照')) return '🔋';
+      if (text.includes('碳足迹')) return '🌱';
+      return '📑';
+    }
+
+    function applyMode(mode: string): void {
+      if (mode === 'beginner') {
+        // 先清掉之前的 wrap(防 SSR 切换中残留)
+        unwrapAll();
+        // 找到所有 H2,匹配 fold key 的 wrap
+        const h2s = prose.querySelectorAll<HTMLHeadingElement>('h2');
+        h2s.forEach((h2) => {
+          const t = (h2.textContent || '').trim();
+          if (foldSet.has(t)) wrapSection(h2);
+        });
+      } else {
+        unwrapAll();
+      }
+    }
+
+    // 初次应用
+    const initMode = document.body.getAttribute('data-mode') || 'expert';
+    applyMode(initMode);
+
+    // 监听 body[data-mode] 变化(用户点 ModeToggle 切换)
+    const obs = new MutationObserver(() => {
+      const m = document.body.getAttribute('data-mode') || 'expert';
+      applyMode(m);
+    });
+    obs.observe(document.body, { attributes: true, attributeFilter: ['data-mode'] });
+  }
 </script>
 
 <style>
+  /* ======================================================================
+     详情页 · 新手/老手 模式视觉差异
+     ----------------------------------------------------------------------
+     设计原则:
+       - 同一份 SSR 渲染内容,靠 body[data-mode] 区分样式
+       - 新手模式:大字号、浅黄高亮、轻松、留白多
+       - 老手模式:紧凑、黑白灰、红色强调、表格密
+       - mode-novice-only / mode-expert-only 类控制整块显隐
+     ====================================================================== */
+
+  .detail-page { padding-top: 1rem; }
+
+  /* ---------- 横幅(横幅视觉差异) ---------- */
+  .mode-banner {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.6em;
+    margin: 0 auto 1.5rem auto;
+    padding: 0.85em 1.2em;
+    max-width: 100%;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    border-radius: 14px;
+    border: 1px solid;
+  }
+  .mode-banner-icon {
+    font-size: 1.2em;
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+  /* 新手:大黄横幅 */
+  .mode-banner-novice {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f59e0b;
+    color: #78350f;
+    font-size: 1.02rem;
+    padding: 1.1em 1.4em;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
+  }
+  .mode-banner-novice strong { color: #92400e; }
+  .mode-banner-novice em { color: #b45309; font-style: italic; }
+
+  /* 老手:深色 banner */
+  .mode-banner-expert {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #0f172a;
+    color: #e2e8f0;
+    font-size: 0.88rem;
+    padding: 0.7em 1.1em;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+  }
+  .mode-banner-expert strong { color: #fbbf24; }
+
+  /* ---------- 标题区 ---------- */
   .radar-detail-head { margin-bottom: 1.5rem; }
-  .radar-detail-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .radar-detail-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.7rem; align-items: center; }
   .radar-detail-title-row {
     display: flex;
     align-items: flex-start;
@@ -327,11 +756,7 @@ const articleJsonLd = {
     margin: 0.3em 0 0.4em 0;
   }
   .radar-detail-title-row h1 { margin: 0; flex: 1 1 auto; min-width: 0; }
-  .copy-summary-btn {
-    flex-shrink: 0;
-    margin-top: 0.4em;
-    cursor: pointer;
-  }
+  .copy-summary-btn { flex-shrink: 0; margin-top: 0.4em; cursor: pointer; }
   .copy-summary-btn[data-state='ok'] {
     background: var(--color-accent-50);
     color: var(--color-accent-700);
@@ -344,10 +769,67 @@ const articleJsonLd = {
   }
   .radar-detail-summary {
     color: var(--color-ink-700);
-    font-size: 1.1rem;
     line-height: 1.6;
     margin: 0.5em 0 1em 0;
   }
+
+  /* 新手模式 h1 增大到 2.2rem / 行高 1.5 */
+  body[data-mode='beginner'] .detail-page h1 {
+    font-size: 2.2rem;
+    line-height: 1.5;
+    letter-spacing: -0.005em;
+    color: #78350f;
+  }
+  /* 老手模式 h1 紧凑 1.6rem */
+  body[data-mode='expert'] .detail-page h1 {
+    font-size: 1.6rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--color-ink-900);
+  }
+  /* 新手模式 summary 字号也大 */
+  body[data-mode='beginner'] .radar-detail-summary {
+    font-size: 1.15rem;
+    color: #92400e;
+  }
+  body[data-mode='expert'] .radar-detail-summary {
+    font-size: 1rem;
+    color: var(--color-ink-700);
+  }
+
+  /* ---------- 一句话结论放大(新手模式) ---------- */
+  .detail-elevator {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 2px solid #f59e0b;
+    border-radius: 16px;
+    padding: 1.2em 1.4em;
+    margin: 1em 0 1.5em 0;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+  }
+  .detail-elevator-tag {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #92400e;
+    background: #fde68a;
+    padding: 0.25em 0.75em;
+    border-radius: 999px;
+    margin-bottom: 0.6em;
+  }
+  .detail-elevator-text {
+    font-size: 1.18rem;
+    line-height: 1.7;
+    color: #78350f;
+    margin: 0;
+    font-weight: 500;
+  }
+  body[data-mode='beginner'] .detail-elevator-text strong {
+    color: #b45309;
+    background: linear-gradient(180deg, transparent 60%, #fde68a 60%);
+    padding: 0 2px;
+  }
+
+  /* ---------- Meta 区 ---------- */
   .radar-detail-meta {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -371,16 +853,31 @@ const articleJsonLd = {
     color: var(--color-ink-900);
     font-size: 0.95rem;
   }
-  .related {
-    margin-top: 3rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--color-ink-200);
+  body[data-mode='expert'] .radar-detail-meta {
+    font-size: 0.85rem;
   }
-  .related h2 { font-size: 1.3rem; margin-bottom: 1rem; }
-  .related-list { padding-left: 1.4em; }
-  .related-list li { margin: 0.3em 0; }
+  body[data-mode='expert'] .radar-detail-meta dt { font-size: 0.7rem; }
+  body[data-mode='expert'] .radar-detail-meta dd { font-size: 0.85rem; }
 
-  /* 内容状态说明块 */
+  /* 截止日期紧迫徽标(expert 模式红底白字) */
+  .deadline-urgent-badge {
+    display: inline-flex;
+    align-items: center;
+    background: #dc2626;
+    color: #fff;
+    border: 1px solid #991b1b;
+    padding: 0.2em 0.7em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    line-height: 1.5;
+    animation: deadline-pulse 1.8s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .deadline-urgent-badge { animation: none; }
+  }
+
+  /* ---------- 内容状态说明块 ---------- */
   .content-kind-note {
     background: var(--color-ink-50);
     border: 1px solid var(--color-ink-200);
@@ -408,7 +905,7 @@ const articleJsonLd = {
     border-left-color: #7c3aed;
   }
 
-  /* 详情页右上角内容状态徽标 */
+  /* ---------- 详情页右上角内容状态徽标 ---------- */
   .kind {
     display: inline-flex;
     align-items: center;
@@ -419,28 +916,12 @@ const articleJsonLd = {
     border: 1px solid;
     line-height: 1.5;
   }
-  .kind-basic {
-    background: var(--color-ink-50);
-    color: var(--color-ink-700);
-    border-color: var(--color-ink-200);
-  }
-  .kind-update {
-    background: var(--color-accent-50);
-    color: var(--color-accent-700);
-    border-color: var(--color-accent-100);
-  }
-  .kind-example {
-    background: var(--color-warn-bg);
-    color: var(--color-warn-text);
-    border-color: var(--color-warn-border);
-  }
-  .kind-pending {
-    background: #f5f3ff;
-    color: #6d28d9;
-    border-color: #ddd6fe;
-  }
+  .kind-basic { background: var(--color-ink-50); color: var(--color-ink-700); border-color: var(--color-ink-200); }
+  .kind-update { background: var(--color-accent-50); color: var(--color-accent-700); border-color: var(--color-accent-100); }
+  .kind-example { background: var(--color-warn-bg); color: var(--color-warn-text); border-color: var(--color-warn-border); }
+  .kind-pending { background: #f5f3ff; color: #6d28d9; border-color: #ddd6fe; }
 
-  /* 倒计时徽标(SSR 算好,客户端无 hydration) */
+  /* ---------- 倒计时徽标(SSR 算好) ---------- */
   .deadline-badge {
     display: inline-flex;
     align-items: center;
@@ -458,23 +939,11 @@ const articleJsonLd = {
     white-space: nowrap;
     animation: deadline-pulse 1.8s ease-in-out infinite;
   }
-  .deadline-badge-overdue {
-    background: #dc2626;
-    border-color: #991b1b;
-  }
-  .deadline-badge-urgent {
-    background: #ea580c;
-    border-color: #c2410c;
-  }
+  .deadline-badge-overdue { background: #dc2626; border-color: #991b1b; }
+  .deadline-badge-urgent { background: #ea580c; border-color: #c2410c; }
   @keyframes deadline-pulse {
-    0%, 100% {
-      box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
-      transform: scale(1);
-    }
-    50% {
-      box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
-      transform: scale(1.04);
-    }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55); transform: scale(1); }
+    50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); transform: scale(1.04); }
   }
   @media (prefers-reduced-motion: reduce) {
     .deadline-badge { animation: none; }
@@ -486,5 +955,365 @@ const articleJsonLd = {
       margin-top: 0.4em;
       font-size: 0.72rem;
     }
+  }
+
+  /* ---------- 老手模式"快速跳转"导航 ---------- */
+  .quick-jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.8rem;
+    align-items: center;
+    background: #0f172a;
+    color: #cbd5e1;
+    border-radius: var(--radius);
+    padding: 0.65em 0.95em;
+    margin: 0 0 1.5rem 0;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+    border: 1px solid #1e293b;
+  }
+  .quick-jump-label {
+    color: #fbbf24;
+    font-weight: 600;
+    margin-right: 0.3em;
+  }
+  .quick-jump-list {
+    display: contents;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .quick-jump-list li {
+    margin: 0;
+  }
+  .quick-jump-list a {
+    color: #cbd5e1;
+    text-decoration: none;
+    padding: 0.15em 0.5em;
+    border: 1px solid #334155;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+  }
+  .quick-jump-list a:hover {
+    background: #fbbf24;
+    color: #0f172a;
+  }
+
+  /* ---------- prose 主体(模式差异) ---------- */
+  .detail-prose {
+    line-height: 1.75;
+  }
+  /* 新手模式:大字号、留白多 */
+  body[data-mode='beginner'] .detail-prose {
+    font-size: 1.08rem;
+    line-height: 1.85;
+    max-width: 64ch;
+  }
+  body[data-mode='beginner'] .detail-prose h2 {
+    font-size: 1.55rem;
+    margin-top: 2em;
+    color: #78350f;
+    border-bottom: 2px solid #fde68a;
+  }
+  body[data-mode='beginner'] .detail-prose h3 {
+    font-size: 1.2rem;
+    color: #92400e;
+  }
+  body[data-mode='beginner'] .detail-prose p,
+  body[data-mode='beginner'] .detail-prose li {
+    color: #422006;
+  }
+  body[data-mode='beginner'] .detail-prose a {
+    color: #b45309;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+  }
+  body[data-mode='beginner'] .detail-prose strong {
+    background: linear-gradient(180deg, transparent 60%, #fde68a 60%);
+    color: #78350f;
+    padding: 0 2px;
+  }
+
+  /* 老手模式:紧凑、表格化 */
+  body[data-mode='expert'] .detail-prose {
+    font-size: 0.92rem;
+    line-height: 1.65;
+  }
+  body[data-mode='expert'] .detail-prose h2 {
+    font-size: 1.25rem;
+    margin-top: 1.6em;
+    color: var(--color-ink-900);
+    border-bottom: 1px solid var(--color-ink-300);
+    padding-bottom: 0.3em;
+  }
+  body[data-mode='expert'] .detail-prose h3 {
+    font-size: 1.05rem;
+    color: var(--color-ink-900);
+  }
+  /* 老手模式:核心义务 / 你现在要做什么 / 不处理的影响 等红色左条 */
+  body[data-mode='expert'] .detail-prose h2 {
+    position: relative;
+    padding-left: 0.85em;
+    border-left: 3px solid var(--color-ink-300);
+  }
+  body[data-mode='expert'] .detail-prose h2:has(+ p, + ul, + ol, + table) {
+    border-left-color: #dc2626;
+  }
+  /* 老手模式表格紧凑 */
+  body[data-mode='expert'] .detail-prose table {
+    font-size: 0.85rem;
+  }
+  body[data-mode='expert'] .detail-prose table th,
+  body[data-mode='expert'] .detail-prose table td {
+    padding: 0.4em 0.6em;
+  }
+
+  /* ---------- 模式感知:H2 段折叠(新手模式) ---------- */
+  /* <details>/<summary> 由 client 脚本在 .detail-prose 下动态生成。
+     样式只控制视觉,不影响 SSR markdown 原始结构 */
+  .mode-fold-block {
+    margin: 1.4em 0;
+    border: 1px solid #fde68a;
+    border-radius: 14px;
+    background: #fffbeb;
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+  }
+  .mode-fold-block[open] {
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
+  }
+  .mode-fold-summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 0.9em 1.2em;
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    font-weight: 600;
+    color: #78350f;
+    user-select: none;
+  }
+  .mode-fold-summary::-webkit-details-marker { display: none; }
+  .mode-fold-summary::marker { content: ''; }
+  .mode-fold-emoji {
+    font-size: 1.25em;
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+  .mode-fold-title {
+    flex: 1 1 auto;
+    font-size: 1.1rem;
+  }
+  .mode-fold-hint {
+    font-size: 0.78rem;
+    color: #b45309;
+    background: #fef3c7;
+    padding: 0.2em 0.7em;
+    border-radius: 999px;
+    border: 1px solid #fde68a;
+    flex: 0 0 auto;
+  }
+  .mode-fold-block[open] > .mode-fold-summary {
+    border-bottom: 1px solid #fde68a;
+  }
+  .mode-fold-block[open] > .mode-fold-summary .mode-fold-hint::after { content: ' (收起)'; }
+  .mode-fold-block:not([open]) > .mode-fold-summary .mode-fold-hint::after { content: ' (展开)'; }
+  .mode-fold-summary:hover { background: #fef3c7; }
+  .mode-fold-summary:focus-visible {
+    outline: 2px solid #f59e0b;
+    outline-offset: 2px;
+  }
+  /* details 块内部内容 padding */
+  .mode-fold-block > :not(.mode-fold-summary) {
+    padding: 0.5em 1.2em 0.9em 1.2em;
+  }
+  .mode-fold-block > :not(.mode-fold-summary):last-child {
+    padding-bottom: 1.1em;
+  }
+
+  /* ---------- 相关区域 ---------- */
+  .related {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .related h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .related-list { padding-left: 1.4em; }
+  .related-list li { margin: 0.3em 0; }
+
+  /* 新手模式:相关区域加暖色,轻松 */
+  body[data-mode='beginner'] .related {
+    border-top-color: #fde68a;
+  }
+  body[data-mode='beginner'] .related h2 {
+    color: #78350f;
+  }
+  /* 老手模式:紧凑 */
+  body[data-mode='expert'] .related h2 {
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-ink-700);
+  }
+  body[data-mode='expert'] .related-list {
+    font-size: 0.88rem;
+  }
+
+  /* ---------- 新手模式底部 ---------- */
+  .beginner-footer {
+    margin-top: 3rem;
+    display: grid;
+    gap: 1.25rem;
+  }
+  .beginner-hint {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 2px solid #f59e0b;
+    border-radius: 18px;
+    padding: 1.4em 1.6em;
+  }
+  .beginner-hint-head {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    margin-bottom: 0.6em;
+  }
+  .beginner-hint-emoji {
+    font-size: 1.8em;
+    line-height: 1;
+  }
+  .beginner-hint-title {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #78350f;
+  }
+  .beginner-hint-text {
+    margin: 0 0 0.6em 0;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: #422006;
+  }
+  .beginner-hint-text strong { color: #b45309; }
+  .beginner-hint-cta {
+    font-size: 0.95rem;
+    color: #78350f;
+    border-top: 1px dashed #fcd34d;
+    padding-top: 0.6em;
+    margin-top: 0.6em;
+  }
+  .beginner-hint-cta a {
+    color: #b45309;
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+  }
+
+  .beginner-next {
+    background: #fff;
+    border: 2px solid #fde68a;
+    border-radius: 18px;
+    padding: 1.2em 1.4em;
+  }
+  .beginner-next-title {
+    margin: 0 0 0.8em 0;
+    font-size: 1.2rem;
+    color: #78350f;
+  }
+  .beginner-next-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.8rem;
+  }
+  .beginner-next-list li { margin: 0; }
+  .beginner-next-list a {
+    display: flex;
+    align-items: center;
+    gap: 0.8em;
+    padding: 0.8em 1em;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #78350f;
+    transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .beginner-next-list a:hover {
+    background: #fef3c7;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);
+    color: #78350f;
+  }
+  .beginner-next-emoji {
+    font-size: 1.8em;
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+  .beginner-next-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15em;
+  }
+  .beginner-next-text strong { font-size: 1.05rem; color: #78350f; }
+  .beginner-next-text small { font-size: 0.85rem; color: #92400e; }
+
+  /* ---------- 老手模式底部:紧凑参考表 ---------- */
+  .expert-footer {
+    margin-top: 2.5rem;
+    padding: 1em 1.2em;
+    background: #0f172a;
+    color: #cbd5e1;
+    border-radius: var(--radius);
+    border: 1px solid #1e293b;
+  }
+  .expert-footer-title {
+    margin: 0 0 0.7em 0;
+    font-size: 1rem;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .expert-refs-table {
+    font-size: 0.82rem;
+  }
+  .expert-refs-table th,
+  .expert-refs-table td {
+    padding: 0.4em 0.6em;
+    border-bottom: 1px solid #1e293b;
+  }
+  .expert-refs-table th {
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+  }
+  .expert-refs-table a { color: #fbbf24; }
+  .expert-refs-table a:hover { color: #fde68a; }
+  .expert-refs-table code {
+    background: #1e293b;
+    color: #94a3b8;
+    font-size: 0.75rem;
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+  }
+  .expert-refs-table code.ref-urgent {
+    background: #dc2626;
+    color: #fff;
+  }
+
+  /* ======================================================================
+     模式显隐控制 — mode-novice-only / mode-expert-only
+     ----------------------------------------------------------------------
+     - 配合 global.css 里的 body[data-mode='X'] [data-show-on] 通用规则,
+       这里用更明确的类名(.mode-novice-only / .mode-expert-only)控制
+       详情页"非通用"模式块的显隐(横幅 / 快速跳转 / 电梯结语 /
+       新手底部 / 老手底部 / 紧迫徽标)
+     - !important 覆盖 Astro scoped style
+     ====================================================================== */
+  body[data-mode='beginner'] .mode-expert-only,
+  body[data-mode='expert'] .mode-novice-only {
+    display: none !important;
   }
 </style>

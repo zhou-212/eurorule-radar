@@ -42,6 +42,8 @@ const radar = defineCollection({
     sourceUrl: z.string().url(),
     sourceType: z.enum(['官方公告', '法规原文', '权威媒体', '社区', '其他']).default('官方公告'),
     disclaimerLevel: z.enum(['standard', 'high', 'critical']).default('standard'),
+    // 新手版提示: 给完全不懂法规的卖家看的大白话, 详情页新手模式下突出显示
+    beginnerHint: z.string().optional(),
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),
     example: z.boolean().default(false),

@@ -15,6 +15,7 @@ sourceName: "Amazon Seller Central EU 公告 / EU Regulation 2023/988"
 sourceUrl: "https://sellercentral.amazon.eu/help/hub/reference/G6C74FKQ4ZBX7BGB"
 sourceType: "官方公告"
 disclaimerLevel: "high"
+beginnerHint: "这个法规要求你在亚马逊欧洲站卖的所有非食品商品, 必须在 listing 上写\"欧盟责任人\"的姓名和联系方式. 不写就下架, 最高罚 1000 万欧或 5% 营收. 你现在去 Amazon Seller Central 后台看看是不是每个 listing 都填了责任人信息, 没填的马上补."
 featured: true
 draft: false
 example: false

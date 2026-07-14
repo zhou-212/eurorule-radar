@@ -15,6 +15,7 @@ sourceName: "Verpackungsregister LUCID / Amazon Seller Central"
 sourceUrl: "https://www.verpackungsregister.org/en/information-platform/responsibilities/obligations-of-manufacturers-and-distributors"
 sourceType: "官方公告"
 disclaimerLevel: "high"
+beginnerHint: "这个法规要求你在德国卖的所有带包装商品, 必须在 LUCID 包装登记册注册 + 加入一个回收系统, 然后把 LUCID 编号填到亚马逊德国站后台. 没填就会被自动下架, 最高罚 20 万欧. 你去 verpackungsregister.org 注册一个 LUCID 主体, 10 分钟搞定."
 featured: true
 draft: false
 example: false

@@ -15,6 +15,7 @@ sourceName: "EUR-Lex Regulation (EU) 2023/1542"
 sourceUrl: "https://eur-lex.europa.eu/eli/reg/2023/1542/oj"
 sourceType: "法规原文"
 disclaimerLevel: "high"
+beginnerHint: "这个法规要求你卖的含电池商品 (充电宝/玩具/电子产品) 必须在 2025-08-18 起满足\"碳足迹 + 电池护照 + CE + 标签 + 回收\"5 大要求. 不做的话亚马逊对含电池商品已启动合规管控. 你如果卖充电宝/手机壳/电子玩具, 现在去看你的供应商能不能提供电池护照, 没有的话要换供应商."
 featured: true
 draft: false
 example: false
