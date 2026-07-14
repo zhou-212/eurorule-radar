@@ -1,0 +1,256 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getRiskClass, getStatusClass, getContentKindClass, SITE_DEFAULTS } from '../../lib/radar';
+import { formatDate } from '../../lib/date';
+import RadarCard from '../../components/RadarCard.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const all = await getCollection('radar', ({ data }) => !data.draft);
+  return all.map((entry) => ({
+    params: { slug: entry.id.replace(/\.(md|mdx)$/, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+
+// 相关规则:同 categories 交集
+const allRadars = (await getCollection('radar', ({ data }) => !data.draft))
+  .filter((r) => r.id !== entry.id);
+const related = allRadars
+  .filter((r) => r.data.categories.some((c) => d.categories.includes(c)))
+  .slice(0, 3);
+
+const siteStr = siteAsDir(Astro.site);
+const slug = entry.id.replace(/\.(md|mdx)$/, '');
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '规则雷达', item: siteStr ? `${siteStr}radar/` : undefined },
+    { '@type': 'ListItem', position: 3, name: d.title, item: siteStr ? `${siteStr}radar/${slug}/` : undefined },
+  ],
+};
+
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: d.title,
+  description: d.summary,
+  datePublished: d.publishedDate.toISOString(),
+  dateModified: d.verifiedDate.toISOString(),
+  inLanguage: 'zh-CN',
+  author: { '@type': 'Organization', name: SITE_DEFAULTS.name },
+  publisher: {
+    '@type': 'Organization',
+    name: SITE_DEFAULTS.name,
+    logo: siteStr ? { '@type': 'ImageObject', url: `${siteStr}favicon.svg` } : undefined,
+  },
+  mainEntityOfPage: siteStr ? `${siteStr}radar/${slug}/` : undefined,
+};
+---
+
+<BaseLayout
+  title={d.title}
+  description={d.summary}
+  type="article"
+  publishedDate={d.publishedDate}
+  modifiedDate={d.verifiedDate}
+  jsonLd={[breadcrumb, articleJsonLd]}
+>
+  <article class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/radar/')}>规则雷达</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>{d.title}</span>
+    </nav>
+
+    <header class="radar-detail-head">
+      <div class="radar-detail-tags">
+        <span class={`risk ${getRiskClass(d.riskLevel)}`}>风险:{d.riskLevel}</span>
+        <span class={`status ${getStatusClass(d.status)}`}>{d.status}</span>
+        <span class={`kind ${getContentKindClass(d.contentKind)}`}>内容状态:{d.contentKind}</span>
+      </div>
+      <h1>{d.title}</h1>
+      <p class="radar-detail-summary">{d.summary}</p>
+      <dl class="radar-detail-meta">
+        <div><dt>内容状态</dt><dd>{d.contentKind}</dd></div>
+        <div><dt>适用范围</dt><dd>{d.countries.join('、')}</dd></div>
+        <div><dt>平台</dt><dd>{d.platform}</dd></div>
+        <div><dt>核对日期</dt><dd><time datetime={d.verifiedDate.toISOString()}>{formatDate(d.verifiedDate)}</time></dd></div>
+        {d.effectiveDate && <div><dt>生效日期</dt><dd><time datetime={d.effectiveDate.toISOString()}>{formatDate(d.effectiveDate)}</time></dd></div>}
+        {d.deadlineDate && <div><dt>截止日期</dt><dd><time datetime={d.deadlineDate.toISOString()}>{formatDate(d.deadlineDate)}</time></dd></div>}
+        <div><dt>来源</dt><dd><a href={d.sourceUrl} target="_blank" rel="noopener noreferrer">{d.sourceName}</a></dd></div>
+      </dl>
+      {d.contentKind === '基础规则' && (
+        <p class="content-kind-note">
+          <strong>这是基础规则 / 常驻要求</strong>。本站是基础规则 + 近期更新两类内容,本卡属于前者:
+          长期有效的合规要求(如 GPSR 责任人、LUCID 注册等),不是"新近发布的变化"。
+          如果你正在追踪 2026 年的新公告,目前<strong>暂未发布已核实的近期更新</strong>;
+          请<strong>定期回访</strong>本站或关注项目 GitHub 仓库的更新。
+        </p>
+      )}
+      {d.contentKind === '近期更新' && (
+        <p class="content-kind-note kind-note-update">
+          <strong>这是已核对的近期更新</strong>。有具体更新日期 / 修订内容 / 执法动态;
+          建议优先处理,核对日期前的旧版可能已落后。
+        </p>
+      )}
+      {d.contentKind === '示例' && (
+        <p class="content-kind-note kind-note-example">
+          <strong>这是示例 / 演示内容</strong>,用于展示"待核实"或编辑模板,
+          <strong>不代表任何具体新规</strong>。具体执行请按你产品适用指令查原文。
+        </p>
+      )}
+      {d.contentKind === '待核实' && (
+        <p class="content-kind-note kind-note-pending">
+          <strong>这条规则的来源尚未核实</strong>;请勿直接当作合规结论使用,等待运营补充官方原始来源。
+        </p>
+      )}
+    </header>
+
+    {d.example && d.contentKind !== '示例' && (
+      <div class="notice notice-warn">
+        <strong>这是示例 / 演示内容</strong>,用于展示"待核实"内容的视觉标记和编辑模板,不代表任何具体新规。具体执行请按你产品适用指令查原文,或咨询专业律师 / 认证机构。
+      </div>
+    )}
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    {related.length > 0 && (
+      <section class="related">
+        <h2>相关规则</h2>
+        <div class="grid grid-3">
+          {related.map((r) => <RadarCard entry={r} />)}
+        </div>
+      </section>
+    )}
+
+    <section class="related">
+      <h2>相关清单</h2>
+      <ul class="related-list">
+        <li><a href={withBase('/checklists/new-seller-basics/')}>亚马逊欧洲站新卖家基础资料检查清单</a></li>
+        <li><a href={withBase('/checklists/pre-listing-documents/')}>产品上架前资料检查清单</a></li>
+        <li><a href={withBase('/checklists/compliance-notice-48h/')}>收到平台合规通知后的 48 小时应对清单</a></li>
+      </ul>
+    </section>
+
+    <div class="notice notice-info related">
+      <strong>操作建议:</strong>完成本规则的"你现在要做什么"清单后,到
+      <a href={withBase('/checklists/compliance-notice-48h/')}>《48 小时应对清单》</a>
+      登记你的执行进度,有助于团队协作和复盘。
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .radar-detail-head { margin-bottom: 1.5rem; }
+  .radar-detail-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .radar-detail-summary {
+    color: var(--color-ink-700);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 0.5em 0 1em 0;
+  }
+  .radar-detail-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.7rem 1.2rem;
+    background: var(--color-ink-50);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.1rem;
+    margin: 0 0 2rem 0;
+  }
+  .radar-detail-meta div { display: flex; flex-direction: column; }
+  .radar-detail-meta dt {
+    font-size: 0.78rem;
+    color: var(--color-ink-500);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.2em;
+  }
+  .radar-detail-meta dd {
+    margin: 0;
+    color: var(--color-ink-900);
+    font-size: 0.95rem;
+  }
+  .related {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .related h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .related-list { padding-left: 1.4em; }
+  .related-list li { margin: 0.3em 0; }
+
+  /* 内容状态说明块 */
+  .content-kind-note {
+    background: var(--color-ink-50);
+    border: 1px solid var(--color-ink-200);
+    border-left: 4px solid var(--color-ink-400);
+    border-radius: var(--radius);
+    padding: 0.9em 1.1em;
+    margin: 0 0 1.5rem 0;
+    font-size: 0.95rem;
+    color: var(--color-ink-700);
+  }
+  .content-kind-note strong { color: var(--color-ink-900); }
+  .kind-note-update {
+    background: var(--color-accent-50);
+    border-color: var(--color-accent-100);
+    border-left-color: var(--color-accent-500);
+  }
+  .kind-note-example {
+    background: var(--color-warn-bg);
+    border-color: var(--color-warn-border);
+    border-left-color: #d97706;
+  }
+  .kind-note-pending {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+    border-left-color: #7c3aed;
+  }
+
+  /* 详情页右上角内容状态徽标 */
+  .kind {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2em 0.65em;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    line-height: 1.5;
+  }
+  .kind-basic {
+    background: var(--color-ink-50);
+    color: var(--color-ink-700);
+    border-color: var(--color-ink-200);
+  }
+  .kind-update {
+    background: var(--color-accent-50);
+    color: var(--color-accent-700);
+    border-color: var(--color-accent-100);
+  }
+  .kind-example {
+    background: var(--color-warn-bg);
+    color: var(--color-warn-text);
+    border-color: var(--color-warn-border);
+  }
+  .kind-pending {
+    background: #f5f3ff;
+    color: #6d28d9;
+    border-color: #ddd6fe;
+  }
+</style>

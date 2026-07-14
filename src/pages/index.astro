@@ -1,0 +1,390 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RadarCard from '../components/RadarCard.astro';
+import ChecklistCard from '../components/ChecklistCard.astro';
+import CalendarEvent from '../components/CalendarEvent.astro';
+import SubscribeForm from '../components/SubscribeForm.astro';
+import { getCollection } from 'astro:content';
+import calendarData from '../content/calendar/events.json';
+import { SITE_DEFAULTS } from '../lib/radar';
+import { daysFromNow } from '../lib/date';
+import { withBase, siteAsDir } from '../lib/url';
+import { getRadarRules, getContentKindKey } from '../lib/radar-source';
+
+// 数据源切换:getCollection('radar') → getRadarRules()
+// getRadarRules 内部:API 成功用 API 数据;任何 error → fallback 到静态 content 集合。
+// 顶层 try/catch 兜底 —— 万一 fallback 自身抛错(理论上不会),也降级到空数组,
+let radars: Awaited<ReturnType<typeof getRadarRules>> = [];
+try {
+  radars = await getRadarRules();
+} catch (err) {
+  // eslint-disable-next-line no-console
+  console.error('[index.astro] getRadarRules failed, rendering empty:', (err as Error).message);
+  radars = [];
+}
+
+// 内容时效原则:
+//   - "近期更新":必须有官方原始来源 + 核对日期 + 具体更新,缺一不可。
+//   - 当前所有规则都是 2026-01 核对的"基础规则",不属于"近期更新"。
+//   - 因此首页只展示"基础规则",绝不为了凑数把基础规则贴"近期更新"标签。
+// 派生逻辑用 `getContentKindKey(r) === 'update'` 风格(英文键,对应后端 API
+// contentKind 字段);`data.contentKind` 仍是中文展示值(给 RadarCard.astro
+// 渲染徽标,锁定文件不能改)。
+const recentUpdates = radars.filter((r) => getContentKindKey(r) === 'update');
+const basicRules = radars.filter((r) => getContentKindKey(r) === 'basic');
+const basicFeatured = basicRules.filter((r) => r.data.featured).slice(0, 3);
+const basicOthers = basicRules.filter((r) => !r.data.featured).slice(0, 3);
+
+const checklists = (await getCollection('checklists'))
+  .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate)
+  .slice(0, 3);
+
+// 日历:默认只看真实 (非示例) 且未过期 的事件
+const upcomingAll = calendarData
+  .filter((e) => daysFromNow(e.date) >= 0)
+  .sort((a, b) => +new Date(a.date) - +new Date(b.date));
+const realUpcoming = upcomingAll.filter((e) => !e.isExample).slice(0, 4);
+
+// 绝对 URL helper (用于 JSON-LD):SITE 已包含 project path(Astro 自动)
+const siteStr = siteAsDir(Astro.site);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      name: SITE_DEFAULTS.name,
+      alternateName: SITE_DEFAULTS.enName,
+      url: siteStr || undefined,
+      description: SITE_DEFAULTS.description,
+      inLanguage: 'zh-CN',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: siteStr ? `${siteStr}radar?q={search_term_string}` : undefined,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@type': 'Organization',
+      name: SITE_DEFAULTS.name,
+      url: siteStr || undefined,
+      logo: siteStr ? `${siteStr}favicon.svg` : undefined,
+    },
+  ],
+};
+---
+
+<BaseLayout
+  title="欧规雷达 · 亚马逊欧洲站规则变化追踪与执行清单"
+  description={SITE_DEFAULTS.description}
+  jsonLd={jsonLd}
+>
+  <!-- Hero -->
+  <section class="section hero">
+    <div class="container">
+      <p class="hero-eyebrow">面向中国亚马逊欧洲站中小卖家</p>
+      <h1 class="hero-title">欧洲站规则更新太快?把公告变成你今天能完成的行动清单。</h1>
+      <p class="hero-sub">追踪亚马逊欧洲站、欧盟法规、成员国官方公告 → 判断是否影响你的店铺、类目和库存 → 输出今天能做的行动 + 截止日期。</p>
+      <div class="hero-cta">
+        <a href={withBase('/radar/')} class="btn btn-primary">免费查看本周规则</a>
+        <a href={withBase('/self-check/')} class="btn btn-secondary">3 题判断你需要关注什么</a>
+      </div>
+      <ul class="hero-points">
+        <li>✓ 中文整理,无术语堆砌</li>
+        <li>✓ 每条规则附原始来源与核对日期</li>
+        <li>✓ 明确区分"已生效"vs"示例内容"</li>
+        <li>✓ 行动清单可勾选、可打印</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 近期更新 / 基础规则 -->
+  <section class="section section-tight" id="latest">
+    <div class="container">
+      <div class="section-head">
+        <h2>近期更新(已核对)</h2>
+        <a href={withBase('/radar/')} class="section-head-link">查看全部 →</a>
+      </div>
+      {recentUpdates.length === 0 ? (
+        <div class="empty-card">
+          <p>暂未发布已核对的近期更新(2026 年新公告 / 修订 / 执法动态)。</p>
+          <p class="empty-meta">
+            近期更新需要 1) 找到官方原始来源(官方公告 / EUR-Lex 法规原文 / 成员国主管机构),2) 人工核对发布日期、生效日期、适用范围,
+            3) 写"你现在要做什么"清单。
+            不允许把未核实的社群消息、AI 推断包装成"新近更新"。运营正在分批核实;
+            请<strong>定期回访本站</strong>或关注 GitHub 仓库的更新。
+          </p>
+        </div>
+      ) : (
+        <div class="grid grid-3">
+          {recentUpdates.map((r) => <RadarCard entry={r} />)}
+        </div>
+      )}
+
+      <div class="section-head section-head-divider">
+        <h2>已核对的基础规则</h2>
+        <span class="section-head-meta">长期有效的常驻要求,不是"新近变化"</span>
+      </div>
+      <div class="grid grid-3">
+        {basicFeatured.map((r) => <RadarCard entry={r} />)}
+        {basicOthers.map((r) => <RadarCard entry={r} />)}
+      </div>
+      <p class="section-foot">
+        <a href={withBase('/radar/')}>查看全部 {basicRules.length} 条基础规则 →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- 截止日历(预览) -->
+  <section class="section section-tight section-bg">
+    <div class="container">
+      <div class="section-head">
+        <h2>未来 90 天重点节点</h2>
+        <a href={withBase('/calendar/')} class="section-head-link">完整日历 →</a>
+      </div>
+      {realUpcoming.length === 0 ? (
+        <div class="empty-card">
+          <p>未来 90 天内暂无已核实的真实截止日。日历只展示有官方原始来源的节点;未核实的日期不会上线,以避免误导。</p>
+          <p class="empty-meta">查看 <a href={withBase('/calendar/')}>完整日历</a> 或<strong>定期回访本站</strong>。</p>
+        </div>
+      ) : (
+        <div class="grid grid-2">
+          {realUpcoming.map((e) => <CalendarEvent event={e} />)}
+        </div>
+      )}
+    </div>
+  </section>
+
+  <!-- 核心价值 -->
+  <section class="section">
+    <div class="container">
+      <h2 class="value-title">我们解决什么</h2>
+      <div class="grid grid-3">
+        <div class="card value-card">
+          <h3>追踪变化</h3>
+          <p>从 Amazon Seller Central、EUR-Lex、欧盟成员国机构等权威源持续监控,过滤噪音,只保留与你有关的规则变化。</p>
+        </div>
+        <div class="card value-card">
+          <h3>判断影响</h3>
+          <p>每个规则卡片标出适用范围(站点、卖家类型、类目)、风险等级(高/中/低)与生效状态(已生效/即将生效/持续关注)。</p>
+        </div>
+        <div class="card value-card">
+          <h3>给出行动</h3>
+          <p>每条规则都附带 3-6 项可立即执行的行动项;遇到合规通知有 48 小时应对清单;每条都附原始来源链接供你二次核实。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 行动清单(预览) -->
+  <section class="section section-bg">
+    <div class="container">
+      <div class="section-head">
+        <h2>常用行动清单</h2>
+        <a href={withBase('/checklists/')} class="section-head-link">查看全部 →</a>
+      </div>
+      <div class="grid grid-3">
+        {checklists.map((c) => <ChecklistCard entry={c} />)}
+      </div>
+    </div>
+  </section>
+
+  <!-- 影响自测(简版) -->
+  <section class="section">
+    <div class="container">
+      <div class="grid grid-2 self-check-promo">
+        <div>
+          <h2>不确定你该先看哪条规则?</h2>
+          <p>3-5 题,基于你的销售国家、商品类目、合规经验,给出"优先关注主题"和"推荐阅读清单"。</p>
+          <p>结果只作导航建议,<strong>不构成法律或合规结论</strong>。</p>
+          <a href={withBase('/self-check/')} class="btn btn-primary">开始自测</a>
+        </div>
+        <div class="self-check-promo-visual" aria-hidden="true">
+          <div class="sc-illu">
+            <div class="sc-q">1. 你在哪些欧洲站销售?</div>
+            <div class="sc-q">2. 你的商品属于哪个类目?</div>
+            <div class="sc-q">3. 你是否收到过平台合规通知?</div>
+            <div class="sc-arrow">↓ 2 分钟给出结果</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 订阅 -->
+  <section class="section section-bg" id="subscribe">
+    <div class="container sub-section">
+      <div class="grid grid-2">
+        <div>
+          <h2>每周一封邮件,把本周规则和截止日期发给你</h2>
+          <p>
+            <strong>订阅功能当前尚未启用。</strong>
+            启用后你将收到:
+          </p>
+          <ul>
+            <li>每周更新的规则雷达摘要</li>
+            <li>未来 30 天的关键截止日期</li>
+            <li>重点 ASIN 类目的合规提示</li>
+            <li>不定期的重大政策变化速读</li>
+          </ul>
+          <p class="form-help">
+            本站不收集你的店铺数据;启用后只发规则和清单,不发送营销邮件。
+            当前不会收集、保存或发送任何邮箱数据,详见
+            <a href={withBase('/privacy/')}>隐私说明</a>。
+          </p>
+        </div>
+        <SubscribeForm />
+      </div>
+    </div>
+  </section>
+
+  <!-- 来源透明 + 免责声明 -->
+  <section class="section section-tight">
+    <div class="container">
+      <div class="transparency">
+        <h2>来源透明与免责声明</h2>
+        <p><strong>来源白名单:</strong>Amazon Seller Central、欧盟委员会 / EUR-Lex、各成员国主管机构、官方认证机构原文。</p>
+        <p><strong>编辑原则:</strong>每条规则附原始来源 + 核对日期;未核实的标注"示例 / 待核实";不杜撰法规结论、链接、日期或处罚后果。</p>
+        <p><strong>边界:</strong>本站是信息整理和辅助判断工具,<strong>不构成法律、税务、认证或专业合规意见</strong>。具体执行请咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。</p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    background: linear-gradient(180deg, var(--color-primary-50) 0%, #fff 100%);
+    padding: 3.5rem 0 2.5rem 0;
+  }
+  .hero-eyebrow {
+    color: var(--color-primary-700);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 0.6em 0;
+  }
+  .hero-title {
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    line-height: 1.25;
+    max-width: 22ch;
+    margin: 0 0 0.5em 0;
+  }
+  .hero-sub {
+    color: var(--color-ink-600);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    max-width: 60ch;
+    margin: 0 0 1.5em 0;
+  }
+  .hero-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .hero-points {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    font-size: 0.92rem;
+    color: var(--color-ink-700);
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .section-head h2 { margin: 0; }
+  .section-head-link {
+    color: var(--color-primary-700);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  .section-head-link:hover { text-decoration: underline; }
+  .section-head-divider {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .section-head-meta {
+    font-size: 0.88rem;
+    color: var(--color-ink-500);
+  }
+  .section-foot {
+    text-align: right;
+    font-size: 0.95rem;
+    margin: 1.5rem 0 0 0;
+  }
+
+  .section-bg { background: var(--color-bg-soft); }
+
+  .recent-details { margin-top: 1.5rem; }
+  .recent-details summary {
+    cursor: pointer;
+    color: var(--color-primary-700);
+    font-size: 0.95rem;
+    font-weight: 500;
+    padding: 0.5em 0;
+  }
+  .recent-grid { margin-top: 1rem; }
+
+  .value-title { margin-bottom: 1.5rem; }
+  .value-card h3 { color: var(--color-primary-800); margin-bottom: 0.5em; }
+  .value-card p { color: var(--color-ink-600); margin: 0; }
+
+  .self-check-promo h2 { margin-bottom: 0.5em; }
+  .self-check-promo-visual { display: flex; align-items: center; }
+  .sc-illu {
+    width: 100%;
+    background: var(--color-primary-50);
+    border: 1px dashed var(--color-primary-200);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.2rem;
+  }
+  .sc-q {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.55em 0.85em;
+    margin: 0.5em 0;
+    color: var(--color-ink-700);
+    font-size: 0.92rem;
+  }
+  .sc-arrow {
+    text-align: center;
+    color: var(--color-primary-700);
+    font-weight: 500;
+    margin-top: 0.5em;
+  }
+
+  .sub-section h2 { margin-bottom: 0.5em; }
+  .transparency h2 { font-size: 1.3rem; margin-bottom: 0.5em; }
+  .transparency p { color: var(--color-ink-700); margin: 0.4em 0; font-size: 0.95rem; }
+
+  .empty {
+    color: var(--color-ink-500);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem 0;
+  }
+  .empty-card {
+    background: var(--color-info-bg);
+    border: 1px dashed var(--color-info-border);
+    border-left: 4px solid #3b82f6;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.5rem;
+    color: var(--color-ink-700);
+    max-width: 70ch;
+  }
+  .empty-card p { margin: 0.4em 0; }
+  .empty-card .empty-meta { font-size: 0.9rem; color: var(--color-ink-500); }
+</style>

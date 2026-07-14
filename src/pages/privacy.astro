@@ -1,0 +1,105 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '隐私说明', item: siteStr ? `${siteStr}privacy/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="隐私说明"
+  description="欧规雷达隐私说明:不收集个人敏感资料,不内置第三方追踪,默认仅收集必要的访问统计。"
+  jsonLd={breadcrumb}
+>
+  <div class="container legal-wrap">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>隐私说明</span>
+    </nav>
+    <h1>隐私说明</h1>
+    <p class="updated">最后更新:<time datetime="2026-07-13">2026-07-13</time></p>
+
+    <div class="prose">
+      <p>欧规雷达(以下简称"本站")尊重你的隐私。本站使用 <strong>GitHub Pages 静态托管</strong>,第一阶段不部署后端服务,也不内置第三方追踪代码。访问本站时,你的数据由 GitHub Pages 和浏览器 / DNS 提供方按其各自隐私政策处理。</p>
+
+      <h2>1. 我们不收集的信息</h2>
+      <ul>
+        <li>不收集姓名、电话、地址等个人识别信息</li>
+        <li>不收集你的店铺、订单、SKU 等商业数据</li>
+        <li>不收集支付 / 银行卡 / 凭证信息(本站不收费)</li>
+        <li>不在站内保存你的勾选 / 自测结果到服务器(清单勾选仅保存在你本地浏览器)</li>
+      </ul>
+
+      <h2>2. 我们可能收集的信息</h2>
+      <h3>(1) 浏览器本地存储(localStorage)</h3>
+      <p>行动清单的勾选状态会保存在你的<strong>浏览器本地</strong>(localStorage),用于下次访问恢复进度。删除浏览器数据会清除这些记录。清除不影响其它浏览器或设备。</p>
+      <h3>(2) 邮件订阅</h3>
+      <p>
+        <strong>当前状态:订阅功能筹备中,当前不收集、不保存、不发送任何邮箱数据。</strong>
+        站内的订阅表单按钮在配置完成前为<strong>禁用</strong>状态;若你尝试提交,浏览器会阻止,且不会发出任何网络请求。
+      </p>
+      <p>
+        启用条件:运营在 <code>public/runtime-config.js</code> 填入真实的 <code>API_BASE_URL</code> 后,表单会变为可用,提交的邮箱数据会通过 <code>POST &#123;API_BASE_URL&#125;/api/v1/subscriptions</code> 发送到自建后端。在此之前,本站不会调用任何第三方邮件服务(Tally / Brevo / ConvertKit 等)。
+      </p>
+      <p>
+        启用后,数据将由你的自建后端按你自己的隐私政策处理;本站只作为前端,不对后端数据保存或传输承担责任。
+      </p>
+      <h3>(3) 访问统计(可选)</h3>
+      <p>本站不内置任何分析代码。运营者可能通过 GitHub Pages 的基础访问日志查看总访问量(不包含个人识别信息)。</p>
+      <p>如未来启用第三方统计(例如 Plausible / Umami 自托管 / Cloudflare Analytics),会在此页面更新并明确告知。</p>
+
+      <h2>3. Cookie 使用</h2>
+      <p>本站是静态站点,本身<strong>不设置任何 Cookie</strong>。如果你启用第三方分析或邮件服务,可能引入第三方 Cookie;届时会明确告知。</p>
+
+      <h2>4. 第三方服务</h2>
+      <p>本站可能链接到:</p>
+      <ul>
+        <li>Amazon Seller Central、欧盟委员会 / EUR-Lex 等官方源(阅读时按对方隐私政策处理)</li>
+        <li>自建后端 API(订阅功能启用后;位于 <code>&#123;API_BASE_URL&#125;</code> 替换后的真实地址)</li>
+        <li>第三方分析服务(如启用)</li>
+      </ul>
+      <p>我们不对第三方服务的隐私实践承担责任。</p>
+
+      <h2>5. 儿童隐私</h2>
+      <p>本站面向商业用户,不针对 14 岁以下儿童。我们不故意收集儿童信息。</p>
+
+      <h2>6. 数据保留</h2>
+      <p>本站不维护用户数据库;订阅启用后数据由你的自建后端管理,你可在后端随时查看 / 删除。清单勾选数据仅在你的浏览器本地。</p>
+
+      <h2>7. 你的权利</h2>
+      <p>你可以随时:</p>
+      <ul>
+        <li>清除浏览器 Cookie / localStorage(本站无 Cookie,只有 localStorage 中的清单勾选)</li>
+        <li>在自建后端管理界面查看 / 删除 / 导出 / 退订你的订阅数据(启用后)</li>
+        <li>停止使用本站,无需告知</li>
+      </ul>
+
+      <h2>8. 跨境传输</h2>
+      <p>本站通过 GitHub Pages 托管,服务器可能位于美国 / 欧盟以外。订阅启用后,邮箱数据的传输由自建后端所在地区处理。</p>
+
+      <h2>9. 条款更新</h2>
+      <p>我们可能在必要时更新本隐私说明,更新会在本站"最后更新"字段标注。</p>
+
+      <h2>10. 联系</h2>
+      <p>对隐私有疑问,可联系:<code>YOUR_CONTACT_EMAIL@example.com</code>(占位,部署前替换为你的真实邮箱)。</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .legal-wrap { max-width: 760px; }
+  .updated {
+    color: var(--color-ink-500);
+    font-size: 0.9rem;
+    margin: 0 0 2rem 0;
+  }
+</style>

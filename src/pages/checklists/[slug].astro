@@ -1,0 +1,213 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate } from '../../lib/date';
+import { SITE_DEFAULTS as _SD } from '../../lib/radar';
+import { withBase, siteAsDir } from '../../lib/url';
+
+export async function getStaticPaths() {
+  const all = await getCollection('checklists');
+  return all.map((entry) => ({
+    params: { slug: entry.id.replace(/\.(md|mdx)$/, '') },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+
+const siteStr = siteAsDir(Astro.site);
+const slug = entry.id.replace(/\.(md|mdx)$/, '');
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '行动清单', item: siteStr ? `${siteStr}checklists/` : undefined },
+    { '@type': 'ListItem', position: 3, name: d.title, item: siteStr ? `${siteStr}checklists/${slug}/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title={d.title}
+  description={d.summary}
+  type="article"
+  jsonLd={breadcrumb}
+>
+  <article class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/checklists/')}>行动清单</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>{d.title}</span>
+    </nav>
+
+    <header class="cl-head">
+      <h1>{d.title}</h1>
+      <p class="cl-summary">{d.summary}</p>
+      <dl class="cl-meta">
+        <div><dt>适用对象</dt><dd>{d.audience.join('、') || '通用'}</dd></div>
+        <div><dt>最后核对</dt><dd><time datetime={d.verifiedDate.toISOString()}>{formatDate(d.verifiedDate)}</time></dd></div>
+        <div><dt>标签</dt><dd>{d.tags.join('、') || '—'}</dd></div>
+        {d.example && <div><dt>类型</dt><dd><span class="tag tag-warn">示例</span></dd></div>}
+      </dl>
+      <div class="cl-toolbar no-print">
+        <button type="button" class="btn btn-primary btn-sm" data-cl-print>打印 / 导出 PDF</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-cl-reset>重置勾选</button>
+        <span class="cl-progress-label">
+          进度: <span data-cl-progress-text>0%</span>
+        </span>
+        <div class="progress cl-progress" aria-hidden="true"><div data-cl-progress-bar style="width: 0%"></div></div>
+      </div>
+    </header>
+
+    {d.example && (
+      <div class="notice notice-warn">
+        <strong>这是示例 / 演示清单</strong>。清单结构和流程展示用,具体执行以你的实际业务和最新法规为准。
+      </div>
+    )}
+
+    <div class="prose cl-prose">
+      <Content />
+    </div>
+
+    <section class="cl-sources">
+      <h2>来源提示</h2>
+      <ul>
+        {d.sourceUrls.map((s) => (
+          <li><a href={s.url} target="_blank" rel="noopener noreferrer">{s.name}</a></li>
+        ))}
+      </ul>
+    </section>
+
+    <div class="notice notice-danger">
+      <strong>免责声明:</strong>本清单是辅助准备工具,<strong>不构成法律、税务、认证或专业合规意见</strong>。
+      具体执行请查阅原始来源,或咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .cl-head { margin-bottom: 1.5rem; }
+  .cl-summary {
+    color: var(--color-ink-700);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin: 0.5em 0 1em 0;
+  }
+  .cl-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.7rem 1.2rem;
+    background: var(--color-ink-50);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.1rem;
+    margin: 0 0 1.2rem 0;
+  }
+  .cl-meta div { display: flex; flex-direction: column; }
+  .cl-meta dt {
+    font-size: 0.78rem;
+    color: var(--color-ink-500);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.2em;
+  }
+  .cl-meta dd { margin: 0; color: var(--color-ink-900); font-size: 0.95rem; }
+
+  .cl-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-100);
+    border-radius: var(--radius);
+    padding: 0.7rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .cl-progress-label { font-size: 0.9rem; color: var(--color-ink-700); font-weight: 500; }
+  .cl-progress { flex: 1; min-width: 120px; }
+
+  .cl-prose :global(ul) { list-style: none; padding-left: 0; }
+  .cl-prose :global(ul li) {
+    display: flex;
+    gap: 0.6em;
+    padding: 0.55em 0.6em;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    margin: 0.4em 0;
+    align-items: flex-start;
+    background: #fff;
+  }
+  .cl-prose :global(ul li::before) { content: none; }
+  .cl-prose :global(ul li input[type='checkbox']) {
+    margin-top: 0.3em;
+    width: 1.1em;
+    height: 1.1em;
+    flex-shrink: 0;
+    accent-color: var(--color-primary-600);
+    cursor: pointer;
+  }
+  .cl-prose :global(ul li label) { cursor: pointer; line-height: 1.55; flex: 1; }
+  .cl-prose :global(ul li input:checked + label),
+  .cl-prose :global(ul li:has(input:checked)) { color: var(--color-ink-400); text-decoration: line-through; }
+
+  .cl-sources { margin-top: 2.5rem; }
+  .cl-sources h2 { font-size: 1.2rem; }
+  .cl-sources ul { padding-left: 1.4em; }
+</style>
+
+<script>
+  function setup() {
+    const printBtn = document.querySelector('[data-cl-print]') as HTMLButtonElement | null;
+    const resetBtn = document.querySelector('[data-cl-reset]') as HTMLButtonElement | null;
+    const bar = document.querySelector('[data-cl-progress-bar]') as HTMLElement | null;
+    const text = document.querySelector('[data-cl-progress-text]') as HTMLElement | null;
+
+    const checks = Array.from(document.querySelectorAll<HTMLInputElement>('.cl-prose input[type="checkbox"]'));
+    const key = `cl-progress::${location.pathname}`;
+
+    // 恢复状态
+    let saved: Record<string, boolean> = {};
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) saved = JSON.parse(raw);
+    } catch {}
+    checks.forEach((c, i) => {
+      const id = c.id || `cl-${i}`;
+      c.id = id;
+      if (saved[id]) c.checked = true;
+    });
+    update();
+
+    checks.forEach((c) => {
+      c.addEventListener('change', () => {
+        const all: Record<string, boolean> = {};
+        checks.forEach((cc) => { if (cc.id && cc.checked) all[cc.id] = true; });
+        try { localStorage.setItem(key, JSON.stringify(all)); } catch {}
+        update();
+      });
+    });
+
+    printBtn?.addEventListener('click', () => window.print());
+    resetBtn?.addEventListener('click', () => {
+      checks.forEach((c) => { c.checked = false; });
+      try { localStorage.removeItem(key); } catch {}
+      update();
+    });
+
+    function update() {
+      const total = checks.length;
+      const done = checks.filter((c) => c.checked).length;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+      if (bar) bar.style.width = `${pct}%`;
+      if (text) text.textContent = `${pct}%`;
+    }
+  }
+  setup();
+</script>

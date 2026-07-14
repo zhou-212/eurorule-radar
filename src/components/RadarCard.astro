@@ -1,0 +1,132 @@
+---
+import type { RadarEntry } from '../lib/radar';
+import { getRiskClass, getStatusClass, getContentKindClass } from '../lib/radar';
+import { formatDate } from '../lib/date';
+import { withBase } from '../lib/url';
+
+interface Props {
+  entry: RadarEntry;
+  showDate?: 'updated' | 'effective' | 'deadline';
+}
+
+const { entry, showDate = 'updated' } = Astro.props;
+const d = entry.data;
+const href = withBase(`/radar/${entry.id.replace(/\.(md|mdx)$/, '')}/`);
+const date = showDate === 'effective' ? d.effectiveDate : showDate === 'deadline' ? d.deadlineDate : d.verifiedDate;
+const dateLabel = showDate === 'effective' ? '生效' : showDate === 'deadline' ? '截止' : '核对';
+---
+
+<article class="radar-card card card-hover">
+  <div class="radar-card-top">
+    <span class={`risk ${getRiskClass(d.riskLevel)}`}>风险:{d.riskLevel}</span>
+    <span class={`status ${getStatusClass(d.status)}`}>{d.status}</span>
+    <span class={`kind ${getContentKindClass(d.contentKind)}`} title={`内容状态:${d.contentKind}`}>{d.contentKind}</span>
+  </div>
+  <h3 class="radar-card-title">
+    <a href={href}>{d.title}</a>
+  </h3>
+  <p class="radar-card-summary">{d.summary}</p>
+  <div class="radar-card-tags">
+    {d.countries.slice(0, 3).map((c) => <span class="tag">{c}</span>)}
+    {d.categories.slice(0, 2).map((c) => <span class="tag tag-primary">{c}</span>)}
+  </div>
+  <div class="radar-card-meta">
+    {date ? (
+      <span class="radar-card-date"><strong>{dateLabel}:</strong> <time datetime={date.toISOString()}>{formatDate(date)}</time></span>
+    ) : (
+      <span class="radar-card-date"><strong>{dateLabel}:</strong> 持续关注</span>
+    )}
+    <a href={href} class="radar-card-link" aria-label={`查看 ${d.title} 详情`}>查看详情 →</a>
+  </div>
+</article>
+
+<style>
+  .radar-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .radar-card-top {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .radar-card-title {
+    font-size: 1.08rem;
+    margin: 0.1em 0 0 0;
+    line-height: 1.4;
+  }
+  .radar-card-title a {
+    color: var(--color-ink-900);
+    text-decoration: none;
+  }
+  .radar-card-title a:hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+  }
+  .radar-card-summary {
+    color: var(--color-ink-600);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .radar-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .radar-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 0.5em;
+    border-top: 1px solid var(--color-ink-100);
+    font-size: 0.85rem;
+    color: var(--color-ink-500);
+    flex-wrap: wrap;
+    gap: 0.5em;
+  }
+  .radar-card-link {
+    color: var(--color-primary-700);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .radar-card-link:hover { text-decoration: underline; }
+
+  /* 内容状态(基础规则 / 近期更新 / 示例 / 待核实) */
+  .kind {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2em 0.65em;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: 1px solid;
+    line-height: 1.5;
+  }
+  .kind-basic {
+    background: var(--color-ink-50);
+    color: var(--color-ink-700);
+    border-color: var(--color-ink-200);
+  }
+  .kind-update {
+    background: var(--color-accent-50);
+    color: var(--color-accent-700);
+    border-color: var(--color-accent-100);
+  }
+  .kind-example {
+    background: var(--color-warn-bg);
+    color: var(--color-warn-text);
+    border-color: var(--color-warn-border);
+  }
+  .kind-pending {
+    background: #f5f3ff;
+    color: #6d28d9;
+    border-color: #ddd6fe;
+  }
+</style>

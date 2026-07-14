@@ -1,0 +1,120 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+# =================================================================
+# 部署模式:
+#   模式 A — 自定义域名根路径:
+#     - 在 GitHub 仓库 Settings → Secrets and variables → Actions → Variables
+#       添加 SITE = 你的完整生产 URL(如 https://eurorule.example.com)
+#     - 可选:另添加 BASE 变量覆盖默认 /,一般不需要
+#     - 在 public/CNAME.example 复制为 public/CNAME,内容改为一行真实域名
+#
+#   模式 B — GitHub Pages 项目页(默认):
+#     - 不设 SITE / 不设 BASE,工作流自动:
+#         SITE = https://<owner>.github.io/eurorule-radar
+#         BASE = /eurorule-radar/
+#     - 站内所有链接、sitemaps、RSS、canonical、OG、面包屑
+#       都会自动加上 /eurorule-radar/ 前缀
+#
+#   模式 C — GitHub Pages 项目页 + 自定义 BASE:
+#     - 不设 SITE(自动拼)
+#     - 添加 BASE 变量(覆盖默认 /eurorule-radar/)
+#     - 例如把站点放在 https://<owner>.github.io/eu-radar/ 时:
+#         BASE=/eu-radar/
+# =================================================================
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Determine SITE and BASE
+        id: site_base
+        run: |
+          if [ -n "${{ vars.SITE }}" ]; then
+            SITE_VALUE="${{ vars.SITE }}"
+            echo "Using custom SITE from GitHub Variables: $SITE_VALUE"
+          else
+            SITE_VALUE="https://${GITHUB_REPOSITORY_OWNER}.github.io/eurorule-radar"
+            echo "Using default GitHub Pages URL: $SITE_VALUE"
+          fi
+          echo "site=$SITE_VALUE" >> "$GITHUB_OUTPUT"
+
+          # BASE 优先从 vars.BASE 读,缺省:
+          #   - 自定义 SITE (vars.SITE 存在) -> /
+          #   - 否则(项目页默认) -> /eurorule-radar/
+          if [ -n "${{ vars.BASE }}" ]; then
+            BASE_VALUE="${{ vars.BASE }}"
+            echo "Using custom BASE from GitHub Variables: $BASE_VALUE"
+          elif [ -n "${{ vars.SITE }}" ]; then
+            BASE_VALUE="/"
+            echo "Custom SITE set, defaulting BASE to /"
+          else
+            BASE_VALUE="/eurorule-radar/"
+            echo "GitHub Pages project page, defaulting BASE to /eurorule-radar/"
+          fi
+          # 归一化:确保以 / 开头、非根时尾部带 /
+          case "$BASE_VALUE" in
+            "") BASE_VALUE="/" ;;
+          esac
+          if [ "$BASE_VALUE" != "/" ]; then
+            case "$BASE_VALUE" in
+              /*) ;;
+              *)  BASE_VALUE="/$BASE_VALUE" ;;
+            esac
+            case "$BASE_VALUE" in
+              */) ;;
+              *)  BASE_VALUE="$BASE_VALUE/" ;;
+            esac
+          fi
+          echo "base=$BASE_VALUE" >> "$GITHUB_OUTPUT"
+          echo "Final: SITE=$SITE_VALUE  BASE=$BASE_VALUE"
+
+      - name: Build
+        env:
+          SITE: ${{ steps.site_base.outputs.site }}
+          BASE: ${{ steps.site_base.outputs.base }}
+        run: npm run build:fast
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

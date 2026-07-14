@@ -1,0 +1,16 @@
+{
+  "name": "欧规雷达 EuroRule Radar",
+  "short_name": "欧规雷达",
+  "description": "面向中国亚马逊欧洲站中小卖家的规则变化追踪与执行清单",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3730a3",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

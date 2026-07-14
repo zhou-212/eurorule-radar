@@ -1,0 +1,209 @@
+---
+/**
+ * 订阅表单(默认禁用,后端接入前不发送任何数据)
+ * ----------------------------------------------------------------
+ * 启用条件:用户部署时复制 public/runtime-config.example.js 为
+ *   public/runtime-config.js,并填入 API_BASE_URL
+ *
+ * 工作流:
+ *   1. 默认:表单字段全部 disabled,提交按钮显示"订阅功能即将开放",
+ *      不会发出任何网络请求;UI 明确告知当前状态。
+ *   2. 启用(window.__EURORULE_RUNTIME_CONFIG__.API_BASE_URL 合法):
+ *      字段可填,提交时 POST JSON 到
+ *        {API_BASE_URL}/api/v1/subscriptions
+ *      body = { email, topics: string[], consent: boolean }
+ *   3. API 不可用 / 网络失败:显示明确失败提示,绝不假装成功。
+ * ----------------------------------------------------------------
+ */
+import { withBase } from '../lib/url';
+---
+
+<form class="sub-form" data-sub-form novalidate aria-label="订阅每周规则汇总">
+  <p class="sub-notice" data-sub-notice>
+    <strong>订阅功能筹备中:</strong>当前不会提交或保存你的邮箱。
+    启用后才会通过自建后端发送每周汇总。
+    详见 <a href={withBase('/privacy/')}>隐私说明</a>。
+  </p>
+  <div class="sub-row">
+    <label class="label" for="sub-email">你的邮箱</label>
+    <input
+      type="email"
+      id="sub-email"
+      name="email"
+      class="input"
+      placeholder="you@example.com"
+      autocomplete="email"
+      required
+      disabled
+    />
+  </div>
+  <div class="sub-row">
+    <label class="label" for="sub-country">主要销售国家(可多选)</label>
+    <select id="sub-country" name="country" class="select" multiple size="4" disabled>
+      <option value="DE">德国</option>
+      <option value="FR">法国</option>
+      <option value="IT">意大利</option>
+      <option value="ES">西班牙</option>
+      <option value="NL">荷兰</option>
+      <option value="PL">波兰</option>
+      <option value="SE">瑞典</option>
+      <option value="OTHER">其它</option>
+    </select>
+    <p class="form-help">按住 Ctrl/Cmd 多选。</p>
+  </div>
+  <div class="sub-row sub-row-check">
+    <label class="sub-check">
+      <input type="checkbox" name="agree" required disabled />
+      <span>我已阅读并接受 <a href={withBase('/privacy/')} target="_blank" rel="noopener">隐私说明</a> 和 <a href={withBase('/disclaimer/')} target="_blank" rel="noopener">免责声明</a>。</span>
+    </label>
+  </div>
+  <button type="submit" class="btn btn-primary sub-submit" data-sub-submit disabled>
+    订阅功能即将开放
+  </button>
+  <p class="sub-status" data-sub-status aria-live="polite"></p>
+</form>
+
+<style>
+  .sub-form {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.4rem;
+  }
+  .sub-row { margin-bottom: 1rem; }
+  .sub-row-check { display: flex; align-items: flex-start; gap: 0.4em; }
+  .sub-check { display: flex; gap: 0.5em; align-items: flex-start; font-size: 0.9rem; cursor: pointer; }
+  .sub-check input { margin-top: 0.25em; }
+  .sub-submit { width: 100%; justify-content: center; }
+  .sub-submit:disabled {
+    background: var(--color-ink-200);
+    color: var(--color-ink-600);
+    cursor: not-allowed;
+    border-color: var(--color-ink-300);
+  }
+  .sub-status { margin: 0.5em 0 0 0; font-size: 0.9rem; min-height: 1.4em; }
+  .sub-status.is-ok { color: var(--color-accent-600); }
+  .sub-status.is-err { color: var(--color-risk-high-text); }
+  .sub-notice {
+    background: var(--color-info-bg);
+    border-left: 3px solid #3b82f6;
+    border-radius: var(--radius);
+    padding: 0.7em 1em;
+    font-size: 0.88rem;
+    color: var(--color-ink-700);
+    margin: 0 0 1rem 0;
+  }
+  .sub-notice strong { color: var(--color-info-text); }
+  .sub-form.is-enabled .sub-notice {
+    background: var(--color-warn-bg);
+    border-left-color: #d97706;
+  }
+  .sub-form.is-enabled .sub-notice strong { color: var(--color-warn-text); }
+</style>
+
+<script>
+  // ================================================================
+  // 订阅表单行为:
+  //   1) 读 window.__EURORULE_RUNTIME_CONFIG__.API_BASE_URL
+  //   2) 合法(https:// 开头) -> 启用表单,提交时 POST JSON 到
+  //        {API_BASE_URL}/api/v1/subscriptions
+  //   3) 不合法 / 缺失 -> 维持禁用,显示"订阅功能即将开放"
+  // ================================================================
+
+  type RuntimeConfig = { API_BASE_URL?: string };
+  const cfg: RuntimeConfig = (typeof window !== 'undefined'
+    ? (window as unknown as { __EURORULE_RUNTIME_CONFIG__?: RuntimeConfig }).__EURORULE_RUNTIME_CONFIG__
+    : null) || {};
+
+  const apiBase = (cfg.API_BASE_URL || '').trim();
+  const apiEnabled = /^https:\/\//i.test(apiBase);
+
+  const form = document.querySelector('[data-sub-form]') as HTMLFormElement | null;
+  const status = document.querySelector('[data-sub-status]') as HTMLElement | null;
+  const notice = document.querySelector('[data-sub-notice]') as HTMLElement | null;
+  const submit = document.querySelector('[data-sub-submit]') as HTMLButtonElement | null;
+
+  if (form && submit) {
+    if (apiEnabled) {
+      // 启用后:解除所有字段禁用,改文案 + 提示色
+      form.classList.add('is-enabled');
+      form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select, button').forEach((el) => {
+        el.disabled = false;
+      });
+      submit.textContent = '订阅每周汇总';
+      if (notice) {
+        // 用 data-privacy 读 BaseLayout 提供的、已经带 BASE 前缀的链接
+        const privacyHref = (document.querySelector('[data-privacy-href]') as HTMLAnchorElement | null)?.getAttribute('href') || '/privacy';
+        notice.innerHTML =
+          '<strong>订阅功能已启用:</strong>提交后将通过自建后端保存你的邮箱,' +
+          '用于发送每周规则汇总。可在 <a href="' + privacyHref + '">隐私说明</a> 查看数据处理方式。';
+      }
+    }
+    // 禁用 / 启用都接 submit,只是为了"不让浏览器把 disabled 字段算 invalid";
+    // 我们自己手动校验
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!status) return;
+      const data = new FormData(form);
+      const email = ((data.get('email') as string | null) || '').trim();
+      const agree = data.get('agree');
+      const country = (data.getAll('country') as string[]).filter(Boolean);
+
+      if (!apiEnabled) {
+        status.textContent = '订阅功能尚未启用,不会提交任何数据。';
+        status.className = 'sub-status is-err';
+        return;
+      }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        status.textContent = '请输入有效的邮箱地址。';
+        status.className = 'sub-status is-err';
+        return;
+      }
+      if (!agree) {
+        status.textContent = '请勾选隐私与免责声明确认。';
+        status.className = 'sub-status is-err';
+        return;
+      }
+
+      const payload = {
+        email,
+        topics: country,
+        consent: true,
+      };
+
+      submit.disabled = true;
+      const oldText = submit.textContent;
+      submit.textContent = '提交中…';
+      status.textContent = '';
+      status.className = 'sub-status';
+
+      try {
+        const res = await fetch(`${apiBase}/api/v1/subscriptions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          // 4xx / 5xx:显示明确失败,绝不假装成功
+          let detail = '';
+          try {
+            const j = await res.json();
+            if (j && typeof j === 'object' && j.message) detail = String(j.message);
+          } catch {}
+          status.textContent = `提交失败(${res.status}${detail ? ': ' + detail : ''}),请稍后重试或联系管理员。`;
+          status.className = 'sub-status is-err';
+          return;
+        }
+        status.textContent = '✓ 已订阅。我们会按隐私说明使用你的邮箱。';
+        status.className = 'sub-status is-ok';
+        form.reset();
+      } catch (err) {
+        status.textContent = '提交失败:无法连接到后端 API。请稍后重试。';
+        status.className = 'sub-status is-err';
+      } finally {
+        submit.disabled = false;
+        submit.textContent = oldText || '订阅每周汇总';
+      }
+    });
+  }
+</script>

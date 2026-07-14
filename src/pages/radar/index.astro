@@ -1,0 +1,236 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RadarCard from '../../components/RadarCard.astro';
+import { getRadarRules, getContentKindKey, type ContentKind } from '../../lib/radar-source';
+import { SITE_DEFAULTS } from '../../lib/radar';
+import { withBase, siteAsDir } from '../../lib/url';
+
+// 数据源切换:getCollection('radar') → getRadarRules()(优先 API,失败 fallback 静态)
+let radars: Awaited<ReturnType<typeof getRadarRules>> = [];
+try {
+  radars = await getRadarRules();
+} catch (err) {
+  // eslint-disable-next-line no-console
+  console.error('[radar/index.astro] getRadarRules failed, rendering empty:', (err as Error).message);
+  radars = [];
+}
+
+const allCountries = Array.from(new Set(radars.flatMap((r) => r.data.countries))).sort();
+const allCategories = Array.from(new Set(radars.flatMap((r) => r.data.categories))).sort();
+const allSellerTypes = Array.from(new Set(radars.flatMap((r) => r.data.sellerTypes || []))).sort();
+const allStatuses = ['生效中', '即将生效', '持续关注', '待核实'];
+const allRisks = ['高', '中', '低'];
+// 内容状态:用英文键做 select value(与后端 API contentKind 字段精确匹配),
+// 可见文本保留中文(不动 select 文案)
+const allKinds: { value: ContentKind; label: string }[] = [
+  { value: 'basic', label: '基础规则' },
+  { value: 'update', label: '近期更新' },
+  { value: 'example', label: '示例' },
+  { value: 'pending', label: '待核实' },
+];
+// 计数:用英文 key 统计,显示用中文 label
+const kindCount: Record<ContentKind, number> = {
+  basic: 0, update: 0, example: 0, pending: 0,
+};
+radars.forEach((r) => { kindCount[getContentKindKey(r)] += 1; });
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '规则雷达', item: siteStr ? `${siteStr}radar/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="规则雷达 · 全部规则"
+  description="亚马逊欧洲站规则雷达:可按国家、主题、风险等级、状态筛选;每条规则附原始来源与核对日期。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>规则雷达</span>
+    </nav>
+    <h1>规则雷达</h1>
+    <p class="page-intro">{SITE_DEFAULTS.description}共 {radars.length} 条规则;所有规则均附原始来源与最近核对日期。
+      <strong>内容状态分布:</strong>
+      基础规则 {kindCount.basic} 条 / 近期更新 {kindCount.update} 条 / 示例 {kindCount.example} 条 / 待核实 {kindCount.pending} 条。
+    </p>
+
+    <!-- 搜索 + 筛选(纯前端) -->
+    <div class="filter-bar" role="search">
+      <div class="filter-row">
+        <label for="search" class="sr-only">搜索</label>
+        <input
+          type="search"
+          id="search"
+          class="input"
+          placeholder="搜索标题、摘要、关键词..."
+          data-radar-search
+          autocomplete="off"
+        />
+      </div>
+      <div class="filter-row filter-row-grid">
+        <div>
+          <label for="f-country" class="label">国家/地区</label>
+          <select id="f-country" class="select" data-radar-filter="countries">
+            <option value="">全部</option>
+            {allCountries.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="f-cat" class="label">主题</label>
+          <select id="f-cat" class="select" data-radar-filter="categories">
+            <option value="">全部</option>
+            {allCategories.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="f-seller" class="label">卖家类型</label>
+          <select id="f-seller" class="select" data-radar-filter="sellerTypes">
+            <option value="">全部</option>
+            {allSellerTypes.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="f-risk" class="label">风险等级</label>
+          <select id="f-risk" class="select" data-radar-filter="riskLevel">
+            <option value="">全部</option>
+            {allRisks.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="f-status" class="label">状态</label>
+          <select id="f-status" class="select" data-radar-filter="status">
+            <option value="">全部</option>
+            {allStatuses.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label for="f-kind" class="label">内容状态</label>
+          <select id="f-kind" class="select" data-radar-filter="contentKind">
+            <option value="">全部</option>
+            {allKinds.map((k) => <option value={k.value}>{k.label}</option>)}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <p class="result-count" data-result-count>{radars.length} 条规则</p>
+
+    <div class="grid grid-2" data-radar-list>
+      {radars.map((r) => (
+        <div
+          data-radar-item
+          data-countries={r.data.countries.join('|')}
+          data-categories={r.data.categories.join('|')}
+          data-seller-types={(r.data.sellerTypes || []).join('|')}
+          data-risk-level={r.data.riskLevel}
+          data-status={r.data.status}
+          data-content-kind={getContentKindKey(r)}
+          data-search-text={`${r.data.title} ${r.data.summary} ${r.data.categories.join(' ')} ${r.data.countries.join(' ')}`.toLowerCase()}
+        >
+          <RadarCard entry={r} />
+        </div>
+      ))}
+    </div>
+
+    <div class="empty-state" data-empty hidden>
+      <p>没有匹配的规则。试试清空筛选或换个关键词。</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    color: var(--color-ink-600);
+    font-size: 1rem;
+    max-width: 60ch;
+    margin: 0 0 2rem 0;
+  }
+  .filter-bar {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .filter-row { margin-bottom: 0.85rem; }
+  .filter-row:last-child { margin-bottom: 0; }
+  .filter-row-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  @media (max-width: 880px) {
+    .filter-row-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 480px) {
+    .filter-row-grid { grid-template-columns: 1fr; }
+  }
+  .result-count {
+    font-size: 0.9rem;
+    color: var(--color-ink-500);
+    margin: 0 0 1rem 0;
+  }
+  .empty-state {
+    background: var(--color-ink-50);
+    border: 1px dashed var(--color-ink-300);
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--color-ink-500);
+  }
+</style>
+
+<script>
+  const search = document.querySelector('[data-radar-search]') as HTMLInputElement | null;
+  const filters = document.querySelectorAll('[data-radar-filter]') as NodeListOf<HTMLSelectElement>;
+  const items = document.querySelectorAll('[data-radar-item]') as NodeListOf<HTMLElement>;
+  const counter = document.querySelector('[data-result-count]') as HTMLElement | null;
+  const empty = document.querySelector('[data-empty]') as HTMLElement | null;
+
+  function applyFilters() {
+    const q = (search?.value || '').trim().toLowerCase();
+    const filterState: Record<string, string> = {};
+    filters.forEach((f) => {
+      const key = f.dataset.radarFilter || '';
+      filterState[key] = f.value;
+    });
+    let visible = 0;
+    items.forEach((it) => {
+      const text = it.dataset.searchText || '';
+      const matchesSearch = !q || text.includes(q);
+      let matchesAll = true;
+      for (const [key, val] of Object.entries(filterState)) {
+        if (!val) continue;
+        const dataKey =
+          key === 'countries' ? 'countries' :
+          key === 'categories' ? 'categories' :
+          key === 'sellerTypes' ? 'sellerTypes' :
+          key === 'riskLevel' ? 'riskLevel' :
+          key === 'contentKind' ? 'contentKind' :
+          'status';
+        const list = (it.dataset[dataKey] || '').split('|').filter(Boolean);
+        if (key === 'riskLevel' || key === 'status' || key === 'contentKind') {
+          if (it.dataset[dataKey] !== val) { matchesAll = false; break; }
+        } else {
+          if (!list.includes(val)) { matchesAll = false; break; }
+        }
+      }
+      const show = matchesSearch && matchesAll;
+      it.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    if (counter) counter.textContent = `${visible} 条规则`;
+    if (empty) empty.hidden = visible > 0;
+  }
+  search?.addEventListener('input', applyFilters);
+  filters.forEach((f) => f.addEventListener('change', applyFilters));
+</script>

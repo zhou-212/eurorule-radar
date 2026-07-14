@@ -1,0 +1,51 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ChecklistCard from '../../components/ChecklistCard.astro';
+import { getCollection } from 'astro:content';
+import { withBase, siteAsDir } from '../../lib/url';
+
+const checklists = (await getCollection('checklists'))
+  .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate);
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '行动清单', item: siteStr ? `${siteStr}checklists/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="行动清单"
+  description="亚马逊欧洲站常用合规行动清单:开店、上架、合规通知应对。所有清单可勾选、可打印为 PDF。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>行动清单</span>
+    </nav>
+    <h1>行动清单</h1>
+    <p class="page-intro">
+      每个清单都可在浏览器中<strong>勾选</strong>、<strong>打印为 PDF</strong>(或保存到本地)。所有清单附来源提示与免责声明。
+    </p>
+
+    <div class="grid grid-2">
+      {checklists.map((c) => <ChecklistCard entry={c} />)}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    color: var(--color-ink-600);
+    font-size: 1rem;
+    max-width: 60ch;
+    margin: 0 0 2rem 0;
+  }
+</style>

@@ -1,0 +1,108 @@
+---
+import { withBase } from '../lib/url';
+
+const year = new Date().getFullYear();
+const lastUpdated = new Date().toISOString().slice(0, 10);
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-brand">欧规雷达 · EuroRule Radar</p>
+        <p class="footer-tag">欧洲站规则变化,转成你今天能执行的清单。</p>
+      </div>
+      <nav aria-label="页脚导航">
+        <h3 class="footer-h">导航</h3>
+        <ul>
+          <li><a href={withBase('/radar/')}>规则雷达</a></li>
+          <li><a href={withBase('/checklists/')}>行动清单</a></li>
+          <li><a href={withBase('/calendar/')}>截止日历</a></li>
+          <li><a href={withBase('/self-check/')}>影响自测</a></li>
+          <li><a href={withBase('/about/')}>关于我们</a></li>
+        </ul>
+      </nav>
+      <nav aria-label="法律信息">
+        <h3 class="footer-h">法律</h3>
+        <ul>
+          <li><a href={withBase('/disclaimer/')}>免责声明</a></li>
+          <li><a href={withBase('/privacy/')}>隐私说明</a></li>
+          <li><a href={withBase('/rss.xml')}>RSS 订阅</a></li>
+        </ul>
+      </nav>
+      <div>
+        <h3 class="footer-h">联系</h3>
+        <p class="footer-meta">最后更新:<time datetime={lastUpdated}>{lastUpdated}</time></p>
+        <p class="footer-meta">© {year} 欧规雷达</p>
+      </div>
+    </div>
+    <p class="footer-disclaimer">
+      本网站是信息整理和辅助判断工具,<strong>不构成法律、税务、认证或专业合规意见</strong>。
+      所有规则与日期以原始来源为准;本站不对使用本站信息造成的损失承担责任。
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--color-ink-50);
+    border-top: 1px solid var(--color-ink-200);
+    padding: 2.5rem 0 2rem 0;
+    margin-top: 4rem;
+    font-size: 0.9rem;
+    color: var(--color-ink-600);
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  @media (max-width: 720px) {
+    .footer-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 480px) {
+    .footer-grid { grid-template-columns: 1fr; }
+  }
+  .footer-brand {
+    font-weight: 600;
+    color: var(--color-ink-900);
+    margin: 0 0 0.2em 0;
+  }
+  .footer-tag {
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+  .footer-h {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-ink-500);
+    margin: 0 0 0.5em 0;
+  }
+  .site-footer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .site-footer li { margin: 0.3em 0; }
+  .site-footer a {
+    color: var(--color-ink-700);
+    text-decoration: none;
+  }
+  .site-footer a:hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+  }
+  .footer-meta { margin: 0.2em 0; font-size: 0.85rem; }
+  .footer-disclaimer {
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-ink-200);
+    font-size: 0.82rem;
+    color: var(--color-ink-500);
+    margin: 0;
+  }
+</style>

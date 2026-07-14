@@ -1,0 +1,103 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '关于我们', item: siteStr ? `${siteStr}about/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="关于我们"
+  description="欧规雷达的使命、信息来源与编辑原则、更新机制、免责声明和联系方式。"
+  jsonLd={breadcrumb}
+>
+  <div class="container about-wrap">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>关于我们</span>
+    </nav>
+
+    <h1>关于我们</h1>
+
+    <section>
+      <h2>网站使命</h2>
+      <p>欧规雷达(<strong>EuroRule Radar</strong>)面向中国亚马逊欧洲站中小卖家,把分散、复杂、更新快的规则变化整理为<strong>中文、清晰、可执行、可追溯来源</strong>的规则卡片与检查清单,帮助你在第一时间判断"是否影响我、什么时候、做什么"。</p>
+      <p>我们不做泛资讯门户,也不做通用 AI 聊天机器人;我们聚焦一件事:把规则变化转成你今天能完成的行动清单。</p>
+    </section>
+
+    <section>
+      <h2>信息来源与编辑原则</h2>
+      <h3>来源白名单</h3>
+      <ul>
+        <li>Amazon Seller Central(欧洲各国)</li>
+        <li>欧盟委员会 + EUR-Lex(法规原文)</li>
+        <li>欧盟各成员国主管机构(如德国 LUCID、法国 Citeo 等)</li>
+        <li>欧盟官方税务 / 环保 / 产品安全机构</li>
+        <li>权威标准或认证机构的原文说明</li>
+      </ul>
+      <h3>编辑原则</h3>
+      <ol>
+        <li>每条规则附原始来源 + 核对日期</li>
+        <li>未核实的标注"示例 / 待核实",不写成确定事实</li>
+        <li>不杜撰法规结论、链接、日期或处罚后果</li>
+        <li>优先中文化 + 拆分复杂句子,避免堆砌术语</li>
+        <li>涉及金额、罚款、日期等数字,标注"以原始来源为准"</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>更新机制</h2>
+      <p>本站按"每周一次"节奏更新;每条规则有"核对日期"字段,运营对超过 90 天未核对的规则优先复核。</p>
+      <p>遇到重大政策变化(例如新 EU 指令生效、平台重大公告),会在 24-48 小时内发布专题卡。</p>
+      <p>内容运营 SOP(白名单、核对步骤、写作风格)请查看项目仓库中的
+        <code>CONTENT_GUIDE.md</code> / <code>README.md</code>(开发者文档,不在本站展示)。
+      </p>
+    </section>
+
+    <section>
+      <h2>提交规则线索</h2>
+      <p>如果你是卖家,看到一条新的官方公告 / 法规变化,想让团队优先处理,可以发送线索给我们:</p>
+      <ul>
+        <li>📮 邮箱占位:<code>YOUR_CONTACT_EMAIL@example.com</code>(部署前在 <code>src/lib/radar.ts</code> 替换为你的真实邮箱)</li>
+        <li>🛠 GitHub Issues(占位):<a href="https://github.com/YOUR_GITHUB_USER/eurorule-radar/issues">github.com/YOUR_GITHUB_USER/eurorule-radar/issues</a></li>
+      </ul>
+      <p>提交时请提供:</p>
+      <ol>
+        <li>原始链接(官方公告、EUR-Lex 条目、平台 Seller Central 页面)</li>
+        <li>发布日期和生效日期</li>
+        <li>你认为涉及的卖家类型 / 类目 / 国家</li>
+        <li>(可选)你认为最重要的 1-2 个行动项</li>
+      </ol>
+      <p>我们收到后会在 7 天内评估并发布。</p>
+    </section>
+
+    <section>
+      <h2>联系 / 团队</h2>
+      <p>欧规雷达目前由 <strong>个人开发者 + AI 协作</strong> 维护。我们有意控制规模,把"内容质量"和"运营可持续性"放在"功能数量"前面。</p>
+      <p>一般联系:<code>YOUR_CONTACT_EMAIL@example.com</code>(占位,部署前替换)</p>
+    </section>
+
+    <div class="notice notice-danger">
+      <strong>免责声明:</strong>本站是信息整理和辅助判断工具,<strong>不构成法律、税务、认证或专业合规意见</strong>。
+      具体执行请咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .about-wrap { max-width: 760px; }
+  section { margin-bottom: 2rem; }
+  section h2 { font-size: 1.4rem; margin-bottom: 0.5em; }
+  section h3 { font-size: 1.1rem; margin-top: 1em; margin-bottom: 0.4em; }
+  ul, ol { color: var(--color-ink-700); }
+  code { background: var(--color-ink-100); padding: 0.1em 0.4em; border-radius: 4px; }
+</style>

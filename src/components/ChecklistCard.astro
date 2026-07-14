@@ -1,0 +1,46 @@
+---
+import type { ChecklistEntry } from '../lib/radar';
+import { formatDate } from '../lib/date';
+import { withBase } from '../lib/url';
+
+interface Props {
+  entry: ChecklistEntry;
+  showCheckbox?: boolean;
+}
+
+const { entry } = Astro.props;
+const d = entry.data;
+const href = withBase(`/checklists/${entry.id.replace(/\.(md|mdx)$/, '')}/`);
+---
+
+<article class="cl-card card card-hover">
+  <h3 class="cl-card-title">
+    <a href={href}>{d.title}</a>
+  </h3>
+  <p class="cl-card-summary">{d.summary}</p>
+  <div class="cl-card-meta">
+    <span class="cl-meta-row"><strong>适用:</strong> {d.audience.join('、') || '通用'}</span>
+    <span class="cl-meta-row"><strong>核对:</strong> <time datetime={d.verifiedDate.toISOString()}>{formatDate(d.verifiedDate)}</time></span>
+    {d.example && <span class="tag tag-warn">示例内容</span>}
+  </div>
+  <div class="cl-card-tags">
+    {d.tags.slice(0, 4).map((t) => <span class="tag">{t}</span>)}
+  </div>
+  <a href={href} class="btn btn-secondary btn-sm cl-card-btn">打开清单</a>
+</article>
+
+<style>
+  .cl-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .cl-card-title { font-size: 1.05rem; margin: 0; }
+  .cl-card-title a { color: var(--color-ink-900); text-decoration: none; }
+  .cl-card-title a:hover { color: var(--color-primary-700); text-decoration: underline; }
+  .cl-card-summary { color: var(--color-ink-600); font-size: 0.92rem; margin: 0; line-height: 1.55; }
+  .cl-card-meta { font-size: 0.85rem; color: var(--color-ink-500); display: flex; flex-direction: column; gap: 0.2em; }
+  .cl-meta-row strong { color: var(--color-ink-700); }
+  .cl-card-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .cl-card-btn { align-self: flex-start; margin-top: auto; }
+</style>

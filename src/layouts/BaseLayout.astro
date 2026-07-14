@@ -1,0 +1,124 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { withBase, isPlaceholderSite, siteAsDir } from '../lib/url';
+
+export interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  canonical?: string;
+  type?: 'website' | 'article';
+  publishedDate?: Date;
+  modifiedDate?: Date;
+  noindex?: boolean;
+  jsonLd?: object | object[];
+}
+
+const {
+  title,
+  description = '面向中国亚马逊欧洲站中小卖家的规则变化追踪、影响判断和执行清单。',
+  ogImage = '/og-default.svg',
+  canonical,
+  type = 'website',
+  publishedDate,
+  modifiedDate,
+  noindex = false,
+  jsonLd,
+} = Astro.props;
+
+// 站点绝对 origin(由 astro.config.mjs 的 site 注入)
+// 占位时 Astro.site 可能为 undefined
+const siteOrigin = siteAsDir(Astro.site); // 以 / 结尾,便于"site + path"拼接
+const placeholder = isPlaceholderSite(Astro.site);
+
+// canonical: 优先 props;否则由 Astro.url.pathname 拼 origin
+// Astro.url.pathname 已包含 BASE 前缀(astro 自动处理),所以拼出来的就是
+// https://<site>/<BASE>/<page>/ —— 两种部署模式都正确。
+const canonicalUrl = canonical
+  ? canonical
+  : siteOrigin
+    ? new URL(Astro.url.pathname, siteOrigin).toString()
+    : Astro.url.pathname;
+
+// og:image 必须是绝对 URL(社交平台会抓取)
+// 拼接规则:siteOrigin 已经包含项目路径(GH Pages 模式下),所以 ogImage
+// 应该是**相对于站点根**的路径,即 'og-default.svg' 或 '/og-default.svg',
+// 不能用 withBase() —— withBase 已经含 BASE 前缀,会与 siteOrigin 重复。
+const ogImageUrl = ogImage.startsWith('http')
+  ? ogImage
+  : siteOrigin
+    ? `${siteOrigin}${ogImage.replace(/^\//, '')}`
+    : '';
+
+const fullTitle = title.includes('欧规雷达') || title.includes('EuroRule')
+  ? title
+  : `${title} · 欧规雷达`;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <link rel="alternate" type="application/rss+xml" title="欧规雷达 · 规则雷达更新" href={withBase('/rss.xml')} />
+    <link rel="sitemap" href={withBase('/sitemap-index.xml')} />
+
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={canonicalUrl} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+    <meta property="og:site_name" content="欧规雷达" />
+    <meta property="og:locale" content="zh_CN" />
+    {publishedDate && <meta property="article:published_time" content={publishedDate.toISOString()} />}
+    {modifiedDate && <meta property="article:modified_time" content={modifiedDate.toISOString()} />}
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
+    {placeholder && !noindex && (
+      <!--
+        站点 SITE 未配置或仍是占位值。
+        防止搜索引擎索引到一个 host 不存在 / 路径错的页面。
+        配好 SITE 后这行会消失。
+      -->
+      <meta name="robots" content="noindex, nofollow" />
+    )}
+
+    {jsonLd && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={JSON.stringify(jsonLd)}
+      />
+    )}
+  </head>
+  <body>
+    <a href="#main" class="skip-link">跳到主要内容</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <!-- 提供 BASE-aware 的关键链接给 client script 读取,避免在 client script 里再 import url.ts -->
+    <a href={withBase('/privacy/')} data-privacy-href hidden aria-hidden="true">privacy</a>
+    <!--
+      运行时配置(可选):用户部署时复制 public/runtime-config.example.js 为
+      public/runtime-config.js 并填入 API_BASE_URL。失败时脚本载入失败,
+      SubscribeForm 会回退到"禁用 + 提示"模式。
+    -->
+    <script is:inline src={withBase('/runtime-config.js')} onerror="window.__EURORULE_RUNTIME_CONFIG__=window.__EURORULE_RUNTIME_CONFIG__||{}"></script>
+  </body>
+</html>

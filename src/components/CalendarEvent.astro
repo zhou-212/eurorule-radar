@@ -1,0 +1,85 @@
+---
+import { relativeDay } from '../lib/date';
+import { withBase } from '../lib/url';
+
+interface Event {
+  title: string;
+  date: string;
+  category: string;
+  countries: string[];
+  summary: string;
+  linkedRadarSlug?: string | null;
+  sourceUrl: string;
+  verifiedDate: string;
+  isExample?: boolean;
+}
+
+interface Props {
+  event: Event;
+}
+
+const { event } = Astro.props;
+const linkHref = event.linkedRadarSlug ? withBase(`/radar/${event.linkedRadarSlug}/`) : null;
+---
+
+<article class="ce-card card">
+  <div class="ce-date">
+    <time datetime={event.date}>
+      <span class="ce-day">{new Date(event.date).getDate()}</span>
+      <span class="ce-month">{new Date(event.date).toLocaleString('zh-CN', { month: 'short' })}</span>
+      <span class="ce-year">{new Date(event.date).getFullYear()}</span>
+    </time>
+    <div class="ce-rel">{relativeDay(event.date)}</div>
+  </div>
+  <div class="ce-body">
+    <div class="ce-tags">
+      <span class="tag tag-primary">{event.category}</span>
+      {event.countries.slice(0, 2).map((c) => <span class="tag">{c}</span>)}
+      {event.isExample && <span class="tag tag-warn">示例</span>}
+    </div>
+    <h3 class="ce-title">{event.title}</h3>
+    <p class="ce-summary">{event.summary}</p>
+    <div class="ce-meta">
+      {linkHref ? (
+        <a href={linkHref}>查看相关规则 →</a>
+      ) : (
+        <span class="ce-no-link">运营事件,无对应规则卡</span>
+      )}
+      <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" class="ce-source">来源 ↗</a>
+    </div>
+  </div>
+</article>
+
+<style>
+  .ce-card {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  @media (max-width: 540px) {
+    .ce-card { grid-template-columns: 80px 1fr; gap: 0.75rem; }
+  }
+  .ce-date {
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-100);
+    border-radius: var(--radius);
+    padding: 0.6em 0.4em;
+    text-align: center;
+    color: var(--color-primary-800);
+  }
+  .ce-date time { display: flex; flex-direction: column; line-height: 1.1; }
+  .ce-day { font-size: 1.6rem; font-weight: 700; }
+  .ce-month { font-size: 0.78rem; color: var(--color-primary-600); }
+  .ce-year { font-size: 0.72rem; color: var(--color-ink-500); }
+  .ce-rel { font-size: 0.75rem; color: var(--color-ink-600); margin-top: 0.4em; }
+  .ce-body { display: flex; flex-direction: column; gap: 0.5rem; }
+  .ce-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+  .ce-title { font-size: 1.05rem; margin: 0; }
+  .ce-summary { font-size: 0.92rem; color: var(--color-ink-600); margin: 0; line-height: 1.55; }
+  .ce-meta { font-size: 0.85rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .ce-meta a { color: var(--color-primary-700); text-decoration: none; }
+  .ce-meta a:hover { text-decoration: underline; }
+  .ce-no-link { color: var(--color-ink-500); }
+  .ce-source { color: var(--color-ink-600) !important; }
+</style>

@@ -1,0 +1,184 @@
+---
+import { withBase } from '../lib/url';
+
+const pathname = Astro.url.pathname;
+function isActive(href: string): boolean {
+  // href 已经包含 BASE 前缀,直接比较 pathname 即可
+  if (href === withBase('/')) return pathname === withBase('/') || pathname === withBase('');
+  return pathname === href || pathname.startsWith(href);
+}
+
+const links = [
+  { href: withBase('/radar/'), label: '规则雷达' },
+  { href: withBase('/checklists/'), label: '行动清单' },
+  { href: withBase('/calendar/'), label: '截止日历' },
+  { href: withBase('/self-check/'), label: '影响自测' },
+  { href: withBase('/about/'), label: '关于我们' },
+];
+---
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href={withBase('/')} class="brand" aria-label="欧规雷达 首页">
+      <span class="brand-mark" aria-hidden="true">ERR</span>
+      <span class="brand-text">
+        <span class="brand-name">欧规雷达</span>
+        <span class="brand-en">EuroRule Radar</span>
+      </span>
+    </a>
+    <nav class="nav" aria-label="主导航">
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" type="button">
+        <span class="sr-only">切换导航</span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+        <span class="nav-toggle-bar"></span>
+      </button>
+      <ul id="nav-menu" class="nav-menu">
+        {links.map((l) => (
+          <li>
+            <a
+              href={l.href}
+              class:list={['nav-link', isActive(l.href) && 'is-active']}
+              aria-current={isActive(l.href) ? 'page' : undefined}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--color-ink-200);
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.85rem 1.25rem;
+    gap: 1rem;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: var(--color-ink-900);
+  }
+  .brand:hover { color: var(--color-ink-900); }
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: var(--color-primary-700);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.78rem;
+    border-radius: 8px;
+    letter-spacing: 0.04em;
+  }
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+  .brand-name {
+    font-weight: 600;
+    font-size: 1.02rem;
+  }
+  .brand-en {
+    font-size: 0.72rem;
+    color: var(--color-ink-500);
+    letter-spacing: 0.04em;
+  }
+  .nav { display: flex; align-items: center; }
+  .nav-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 0.2rem;
+  }
+  .nav-link {
+    display: inline-block;
+    padding: 0.45em 0.85em;
+    color: var(--color-ink-700);
+    text-decoration: none;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+  }
+  .nav-link:hover {
+    background: var(--color-ink-50);
+    color: var(--color-ink-900);
+  }
+  .nav-link.is-active {
+    background: var(--color-primary-50);
+    color: var(--color-primary-800);
+  }
+  .nav-toggle {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.4em 0.55em;
+    cursor: pointer;
+  }
+  .nav-toggle-bar {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--color-ink-700);
+    margin: 4px 0;
+  }
+  @media (max-width: 720px) {
+    .nav-toggle { display: inline-flex; flex-direction: column; }
+    .nav-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 1rem;
+      left: 1rem;
+      background: #fff;
+      border: 1px solid var(--color-ink-200);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 0.5rem;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .nav-menu.is-open { display: flex; }
+    .nav-link { display: block; }
+  }
+</style>
+
+<script>
+  const btn = document.querySelector('.nav-toggle');
+  const menu = document.getElementById('nav-menu');
+  if (btn && menu) {
+    btn.addEventListener('click', () => {
+      const open = menu.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', String(open));
+    });
+    // 关闭:点击菜单外
+    document.addEventListener('click', (e) => {
+      const t = e.target as Node;
+      if (!menu.contains(t) && !btn.contains(t)) {
+        menu.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+</script>

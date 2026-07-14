@@ -1,0 +1,28 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.local
+.DS_Store
+Thumbs.db
+*.log
+.cache/
+.vscode/
+.idea/
+# 打包 / 临时产物
+_zip_tmp/
+*.zip
+*.zip.txt
+# PowerShell 临时构建日志
+build-fast.log
+check.log
+build.log
+# 验证脚本的本地报告(脚本生成的产物,不入仓)
+verify-report.json
+verify-report-*.json
+# pnpm 锁文件(本项目用 npm,package.json 无 packageManager 字段)
+pnpm-lock.yaml
+pnpm-workspace.yaml
+yarn.lock
+# 运行时配置:用户部署时复制 example.js 改名为 runtime-config.js,不要提交
+public/runtime-config.js

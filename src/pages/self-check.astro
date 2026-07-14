@@ -1,0 +1,319 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '影响自测', item: siteStr ? `${siteStr}self-check/` : undefined },
+  ],
+};
+
+// 链接 map 在 build 时生成(走 withBase),用 define:vars 序列化进 client script,
+// 避免 client script 直接 import url.ts
+const radarLinks: Record<string, { title: string; href: string }> = {
+  'de-lucid-packaging': { title: '德国包装法 LUCID 与 EPR 注册', href: withBase('/radar/de-lucid-packaging/') },
+  'france-epr-triman': { title: '法国 EPR Triman 标识 + 唯一识别符', href: withBase('/radar/france-epr-triman/') },
+  'eu-gpsr-responsible-person': { title: '欧盟 GPSR 通用产品安全法规:欧盟责任人', href: withBase('/radar/eu-gpsr-responsible-person/') },
+  'eu-eprel-energy-label': { title: '欧盟能效标签 EPREL 数据库', href: withBase('/radar/eu-eprel-energy-label/') },
+  'eu-child-product-warnings': { title: '欧盟儿童商品特定年龄警告规则', href: withBase('/radar/eu-child-product-warnings/') },
+  'eu-ioss-vat': { title: '欧盟 IOSS 跨境远程销售 VAT', href: withBase('/radar/eu-ioss-vat/') },
+};
+
+const checklistLinks: Record<string, { title: string; href: string }> = {
+  'new-seller-basics': { title: '亚马逊欧洲站新卖家基础资料检查清单', href: withBase('/checklists/new-seller-basics/') },
+  'pre-listing-documents': { title: '产品上架前资料检查清单', href: withBase('/checklists/pre-listing-documents/') },
+  'compliance-notice-48h': { title: '收到平台合规通知后的 48 小时应对清单', href: withBase('/checklists/compliance-notice-48h/') },
+};
+---
+
+<BaseLayout
+  title="影响自测"
+  description="3-5 题,基于你的销售国家、商品类目、合规经验,给出优先关注主题和推荐阅读清单。结果只作导航建议。"
+  jsonLd={breadcrumb}
+>
+  <div class="container sc-wrap">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>影响自测</span>
+    </nav>
+
+    <h1>影响自测</h1>
+    <p class="sc-intro">
+      回答 3-5 个问题,我们会给你一个"优先关注主题"清单。结果只作导航建议,<strong>不构成法律或合规结论</strong>。
+    </p>
+
+    <form class="sc-form" data-sc-form novalidate>
+      <fieldset class="sc-q">
+        <legend>1. 你在哪些欧洲国家销售?(可多选)</legend>
+        <div class="sc-opts">
+          <label><input type="checkbox" name="countries" value="DE" /> 德国 (DE)</label>
+          <label><input type="checkbox" name="countries" value="FR" /> 法国 (FR)</label>
+          <label><input type="checkbox" name="countries" value="IT" /> 意大利 (IT)</label>
+          <label><input type="checkbox" name="countries" value="ES" /> 西班牙 (ES)</label>
+          <label><input type="checkbox" name="countries" value="NL" /> 荷兰 (NL)</label>
+          <label><input type="checkbox" name="countries" value="PL" /> 波兰 (PL)</label>
+          <label><input type="checkbox" name="countries" value="OTHER" /> 其它欧洲站</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="sc-q">
+        <legend>2. 你的商品属于哪类?(可多选)</legend>
+        <div class="sc-opts">
+          <label><input type="checkbox" name="categories" value="general" /> 一般消费品(家居、户外、服饰配件等)</label>
+          <label><input type="checkbox" name="categories" value="electronic" /> 电子电器</label>
+          <label><input type="checkbox" name="categories" value="children" /> 儿童 / 玩具</label>
+          <label><input type="checkbox" name="categories" value="cosmetic" /> 化妆品 / 个护</label>
+          <label><input type="checkbox" name="categories" value="food-contact" /> 食品接触材料(餐具、容器等)</label>
+          <label><input type="checkbox" name="categories" value="other" /> 其它</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="sc-q">
+        <legend>3. 是否有自有品牌?</legend>
+        <div class="sc-opts sc-opts-inline">
+          <label><input type="radio" name="brand" value="yes" /> 是</label>
+          <label><input type="radio" name="brand" value="no" /> 否</label>
+          <label><input type="radio" name="brand" value="unsure" /> 不确定</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="sc-q">
+        <legend>4. 是否有当地库存(FBA / 第三方海外仓)?</legend>
+        <div class="sc-opts sc-opts-inline">
+          <label><input type="radio" name="local-stock" value="yes" /> 是</label>
+          <label><input type="radio" name="local-stock" value="no" /> 否</label>
+          <label><input type="radio" name="local-stock" value="unsure" /> 不确定</label>
+        </div>
+      </fieldset>
+
+      <fieldset class="sc-q">
+        <legend>5. 是否收到过平台合规 / 海关 / 监管通知?</legend>
+        <div class="sc-opts sc-opts-inline">
+          <label><input type="radio" name="notice" value="yes" /> 是</label>
+          <label><input type="radio" name="notice" value="no" /> 否</label>
+        </div>
+      </fieldset>
+
+      <div class="sc-actions">
+        <button type="submit" class="btn btn-primary">查看结果</button>
+        <button type="reset" class="btn btn-ghost">清空回答</button>
+      </div>
+    </form>
+
+    <section class="sc-result" data-sc-result hidden>
+      <h2>你的优先关注主题</h2>
+      <ul data-sc-topics class="sc-topics"></ul>
+
+      <h3>推荐阅读的规则</h3>
+      <ul data-sc-radars class="sc-radars"></ul>
+
+      <h3>推荐清单</h3>
+      <ul data-sc-checklists class="sc-checklists"></ul>
+
+      <div class="notice notice-info sc-notice">
+        <strong>再次提醒:</strong>这是导航建议,不是合规结论。涉及具体商品 / 类目的合规判断,
+        请咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。
+      </div>
+
+      <button type="button" class="btn btn-ghost btn-sm" data-sc-retake>重新回答</button>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .sc-wrap { max-width: 800px; }
+  .sc-intro {
+    color: var(--color-ink-600);
+    font-size: 1rem;
+    max-width: 60ch;
+    margin: 0 0 2rem 0;
+  }
+  .sc-form { display: flex; flex-direction: column; gap: 1.5rem; }
+  .sc-q {
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.3rem;
+    background: #fff;
+  }
+  .sc-q legend {
+    font-weight: 600;
+    color: var(--color-ink-900);
+    padding: 0 0.4em;
+    font-size: 1rem;
+  }
+  .sc-opts { display: flex; flex-direction: column; gap: 0.5em; margin-top: 0.5em; }
+  .sc-opts label {
+    display: flex;
+    align-items: center;
+    gap: 0.6em;
+    padding: 0.4em 0.5em;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .sc-opts label:hover { background: var(--color-ink-50); }
+  .sc-opts input { width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: var(--color-primary-600); }
+  .sc-opts-inline { flex-direction: row; flex-wrap: wrap; gap: 0.5rem 1rem; }
+  .sc-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+  .sc-result {
+    margin-top: 2.5rem;
+    background: #fff;
+    border: 2px solid var(--color-primary-200);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem 1.6rem;
+  }
+  .sc-result h2 { font-size: 1.4rem; }
+  .sc-result h3 { font-size: 1.1rem; margin-top: 1.5em; margin-bottom: 0.5em; }
+  .sc-topics, .sc-radars, .sc-checklists {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+  }
+  .sc-topics li {
+    background: var(--color-primary-50);
+    border-left: 4px solid var(--color-primary-600);
+    padding: 0.7em 1em;
+    border-radius: var(--radius);
+    color: var(--color-primary-900);
+    font-weight: 500;
+  }
+  .sc-radars li, .sc-checklists li {
+    background: var(--color-ink-50);
+    border: 1px solid var(--color-ink-200);
+    padding: 0.6em 0.9em;
+    border-radius: var(--radius);
+  }
+  .sc-radars a, .sc-checklists a { color: var(--color-primary-700); text-decoration: none; font-weight: 500; }
+  .sc-radars a:hover, .sc-checklists a:hover { text-decoration: underline; }
+  .sc-notice { margin-top: 2em; }
+</style>
+
+<script is:inline define:vars={{ radarLinks, checklistLinks }}>
+  // 优先级映射规则(基于行业公开信息)
+  const topicMap = {
+    de: { topic: '德国 LUCID 包装法 + 回收系统(EPR 包装)', radar: 'de-lucid-packaging', checklist: 'new-seller-basics' },
+    fr: { topic: '法国 EPR(包装、电气、电池等)+ Triman 标识', radar: 'france-epr-triman' },
+    it: { topic: '意大利 EPR(CONAI 等)+ 包装责任', radar: 'france-epr-triman' },
+    es: { topic: '西班牙 EPR(ECOEMBES / SIGRE 等)+ 包装责任', radar: 'france-epr-triman' },
+    gpsr: { topic: '欧盟 GPSR 通用产品安全法规 + 欧盟责任人', radar: 'eu-gpsr-responsible-person' },
+    electronic: { topic: '电子电器 CE / EMC / LVD / RoHS / EPREL 能效', radar: 'eu-eprel-energy-label' },
+    children: { topic: '儿童商品安全(Toy Safety Directive)+ EN 71 测试', radar: 'eu-child-product-warnings' },
+    cosmetic: { topic: '化妆品法规(EC 1223/2009)+ PIF 文件', radar: 'eu-gpsr-responsible-person' },
+    'food-contact': { topic: '食品接触材料法规 + FCM 声明', radar: 'eu-gpsr-responsible-person' },
+    'pre-listing': { topic: '产品上架前资料检查(CE / DoC / 测试报告)', radar: 'eu-gpsr-responsible-person' },
+    ioss: { topic: '欧盟 IOSS 跨境 VAT 申报(货值 ≤ €150 小包)', radar: 'eu-ioss-vat' },
+    brand: { topic: 'Amazon Brand Registry + 商标注册', radar: 'eu-gpsr-responsible-person' },
+    notice: { topic: '收到合规通知:48 小时应对清单', radar: 'eu-gpsr-responsible-person', checklist: 'compliance-notice-48h' },
+  };
+
+  const form = document.querySelector('[data-sc-form]');
+  const result = document.querySelector('[data-sc-result]');
+  const topicsEl = document.querySelector('[data-sc-topics]');
+  const radarsEl = document.querySelector('[data-sc-radars]');
+  const cksEl = document.querySelector('[data-sc-checklists]');
+  const retake = document.querySelector('[data-sc-retake]');
+
+  function getSelected(form, name) {
+    return Array.from(form.querySelectorAll(`[name="${name}"]:checked`)).map((i) => i.value);
+  }
+  function getRadio(form, name) {
+    const el = form.querySelector(`[name="${name}"]:checked`);
+    return el ? el.value : '';
+  }
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!topicsEl || !radarsEl || !cksEl || !result) return;
+
+    const countries = getSelected(form, 'countries');
+    const categories = getSelected(form, 'categories');
+    const brand = getRadio(form, 'brand');
+    const stock = getRadio(form, 'local-stock');
+    const notice = getRadio(form, 'notice');
+
+    const topics = new Set();
+    const radars = new Set();
+    const checks = new Set();
+
+    if (countries.includes('DE')) { topics.add(topicMap.de.topic); radars.add(topicMap.de.radar); checks.add(topicMap.de.checklist || 'pre-listing-documents'); }
+    if (countries.includes('FR')) { topics.add(topicMap.fr.topic); radars.add(topicMap.fr.radar); }
+    if (countries.includes('IT')) { topics.add(topicMap.it.topic); radars.add(topicMap.it.radar); }
+    if (countries.includes('ES')) { topics.add(topicMap.es.topic); radars.add(topicMap.es.radar); }
+
+    if (categories.includes('general') || countries.length > 0) {
+      topics.add(topicMap.gpsr.topic);
+      radars.add(topicMap.gpsr.radar);
+    }
+    if (categories.includes('electronic')) { topics.add(topicMap.electronic.topic); radars.add(topicMap.electronic.radar); }
+    if (categories.includes('children')) { topics.add(topicMap.children.topic); radars.add(topicMap.children.radar); }
+    if (categories.includes('cosmetic')) { topics.add(topicMap.cosmetic.topic); radars.add(topicMap.cosmetic.radar); }
+    if (categories.includes('food-contact')) { topics.add(topicMap['food-contact'].topic); radars.add(topicMap['food-contact'].radar); }
+
+    if (brand === 'yes') { topics.add(topicMap.brand.topic); radars.add(topicMap.brand.radar); }
+    if (stock === 'no') { topics.add(topicMap.ioss.topic); radars.add(topicMap.ioss.radar); }
+    if (notice === 'yes') {
+      topics.add(topicMap.notice.topic);
+      radars.add(topicMap.notice.radar);
+      checks.add(topicMap.notice.checklist || 'compliance-notice-48h');
+    }
+
+    if (categories.length > 0) checks.add('pre-listing-documents');
+    if (countries.length > 0 && !checks.has('new-seller-basics') && (stock === 'unsure' || brand === 'unsure')) {
+      checks.add('new-seller-basics');
+    }
+
+    topicsEl.innerHTML = '';
+    if (topics.size === 0) {
+      const li = document.createElement('li');
+      li.textContent = '你的回答没有触发特定主题;建议先阅读 亚马逊欧洲站新卖家基础资料检查清单。';
+      topicsEl.appendChild(li);
+    } else {
+      topics.forEach((t) => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        topicsEl.appendChild(li);
+      });
+    }
+
+    radarsEl.innerHTML = '';
+    if (radars.size === 0) {
+      const li = document.createElement('li');
+      li.textContent = '暂无对应规则卡(请补充回答以获得更精确建议)。';
+      radarsEl.appendChild(li);
+    } else {
+      radars.forEach((slug) => {
+        const link = radarLinks[slug];
+        if (!link) return;
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="${link.href}">${link.title}</a> · <a href="${link.href}" aria-label="查看 ${link.title}">查看 →</a>`;
+        radarsEl.appendChild(li);
+      });
+    }
+
+    cksEl.innerHTML = '';
+    if (checks.size === 0) checks.add('pre-listing-documents');
+    checks.forEach((slug) => {
+      const link = checklistLinks[slug];
+      if (!link) return;
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="${link.href}">${link.title}</a>`;
+      cksEl.appendChild(li);
+    });
+
+    result.hidden = false;
+    result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  retake?.addEventListener('click', () => {
+    if (result) result.hidden = true;
+    form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+</script>

@@ -1,0 +1,13 @@
+[
+  {
+    "title": "示例日历:运营节奏演示(请勿当作真实截止日)",
+    "date": "2026-10-15",
+    "category": "运营节奏",
+    "countries": ["欧盟全境"],
+    "summary": "这是日历视觉与分组演示用的示例事件,标 isExample: true。日历默认只展示已核实、有原始来源的真实节点;真实节点由运营在 src/content/calendar/events.json 维护。",
+    "linkedRadarSlug": null,
+    "sourceUrl": "https://sellercentral.amazon.eu",
+    "verifiedDate": "2026-07-13",
+    "isExample": true
+  }
+]

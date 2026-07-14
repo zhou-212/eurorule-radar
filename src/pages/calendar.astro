@@ -1,0 +1,195 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import CalendarEvent from '../components/CalendarEvent.astro';
+import calendarData from '../content/calendar/events.json';
+import { daysFromNow, bucketByUrgency, urgencyLabels } from '../lib/date';
+import { withBase, siteAsDir } from '../lib/url';
+
+// =============================================================================
+// 日历内容策略
+// =============================================================================
+//   - 源文件可以保留 isExample: true 的演示数据,用于开发/视觉测试。
+//   - 生产页面:只展示已核实、非示例 (!isExample) 的真实节点。
+//   - 如果没有任何真实节点:不展示示例,不展示"未来 30 天"标题,直接
+//     显示"暂未发布已核实的近期截止日"空状态(文案见下方)。
+//   - 示例日历不进入 RSS、首页、SEO 索引。
+// =============================================================================
+
+const allEvents = [...calendarData].sort((a, b) => +new Date(a.date) - +new Date(b.date));
+// 生产视图 = 排除示例 + 排除未核实
+const realEvents = allEvents.filter((e) => !e.isExample);
+
+// 筛选下拉只来自真实事件,避免出现"示例运营节奏"这种 dropdown 选项
+const allCountries = Array.from(new Set(realEvents.flatMap((e) => e.countries))).sort();
+const allCategories = Array.from(new Set(realEvents.map((e) => e.category))).sort();
+
+const grouped: Record<string, typeof realEvents> = {
+  urgent: [],
+  'this-month': [],
+  later: [],
+  past: [],
+};
+realEvents.forEach((e) => {
+  const bucket = bucketByUrgency(daysFromNow(e.date));
+  grouped[bucket].push(e);
+});
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '截止日历', item: siteStr ? `${siteStr}calendar/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="截止日历"
+  description="未来 90 天重点合规节点:按已临近 / 本月 / 后续关注分组;每条标国家、主题、来源。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>截止日历</span>
+    </nav>
+    <h1>截止日历</h1>
+    <p class="page-intro">
+      未来 90 天的合规节点、平台复核窗口和重要截止日期。本日历
+      <strong>只展示已核实、有官方原始来源的真实节点</strong>;未核实的日期不会上线,以避免误导。
+      运营正在分批核实真实节点;暂未发布的近期截止日请直接
+      <a href={withBase('/radar/')}>查看规则卡片</a>或<strong>定期回访本站</strong>。
+    </p>
+
+    {realEvents.length > 0 && (
+      <div class="filter-bar">
+        <div class="filter-row">
+          <label for="c-country" class="label">国家/地区</label>
+          <select id="c-country" class="select" data-cal-filter="countries">
+            <option value="">全部</option>
+            {allCountries.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div class="filter-row">
+          <label for="c-cat" class="label">主题</label>
+          <select id="c-cat" class="select" data-cal-filter="category">
+            <option value="">全部</option>
+            {allCategories.map((c) => <option value={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+    )}
+
+    {realEvents.length > 0 && (['urgent', 'this-month', 'later', 'past'] as const).map((bucket) => {
+      const list = grouped[bucket];
+      if (list.length === 0) return null;
+      return (
+        <section class="cal-section">
+          <h2 class="cal-section-h">
+            {urgencyLabels[bucket]}
+            <span class="cal-section-count">({list.length})</span>
+          </h2>
+          <div class="grid grid-2" data-cal-list>
+            {list.map((e) => (
+              <div
+                data-cal-item
+                data-countries={e.countries.join('|')}
+                data-cat={e.category}
+              >
+                <CalendarEvent event={e} />
+              </div>
+            ))}
+          </div>
+        </section>
+      );
+    })}
+
+    {realEvents.length === 0 && (
+      <div class="empty-state" data-cal-empty>
+        <h2 class="empty-title">暂未发布已核实的近期截止日</h2>
+        <p>请订阅更新或查看规则卡片。</p>
+        <p class="empty-meta">
+          运营可在 <code>src/content/calendar/events.json</code> 新增节点,
+          流程见项目仓库 <code>CONTENT_GUIDE.md</code>。
+          源文件里的 <code>isExample: true</code> 数据仅用于开发演示,生产页面不会展示。
+        </p>
+      </div>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    color: var(--color-ink-600);
+    font-size: 1rem;
+    max-width: 65ch;
+    margin: 0 0 2rem 0;
+  }
+  .filter-bar {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+  @media (max-width: 600px) { .filter-bar { grid-template-columns: 1fr; } }
+  .filter-row { margin: 0; }
+  .cal-section { margin-bottom: 2.5rem; }
+  .cal-section-h {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 1.15rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.4em;
+    border-bottom: 1px solid var(--color-ink-200);
+  }
+  .cal-section-count {
+    font-size: 0.85rem;
+    color: var(--color-ink-500);
+    font-weight: 400;
+  }
+  .empty-state {
+    background: var(--color-info-bg);
+    border: 1px dashed var(--color-info-border);
+    border-left: 4px solid #3b82f6;
+    border-radius: var(--radius-lg);
+    padding: 2.5rem 1.5rem;
+    text-align: left;
+    color: var(--color-ink-700);
+    max-width: 70ch;
+  }
+  .empty-state .empty-title {
+    font-size: 1.2rem;
+    color: var(--color-info-text);
+    margin: 0 0 0.5em 0;
+  }
+  .empty-state p { margin: 0.4em 0; }
+  .empty-state .empty-meta { font-size: 0.88rem; color: var(--color-ink-500); margin-top: 1em; }
+</style>
+
+{realEvents.length > 0 && (
+  <script>
+    const filters = document.querySelectorAll('[data-cal-filter]') as NodeListOf<HTMLSelectElement>;
+    const items = document.querySelectorAll('[data-cal-item]') as NodeListOf<HTMLElement>;
+
+    function apply() {
+      const country = (document.querySelector('[data-cal-filter="countries"]') as HTMLSelectElement)?.value || '';
+      const cat = (document.querySelector('[data-cal-filter="category"]') as HTMLSelectElement)?.value || '';
+      items.forEach((it) => {
+        const cs = (it.dataset.countries || '').split('|');
+        const showCountry = !country || cs.includes(country);
+        const showCat = !cat || it.dataset.cat === cat;
+        it.style.display = showCountry && showCat ? '' : 'none';
+      });
+    }
+    filters.forEach((f) => f.addEventListener('change', apply));
+  </script>
+)}

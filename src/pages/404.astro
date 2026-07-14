@@ -1,0 +1,24 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/url';
+---
+<BaseLayout title="404 · 页面未找到" noindex>
+  <div class="container nf-wrap">
+    <h1>404</h1>
+    <p>页面不存在或已被移除。</p>
+    <p>
+      <a href={withBase('/')} class="btn btn-primary">返回首页</a>
+      <a href={withBase('/radar/')} class="btn btn-secondary">浏览规则雷达</a>
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .nf-wrap {
+    text-align: center;
+    padding: 4rem 1rem 6rem 1rem;
+  }
+  .nf-wrap h1 { font-size: 4rem; color: var(--color-primary-700); margin-bottom: 0.2em; }
+  .nf-wrap p { margin: 0.5em 0 1.5em 0; color: var(--color-ink-600); }
+  .nf-wrap .btn { margin: 0 0.3em; }
+</style>
