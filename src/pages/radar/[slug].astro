@@ -2,7 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getRiskClass, getStatusClass, getContentKindClass, SITE_DEFAULTS } from '../../lib/radar';
-import { formatDate } from '../../lib/date';
+import { formatDate, daysFromNow } from '../../lib/date';
 import RadarCard from '../../components/RadarCard.astro';
 import { withBase, siteAsDir } from '../../lib/url';
 
@@ -43,6 +43,29 @@ function firstParagraph(md: string): string {
   return text.slice(0, 200) + '…';
 }
 const firstPara = firstParagraph(entry.body || '');
+
+/**
+ * 倒计时徽标(SSR 算好,避免 hydration mismatch):
+ *   - 触发前提:contentKind === '近期更新' && 有 deadlineDate
+ *   - days = daysFromNow(deadlineDate)
+ *   - days <= 0 (已逾期) && status !== '生效中' → 🚨 已逾期 X 天
+ *     (status='生效中' 表示规则已自然进入"生效"状态,不再视为待办 → 不展示)
+ *   - 0 < days <= 30 → 🔥 距生效 X 天
+ *   - 其余情况 → null(不展示)
+ */
+type DeadlineBadge = { kind: 'overdue' | 'urgent'; days: number; text: string };
+const deadlineBadge: DeadlineBadge | null = (() => {
+  if (d.contentKind !== '近期更新' || !d.deadlineDate) return null;
+  const days = daysFromNow(d.deadlineDate);
+  if (days <= 0) {
+    if (d.status === '生效中') return null;
+    return { kind: 'overdue', days: -days, text: `🚨 已逾期 ${-days} 天` };
+  }
+  if (days <= 30) {
+    return { kind: 'urgent', days, text: `🔥 距生效 ${days} 天` };
+  }
+  return null;
+})();
 
 // 相关规则:同 categories 交集
 const allRadars = (await getCollection('radar', ({ data }) => !data.draft))
@@ -106,7 +129,18 @@ const articleJsonLd = {
         <span class={`kind ${getContentKindClass(d.contentKind)}`}>内容状态:{d.contentKind}</span>
       </div>
       <div class="radar-detail-title-row">
-        <h1>{d.title}</h1>
+        <h1>
+          {d.title}
+          {deadlineBadge && (
+            <span
+              class={`deadline-badge deadline-badge-${deadlineBadge.kind}`}
+              role="status"
+              aria-label={deadlineBadge.kind === 'overdue' ? `已逾期 ${deadlineBadge.days} 天` : `距生效 ${deadlineBadge.days} 天`}
+            >
+              {deadlineBadge.text}
+            </span>
+          )}
+        </h1>
         <button
           type="button"
           class="btn btn-ghost btn-sm copy-summary-btn"
@@ -393,5 +427,53 @@ const articleJsonLd = {
     background: #f5f3ff;
     color: #6d28d9;
     border-color: #ddd6fe;
+  }
+
+  /* 倒计时徽标(SSR 算好,客户端无 hydration) */
+  .deadline-badge {
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    margin-left: 0.5em;
+    padding: 0.2em 0.7em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.5;
+    color: #fff;
+    background: #dc2626;
+    border: 1px solid #b91c1c;
+    border-radius: 999px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    animation: deadline-pulse 1.8s ease-in-out infinite;
+  }
+  .deadline-badge-overdue {
+    background: #dc2626;
+    border-color: #991b1b;
+  }
+  .deadline-badge-urgent {
+    background: #ea580c;
+    border-color: #c2410c;
+  }
+  @keyframes deadline-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
+      transform: scale(1);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+      transform: scale(1.04);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .deadline-badge { animation: none; }
+  }
+  @media (max-width: 480px) {
+    .deadline-badge {
+      display: inline-flex;
+      margin-left: 0;
+      margin-top: 0.4em;
+      font-size: 0.72rem;
+    }
   }
 </style>

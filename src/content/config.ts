@@ -26,8 +26,9 @@ const radar = defineCollection({
     platform: z.string().default('Amazon EU'),
     sellerTypes: z.array(z.string()).default([]),
     categories: z.array(z.string()).default([]),
+    tags: z.array(z.string()).default([]),
     riskLevel: z.enum(['高', '中', '低']).default('中'),
-    status: z.enum(['生效中', '即将生效', '持续关注', '待核实']).default('持续关注'),
+    status: z.enum(['生效中', '即将生效', '过渡期', '持续关注', '待核实']).default('持续关注'),
     // 内容状态(用于首页 / 卡片视觉区分):
     //   基础规则  — 长期有效的常驻要求(GPSR / LUCID / EPR / EPREL 等)
     //   近期更新  — 90 天内有具体更新 / 修订 / 新规

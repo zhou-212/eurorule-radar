@@ -51,6 +51,12 @@ const realUpcoming = upcomingAll.filter((e) => !e.isExample).slice(0, 4);
 // 绝对 URL helper (用于 JSON-LD):SITE 已包含 project path(Astro 自动)
 const siteStr = siteAsDir(Astro.site);
 
+// 首页搜索:/search.json 端点的 BASE-aware 路径(由另一个 agent 提供端点,
+// 这里只消费 URL 字符串,不耦合实现)。空字符串表示 BASE 解析失败(降级到相对路径)。
+const searchJsonUrl = withBase('/search.json');
+// 详情页 BASE-aware 路径前缀(用于客户端构造 /radar/<slug>/)
+const radarBaseHref = withBase('/radar/');
+
 const jsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -98,6 +104,55 @@ const jsonLd = {
         <li>✓ 明确区分"已生效"vs"示例内容"</li>
         <li>✓ 行动清单可勾选、可打印</li>
       </ul>
+
+      <!-- 🆕 首页搜索(消费 /search.json 端点,客户端过滤) -->
+      <div
+        class="radar-search"
+        data-radar-search-root
+        data-search-url={searchJsonUrl}
+        data-radar-base={radarBaseHref}
+      >
+        <label for="radar-search-input" class="sr-only">搜索规则</label>
+        <div class="radar-search-input-wrap">
+          <svg
+            class="radar-search-icon"
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2" />
+            <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <input
+            type="search"
+            id="radar-search-input"
+            class="input radar-search-input"
+            placeholder="搜索法规、产品名、关键词…"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            inputmode="search"
+            enterkeyhint="search"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="radar-search-results"
+            aria-activedescendant=""
+          />
+        </div>
+        <div
+          id="radar-search-results"
+          class="radar-search-results"
+          role="listbox"
+          aria-label="搜索结果"
+          hidden
+        ></div>
+        <p class="radar-search-help sr-only" id="radar-search-help">
+          输入时显示前 5 条匹配规则;按上下键切换,Enter 打开,Esc 关闭。
+        </p>
+      </div>
     </div>
   </section>
 
@@ -487,4 +542,398 @@ const jsonLd = {
     color: var(--color-risk-high-text);
     border-color: var(--color-risk-high-border);
   }
+
+  /* 🆕 首页搜索(在 hero 区,下拉浮在 hero 之外) */
+  .radar-search {
+    position: relative;
+    max-width: 640px;
+    margin: 1.5rem 0 0 0;
+  }
+  .radar-search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .radar-search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-ink-500);
+    pointer-events: none;
+  }
+  .radar-search-input {
+    width: 100%;
+    padding: 0.85em 1em 0.85em 2.85em;
+    font-size: 1rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .radar-search-input:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18), var(--shadow-sm);
+  }
+  /* 去掉 type=search 浏览器默认的 ✕ 按钮(自定义 UI 风格) */
+  .radar-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .radar-search-results {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    max-height: 70vh;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 0.4rem 0;
+    margin: 0;
+    list-style: none;
+  }
+  .radar-search-results[hidden] { display: none; }
+  .radar-search-result {
+    display: block;
+    padding: 0.7rem 1rem;
+    color: var(--color-ink-900);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-ink-100);
+    transition: background 0.12s;
+  }
+  .radar-search-result:last-child { border-bottom: none; }
+  .radar-search-result:hover,
+  .radar-search-result.is-active {
+    background: var(--color-primary-50);
+    color: var(--color-primary-900);
+  }
+  .radar-search-result-top {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.25em;
+  }
+  .radar-search-result-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin: 0;
+    color: inherit;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .radar-search-result-title mark {
+    background: #fef08a;
+    color: inherit;
+    padding: 0 0.1em;
+    border-radius: 2px;
+  }
+  .radar-search-result-summary {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--color-ink-600);
+    line-height: 1.5;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .radar-search-result-summary mark {
+    background: #fef08a;
+    color: inherit;
+    padding: 0 0.1em;
+    border-radius: 2px;
+  }
+  .radar-search-empty {
+    padding: 0.9rem 1rem;
+    color: var(--color-ink-500);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+  .radar-search-loading {
+    padding: 0.7rem 1rem;
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+  }
+  .radar-search-error {
+    padding: 0.7rem 1rem;
+    color: var(--color-risk-high-text);
+    font-size: 0.85rem;
+  }
+  @media (max-width: 480px) {
+    .radar-search-input {
+      font-size: 0.95rem;
+      padding: 0.75em 0.9em 0.75em 2.6em;
+    }
+  }
 </style>
+
+<script>
+  /**
+   * 首页搜索(消费 /search.json 端点):
+   *  - 输入 debounce 200ms
+   *  - 客户端按 title + summary + tags 过滤
+   *  - 显示前 5 条结果,关键词 <mark> 高亮
+   *  - 键盘 ↑↓ 导航,Enter 跳转,Esc 关闭
+   *  - 移动端 inputmode="search" / enterkeyhint="search"
+   *  - 数据由 SSR 注入的 data-search-url / data-radar-base 决定(BASE-aware)
+   */
+  type SearchItem = {
+    slug: string;
+    title: string;
+    summary: string;
+    tags?: string[];
+    riskLevel?: '高' | '中' | '低' | string;
+  };
+
+  const root = document.querySelector<HTMLElement>('[data-radar-search-root]');
+  if (root) {
+    const input = root.querySelector<HTMLInputElement>('#radar-search-input');
+    const list = root.querySelector<HTMLElement>('#radar-search-results');
+    const searchUrl = root.dataset.searchUrl || '/search.json';
+    const radarBase = root.dataset.radarBase || '/radar/';
+
+    if (input && list) {
+      let dataPromise: Promise<SearchItem[]> | null = null;
+      let currentMatches: SearchItem[] = [];
+      let currentQuery = '';
+      let activeIndex = -1;
+      let blurTimer: number | null = null;
+
+      // ---------- 工具函数 ----------
+      const escapeHtml = (s: string): string =>
+        s.replace(/[&<>"']/g, (ch) =>
+          ch === '&' ? '&amp;' :
+          ch === '<' ? '&lt;' :
+          ch === '>' ? '&gt;' :
+          ch === '"' ? '&quot;' : '&#39;'
+        );
+
+      const escapeRegex = (s: string): string =>
+        s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      const highlight = (text: string, q: string): string => {
+        if (!q) return escapeHtml(text);
+        const safe = escapeHtml(text);
+        const re = new RegExp(escapeRegex(escapeHtml(q)), 'gi');
+        return safe.replace(re, (m) => `<mark>${m}</mark>`);
+      };
+
+      const debounce = <F extends (...a: any[]) => void>(fn: F, ms: number) => {
+        let t: number | null = null;
+        return (...args: Parameters<F>) => {
+          if (t !== null) window.clearTimeout(t);
+          t = window.setTimeout(() => fn(...args), ms);
+        };
+      };
+
+      // 风险等级 → 已有的 .risk 修饰类
+      const riskClass = (level: string | undefined): string => {
+        if (level === '高') return 'risk-high';
+        if (level === '中') return 'risk-medium';
+        if (level === '低') return 'risk-low';
+        return 'risk-low';
+      };
+
+      // ---------- 数据加载 ----------
+      const ensureData = (): Promise<SearchItem[]> => {
+        if (dataPromise) return dataPromise;
+        dataPromise = fetch(searchUrl, { credentials: 'same-origin' })
+          .then((r) => {
+            if (!r.ok) throw new Error(`search.json HTTP ${r.status}`);
+            return r.json() as Promise<SearchItem[] | { items?: SearchItem[] }>;
+          })
+          .then((raw) => {
+            // 兼容两种返回:裸数组 / {items: [...]}
+            if (Array.isArray(raw)) return raw;
+            if (raw && Array.isArray((raw as any).items)) return (raw as any).items;
+            return [];
+          })
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.warn('[radar-search] /search.json 加载失败,搜索功能降级:', err);
+            return [];
+          });
+        return dataPromise;
+      };
+
+      // ---------- 渲染 ----------
+      const renderEmpty = () => {
+        list!.innerHTML = '<div class="radar-search-empty">无匹配,试试其他关键词</div>';
+        list!.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+        activeIndex = -1;
+        input.setAttribute('aria-activedescendant', '');
+      };
+
+      const renderMatches = (matches: SearchItem[], q: string) => {
+        if (matches.length === 0) {
+          renderEmpty();
+          return;
+        }
+        const html = matches
+          .map((m, i) => {
+            const href = radarBase + encodeURIComponent(m.slug) + '/';
+            const risk = escapeHtml(m.riskLevel || '');
+            return (
+              `<a href="${href}" class="radar-search-result" role="option" data-idx="${i}" id="radar-search-result-${i}">` +
+                `<div class="radar-search-result-top">` +
+                  `<span class="risk ${riskClass(m.riskLevel)}">风险:${risk}</span>` +
+                `</div>` +
+                `<p class="radar-search-result-title">${highlight(m.title, q)}</p>` +
+                `<p class="radar-search-result-summary">${highlight(m.summary, q)}</p>` +
+              `</a>`
+            );
+          })
+          .join('');
+        list!.innerHTML = html;
+        list!.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+      };
+
+      const renderLoading = () => {
+        list!.innerHTML = '<div class="radar-search-loading">正在加载索引…</div>';
+        list!.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+      };
+
+      const close = () => {
+        list!.hidden = true;
+        input.setAttribute('aria-expanded', 'false');
+        input.setAttribute('aria-activedescendant', '');
+        activeIndex = -1;
+      };
+
+      // ---------- 搜索执行 ----------
+      const runSearch = async (rawQ: string) => {
+        const q = rawQ.trim();
+        currentQuery = q;
+        if (!q) {
+          close();
+          return;
+        }
+        // 第一次输入时展示 loading,等待 /search.json
+        if (!dataPromise) renderLoading();
+        const data = await ensureData();
+        if (currentQuery !== q) return; // 已被新输入覆盖
+        const lower = q.toLowerCase();
+        const matches: SearchItem[] = [];
+        for (const item of data) {
+          if (!item || typeof item !== 'object') continue;
+          const tags = Array.isArray(item.tags) ? item.tags.join(' ') : '';
+          const hay = `${item.title || ''} ${item.summary || ''} ${tags}`.toLowerCase();
+          if (hay.includes(lower)) {
+            matches.push(item);
+            if (matches.length >= 5) break;
+          }
+        }
+        currentMatches = matches;
+        activeIndex = -1;
+        renderMatches(matches, q);
+      };
+
+      const debouncedSearch = debounce((q: string) => {
+        runSearch(q).catch((err) => {
+          // eslint-disable-next-line no-console
+          console.warn('[radar-search] runSearch 异常:', err);
+          if (list) {
+            list.innerHTML = '<div class="radar-search-error">搜索出错,请稍后重试</div>';
+            list.hidden = false;
+          }
+        });
+      }, 200);
+
+      const updateActive = () => {
+        const items = list!.querySelectorAll<HTMLElement>('.radar-search-result');
+        items.forEach((el, i) => {
+          const isActive = i === activeIndex;
+          el.classList.toggle('is-active', isActive);
+          if (isActive) {
+            el.scrollIntoView({ block: 'nearest' });
+            input.setAttribute('aria-activedescendant', el.id);
+          }
+        });
+        if (activeIndex < 0) input.setAttribute('aria-activedescendant', '');
+      };
+
+      // ---------- 事件绑定 ----------
+      input.addEventListener('input', () => debouncedSearch(input.value));
+
+      input.addEventListener('focus', () => {
+        if (blurTimer !== null) {
+          window.clearTimeout(blurTimer);
+          blurTimer = null;
+        }
+        // 有未关闭的旧结果时保留;有当前 query 时再跑一次(确保数据就绪后展示)
+        if (input.value.trim()) {
+          if (currentMatches.length > 0 && !list.hidden) return;
+          runSearch(input.value);
+        }
+      });
+
+      input.addEventListener('blur', () => {
+        // 延迟关闭,允许 click 结果跳转
+        if (blurTimer !== null) window.clearTimeout(blurTimer);
+        blurTimer = window.setTimeout(() => {
+          close();
+        }, 150);
+      });
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (list.hidden) {
+            if (input.value.trim()) runSearch(input.value);
+            return;
+          }
+          if (currentMatches.length === 0) return;
+          activeIndex = (activeIndex + 1) % currentMatches.length;
+          updateActive();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (list.hidden || currentMatches.length === 0) return;
+          activeIndex = activeIndex <= 0 ? currentMatches.length - 1 : activeIndex - 1;
+          updateActive();
+        } else if (e.key === 'Enter') {
+          if (activeIndex >= 0 && currentMatches[activeIndex]) {
+            e.preventDefault();
+            const m = currentMatches[activeIndex];
+            window.location.href = radarBase + encodeURIComponent(m.slug) + '/';
+          } else if (currentMatches.length > 0) {
+            // 没高亮时按 Enter 默认跳第一条
+            e.preventDefault();
+            const m = currentMatches[0];
+            window.location.href = radarBase + encodeURIComponent(m.slug) + '/';
+          }
+          // 无结果时不拦截(让表单默认行为兜底;当前是 input,无副作用)
+        } else if (e.key === 'Escape') {
+          if (!list.hidden) {
+            e.preventDefault();
+            close();
+          }
+        }
+      });
+
+      // 点击下拉内空白处不关闭(链接 click 自然跳转)
+      list.addEventListener('mousedown', (e) => {
+        // 阻止 input 的 blur 触发关闭
+        e.preventDefault();
+      });
+
+      // 点击页面其它区域关闭
+      document.addEventListener('click', (e) => {
+        const t = e.target as Node;
+        if (!root.contains(t)) close();
+      });
+    }
+  }
+</script>
