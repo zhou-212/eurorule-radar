@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import EmailSubscribe from '../components/EmailSubscribe.astro';
 import { withBase, siteAsDir } from '../lib/url';
 
 const siteStr = siteAsDir(Astro.site);
@@ -9,311 +10,753 @@ const breadcrumb = {
   '@type': 'BreadcrumbList',
   itemListElement: [
     { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
-    { '@type': 'ListItem', position: 2, name: '影响自测', item: siteStr ? `${siteStr}self-check/` : undefined },
+    { '@type': 'ListItem', position: 2, name: '适不适合做欧洲站', item: siteStr ? `${siteStr}self-check/` : undefined },
   ],
 };
 
-// 链接 map 在 build 时生成(走 withBase),用 define:vars 序列化进 client script,
-// 避免 client script 直接 import url.ts
-const radarLinks: Record<string, { title: string; href: string }> = {
-  'de-lucid-packaging': { title: '德国包装法 LUCID 与 EPR 注册', href: withBase('/radar/de-lucid-packaging/') },
-  'france-epr-triman': { title: '法国 EPR Triman 标识 + 唯一识别符', href: withBase('/radar/france-epr-triman/') },
-  'eu-gpsr-responsible-person': { title: '欧盟 GPSR 通用产品安全法规:欧盟责任人', href: withBase('/radar/eu-gpsr-responsible-person/') },
-  'eu-eprel-energy-label': { title: '欧盟能效标签 EPREL 数据库', href: withBase('/radar/eu-eprel-energy-label/') },
-  'eu-child-product-warnings': { title: '欧盟儿童商品特定年龄警告规则', href: withBase('/radar/eu-child-product-warnings/') },
-  'eu-ioss-vat': { title: '欧盟 IOSS 跨境远程销售 VAT', href: withBase('/radar/eu-ioss-vat/') },
-};
-
-const checklistLinks: Record<string, { title: string; href: string }> = {
-  'new-seller-basics': { title: '亚马逊欧洲站新卖家基础资料检查清单', href: withBase('/checklists/new-seller-basics/') },
-  'pre-listing-documents': { title: '产品上架前资料检查清单', href: withBase('/checklists/pre-listing-documents/') },
-  'compliance-notice-48h': { title: '收到平台合规通知后的 48 小时应对清单', href: withBase('/checklists/compliance-notice-48h/') },
+// 链接 map — build 时用 withBase 拼前缀,define:vars 序列化进 client script。
+// 每条行动路径对应 step1 的卖家类型。
+const paths: Record<string, { title: string; items: { title: string; href: string; desc: string }[] }> = {
+  A: {
+    title: '新手路径:从 0 到基本合规',
+    items: [
+      {
+        title: '90 天合规起步路线图',
+        href: withBase('/radar/guide-seller-90days/'),
+        desc: '每周 1-2 件事,从 0 走到基本合规,不被法规压垮',
+      },
+      {
+        title: '8 大合规名词一次搞懂',
+        href: withBase('/radar/guide-8-terms/'),
+        desc: 'GPSR / CE / EPR / VAT 是啥,3 分钟心里有底',
+      },
+      {
+        title: '亚马逊 GPSR 邮件怎么回',
+        href: withBase('/radar/guide-amazon-gpsr-email/'),
+        desc: '收到"请补欧盟责任人"邮件的回复模板',
+      },
+    ],
+  },
+  B: {
+    title: '老卖家路径:稳住基本盘,别踩新雷',
+    items: [
+      {
+        title: '近期更新',
+        href: withBase('/radar/'),
+        desc: '过去 30 天新出的规则变化,先看这些',
+      },
+      {
+        title: '产品上架前资料检查清单',
+        href: withBase('/checklists/pre-listing-documents/'),
+        desc: '新 ASIN 上架前一次性补齐合规资料',
+      },
+      {
+        title: '截止日历',
+        href: withBase('/calendar/'),
+        desc: '未来 90 天要盯的关键日期',
+      },
+    ],
+  },
+  C: {
+    title: '转行/扩大路径:跨平台与跨境的合规',
+    items: [
+      {
+        title: '德 / 法 / 意 我先开哪个',
+        href: withBase('/radar/guide-pick-first-country/'),
+        desc: '三个国家的流量、合规、物流成本一次说清',
+      },
+      {
+        title: '产品上架前资料检查',
+        href: withBase('/checklists/pre-listing-documents/'),
+        desc: '扩 SKU / 扩平台前的资料总表',
+      },
+      {
+        title: '欧盟 IOSS 跨境远程销售',
+        href: withBase('/radar/eu-ioss-vat/'),
+        desc: '货值 ≤ €150 的小包怎么报关和交税',
+      },
+    ],
+  },
+  D: {
+    title: '观望路径:先花 30 分钟了解再决定',
+    items: [
+      {
+        title: '8 大合规名词',
+        href: withBase('/radar/guide-8-terms/'),
+        desc: '先搞懂核心名词,再判断要不要做',
+      },
+      {
+        title: '亚马逊欧洲站新卖家基础资料',
+        href: withBase('/checklists/new-seller-basics/'),
+        desc: '看看开店到底要准备什么',
+      },
+      {
+        title: '90 天路线图',
+        href: withBase('/radar/guide-seller-90days/'),
+        desc: '看看到底要花多少时间和钱',
+      },
+    ],
+  },
 };
 ---
 
 <BaseLayout
-  title="影响自测"
-  description="3-5 题,基于你的销售国家、商品类目、合规经验,给出优先关注主题和推荐阅读清单。结果只作导航建议。"
+  title="适不适合做欧洲站 · 3 分钟测试"
+  description="3 步,5 分钟,告诉你现在适不适合做亚马逊欧洲站,以及 3 条行动路径。结果只作参考,不构成商业或合规建议。"
   jsonLd={breadcrumb}
 >
   <div class="container sc-wrap">
     <nav class="breadcrumb" aria-label="面包屑">
       <a href={withBase('/')}>首页</a>
       <span class="breadcrumb-sep">/</span>
-      <span>影响自测</span>
+      <span>适不适合做欧洲站</span>
     </nav>
 
-    <h1>影响自测</h1>
-    <p class="sc-intro">
-      回答 3-5 个问题,我们会给你一个"优先关注主题"清单。结果只作导航建议,<strong>不构成法律或合规结论</strong>。
+    <h1>适不适合做欧洲站?</h1>
+
+    <!-- 🆕 模式提示横幅:仅在对应模式显示 -->
+    <p class="mode-banner mode-banner-beginner" data-show-on="beginner" role="note">
+      <span class="mode-banner-icon" aria-hidden="true">🌱</span>
+      <span>我们用 <strong>3 步</strong> 帮你判断适不适合做欧洲站,新手友好,先别急</span>
+    </p>
+    <p class="mode-banner mode-banner-expert" data-show-on="expert" role="note">
+      <span class="mode-banner-icon" aria-hidden="true">⚡</span>
+      <span>你已经有经验,<strong>直接看进阶</strong> —— 跳过基础概念,定位你当前该盯的法规</span>
     </p>
 
+    <p class="sc-intro">
+      花 3 分钟答 3 个问题,我们会告诉你现在的状态是<strong>适合</strong>、<strong>还需要准备</strong>还是<strong>不建议</strong>,
+      并给出 3 条具体行动路径。结果只作参考,<strong>不构成商业或合规建议</strong>。
+    </p>
+
+    <!-- 进度条 -->
+    <div class="sc-progress" aria-hidden="true">
+      <div class="sc-progress-bar" data-sc-progress-bar style="width: 33%"></div>
+    </div>
+    <p class="sc-progress-label" aria-live="polite">
+      <span data-sc-step-text>第 1 步 / 共 3 步</span>
+    </p>
+
+    <!-- 表单容器(单 step 显示) -->
     <form class="sc-form" data-sc-form novalidate>
-      <fieldset class="sc-q">
-        <legend>1. 你在哪些欧洲国家销售?(可多选)</legend>
-        <div class="sc-opts">
-          <label><input type="checkbox" name="countries" value="DE" /> 德国 (DE)</label>
-          <label><input type="checkbox" name="countries" value="FR" /> 法国 (FR)</label>
-          <label><input type="checkbox" name="countries" value="IT" /> 意大利 (IT)</label>
-          <label><input type="checkbox" name="countries" value="ES" /> 西班牙 (ES)</label>
-          <label><input type="checkbox" name="countries" value="NL" /> 荷兰 (NL)</label>
-          <label><input type="checkbox" name="countries" value="PL" /> 波兰 (PL)</label>
-          <label><input type="checkbox" name="countries" value="OTHER" /> 其它欧洲站</label>
+      <!-- Step 1: 你是哪种卖家 -->
+      <section class="sc-step" data-sc-step="1" aria-labelledby="sc-q1-title">
+        <h2 id="sc-q1-title" class="sc-q-title">1. 你是哪种卖家?</h2>
+        <p class="sc-q-hint">选最贴近你真实情况的一项</p>
+        <div class="sc-opts-grid">
+          <button type="button" class="sc-opt" data-sc-seller="A" aria-pressed="false">
+            <span class="sc-opt-tag">A</span>
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">我是新手,还没在欧洲站开过店</strong>
+              <span class="sc-opt-desc">正准备开店 / 还在调研阶段</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-seller="B" aria-pressed="false">
+            <span class="sc-opt-tag">B</span>
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">已经在欧洲站卖了 1 年以内</strong>
+              <span class="sc-opt-desc">跑通过基础流程,刚开始赚钱</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-seller="C" aria-pressed="false">
+            <span class="sc-opt-tag">C</span>
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">已经卖了 1 年以上,想转做别的站或扩大</strong>
+              <span class="sc-opt-desc">扩 SKU / 扩国家 / 扩平台</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-seller="D" aria-pressed="false">
+            <span class="sc-opt-tag">D</span>
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">观望中,还没决定要不要做</strong>
+              <span class="sc-opt-desc">听别人说过欧洲赚钱,但还没动</span>
+            </span>
+          </button>
         </div>
-      </fieldset>
+      </section>
 
-      <fieldset class="sc-q">
-        <legend>2. 你的商品属于哪类?(可多选)</legend>
-        <div class="sc-opts">
-          <label><input type="checkbox" name="categories" value="general" /> 一般消费品(家居、户外、服饰配件等)</label>
-          <label><input type="checkbox" name="categories" value="electronic" /> 电子电器</label>
-          <label><input type="checkbox" name="categories" value="children" /> 儿童 / 玩具</label>
-          <label><input type="checkbox" name="categories" value="cosmetic" /> 化妆品 / 个护</label>
-          <label><input type="checkbox" name="categories" value="food-contact" /> 食品接触材料(餐具、容器等)</label>
-          <label><input type="checkbox" name="categories" value="other" /> 其它</label>
+      <!-- Step 2: 你的品类 -->
+      <section class="sc-step" data-sc-step="2" hidden aria-labelledby="sc-q2-title">
+        <h2 id="sc-q2-title" class="sc-q-title">2. 你的品类是?</h2>
+        <p class="sc-q-hint">选一个最主要的品类就行</p>
+        <div class="sc-opts-grid sc-opts-grid-2">
+          <button type="button" class="sc-opt" data-sc-cat="electronic" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">电子 / 电器</strong>
+              <span class="sc-opt-desc">耳机、充电器、小家电等</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-cat="apparel" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">服装 / 鞋帽</strong>
+              <span class="sc-opt-desc">衣服、鞋子、配饰</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-cat="home" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">家居 / 厨房</strong>
+              <span class="sc-opt-desc">收纳、餐具、家纺、清洁</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-cat="beauty" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">美妆 / 个护</strong>
+              <span class="sc-opt-desc">护肤、彩妆、个护工具</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-cat="toys" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">玩具 / 母婴</strong>
+              <span class="sc-opt-desc">儿童用品、孕产用品</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-cat="food" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">食品 / 保健品</strong>
+              <span class="sc-opt-desc">零食、膳食补充剂、茶叶</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-cat="other" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">其他</strong>
+              <span class="sc-opt-desc">汽配、宠物、户外、文具等</span>
+            </span>
+          </button>
         </div>
-      </fieldset>
+      </section>
 
-      <fieldset class="sc-q">
-        <legend>3. 是否有自有品牌?</legend>
-        <div class="sc-opts sc-opts-inline">
-          <label><input type="radio" name="brand" value="yes" /> 是</label>
-          <label><input type="radio" name="brand" value="no" /> 否</label>
-          <label><input type="radio" name="brand" value="unsure" /> 不确定</label>
+      <!-- Step 3: 你的预算和时间 -->
+      <section class="sc-step" data-sc-step="3" hidden aria-labelledby="sc-q3-title">
+        <h2 id="sc-q3-title" class="sc-q-title">3. 你的预算和时间?</h2>
+        <p class="sc-q-hint">合规每月要花一点时间维护,选最贴近你预期的一项</p>
+        <div class="sc-opts-grid">
+          <button type="button" class="sc-opt" data-sc-time="weekly" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">每月愿意花 1 周时间处理合规</strong>
+              <span class="sc-opt-desc">愿意自己啃规则、动手注册</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-time="daily" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">每月愿意花 1 天处理</strong>
+              <span class="sc-opt-desc">轻度维护,基础合规能搞定</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-time="service" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">只想有人帮我搞定</strong>
+              <span class="sc-opt-desc">找代理 / 服务商,愿意花钱省时间</span>
+            </span>
+          </button>
+          <button type="button" class="sc-opt" data-sc-time="fast" aria-pressed="false">
+            <span class="sc-opt-body">
+              <strong class="sc-opt-title">没时间弄,就想赚快钱</strong>
+              <span class="sc-opt-desc">想当甩手掌柜,不愿花心思</span>
+            </span>
+          </button>
         </div>
-      </fieldset>
+      </section>
 
-      <fieldset class="sc-q">
-        <legend>4. 是否有当地库存(FBA / 第三方海外仓)?</legend>
-        <div class="sc-opts sc-opts-inline">
-          <label><input type="radio" name="local-stock" value="yes" /> 是</label>
-          <label><input type="radio" name="local-stock" value="no" /> 否</label>
-          <label><input type="radio" name="local-stock" value="unsure" /> 不确定</label>
-        </div>
-      </fieldset>
-
-      <fieldset class="sc-q">
-        <legend>5. 是否收到过平台合规 / 海关 / 监管通知?</legend>
-        <div class="sc-opts sc-opts-inline">
-          <label><input type="radio" name="notice" value="yes" /> 是</label>
-          <label><input type="radio" name="notice" value="no" /> 否</label>
-        </div>
-      </fieldset>
-
-      <div class="sc-actions">
-        <button type="submit" class="btn btn-primary">查看结果</button>
-        <button type="reset" class="btn btn-ghost">清空回答</button>
+      <!-- Step 导航 -->
+      <div class="sc-nav">
+        <button type="button" class="btn btn-ghost" data-sc-back hidden>← 返回上一步</button>
+        <span class="sc-nav-spacer" aria-hidden="true"></span>
       </div>
     </form>
 
-    <section class="sc-result" data-sc-result hidden>
-      <h2>你的优先关注主题</h2>
-      <ul data-sc-topics class="sc-topics"></ul>
-
-      <h3>推荐阅读的规则</h3>
-      <ul data-sc-radars class="sc-radars"></ul>
-
-      <h3>推荐清单</h3>
-      <ul data-sc-checklists class="sc-checklists"></ul>
-
-      <div class="notice notice-info sc-notice">
-        <strong>再次提醒:</strong>这是导航建议,不是合规结论。涉及具体商品 / 类目的合规判断,
-        请咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。
+    <!-- 结果区 -->
+    <section class="sc-result" data-sc-result hidden aria-labelledby="sc-result-title">
+      <p class="sc-eyebrow">测试结果</p>
+      <h2 id="sc-result-title" class="sc-verdict" data-sc-verdict>—</h2>
+      <p class="sc-verdict-desc" data-sc-verdict-desc></p>
+      <div class="sc-score">
+        <span class="sc-score-label">适合度</span>
+        <div class="sc-score-bar" aria-hidden="true">
+          <div class="sc-score-bar-fill" data-sc-score-fill style="width: 0%"></div>
+        </div>
+        <span class="sc-score-num" data-sc-score-num>0</span>
+        <span class="sc-score-suffix">/ 100</span>
       </div>
 
-      <button type="button" class="btn btn-ghost btn-sm" data-sc-retake>重新回答</button>
+      <h3 class="sc-path-title" data-sc-path-title>为你推荐的行动路径</h3>
+      <ol class="sc-path" data-sc-path></ol>
+
+      <div class="sc-actions-row">
+        <button type="button" class="btn btn-ghost" data-sc-retake>重新测试</button>
+        <a href={withBase('/radar/')} class="btn btn-secondary">先去规则雷达逛逛</a>
+      </div>
+
+      <div class="sc-subscribe">
+        <h3>📮 不想每周自己盯?让邮件告诉你</h3>
+        <p class="sc-subscribe-desc">订阅后每周一封邮件,本周规则 + 未来 30 天截止日期,中文整理,无废话。</p>
+        <EmailSubscribe />
+      </div>
     </section>
   </div>
 </BaseLayout>
 
 <style>
-  .sc-wrap { max-width: 800px; }
+  .sc-wrap { max-width: 820px; }
+
   .sc-intro {
     color: var(--color-ink-600);
     font-size: 1rem;
-    max-width: 60ch;
-    margin: 0 0 2rem 0;
+    max-width: 64ch;
+    margin: 0 0 1.6rem 0;
   }
+  .sc-intro strong { color: var(--color-ink-900); }
+
+  /* 进度条 */
+  .sc-progress {
+    height: 8px;
+    background: var(--color-ink-100);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  .sc-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-accent-500), var(--color-primary-500));
+    transition: width 0.3s ease;
+  }
+  .sc-progress-label {
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+    margin: 0 0 1.4rem 0;
+  }
+
+  /* step 容器 */
   .sc-form { display: flex; flex-direction: column; gap: 1.5rem; }
-  .sc-q {
+  .sc-step {
+    background: #fff;
     border: 1px solid var(--color-ink-200);
     border-radius: var(--radius-lg);
-    padding: 1.1rem 1.3rem;
-    background: #fff;
+    padding: 1.4rem 1.4rem 1.6rem 1.4rem;
   }
-  .sc-q legend {
+  .sc-q-title {
+    font-size: 1.25rem;
     font-weight: 600;
     color: var(--color-ink-900);
-    padding: 0 0.4em;
-    font-size: 1rem;
+    margin: 0 0 0.2em 0;
   }
-  .sc-opts { display: flex; flex-direction: column; gap: 0.5em; margin-top: 0.5em; }
-  .sc-opts label {
+  .sc-q-hint {
+    color: var(--color-ink-500);
+    font-size: 0.9rem;
+    margin: 0 0 1.1em 0;
+  }
+
+  /* 大按钮选项 */
+  .sc-opts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+  .sc-opts-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: 640px) {
+    .sc-opts-grid, .sc-opts-grid-2 { grid-template-columns: 1fr; }
+  }
+
+  .sc-opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    text-align: left;
+    background: #fff;
+    border: 2px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.1rem;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.05s;
+    color: inherit;
+    font: inherit;
+    width: 100%;
+    min-height: 80px;
+  }
+  .sc-opt:hover {
+    border-color: var(--color-primary-300);
+    background: var(--color-primary-50);
+  }
+  .sc-opt:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+  .sc-opt[aria-pressed='true'] {
+    border-color: var(--color-primary-600);
+    background: var(--color-primary-50);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  }
+  .sc-opt-tag {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--color-primary-100);
+    color: var(--color-primary-800);
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1;
+  }
+  .sc-opt[aria-pressed='true'] .sc-opt-tag {
+    background: var(--color-primary-600);
+    color: #fff;
+  }
+  .sc-opt-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .sc-opt-title {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-ink-900);
+    line-height: 1.4;
+  }
+  .sc-opt-desc {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-ink-500);
+    line-height: 1.4;
+  }
+  /* step 2/3 没有 A/B/C/D tag,让 body 撑满 */
+  [data-sc-step='2'] .sc-opt-tag,
+  [data-sc-step='3'] .sc-opt-tag { display: none; }
+
+  /* 导航 */
+  .sc-nav {
     display: flex;
     align-items: center;
-    gap: 0.6em;
-    padding: 0.4em 0.5em;
-    border-radius: var(--radius);
-    cursor: pointer;
+    gap: 0.6rem;
   }
-  .sc-opts label:hover { background: var(--color-ink-50); }
-  .sc-opts input { width: 1.1em; height: 1.1em; flex-shrink: 0; accent-color: var(--color-primary-600); }
-  .sc-opts-inline { flex-direction: row; flex-wrap: wrap; gap: 0.5rem 1rem; }
-  .sc-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .sc-nav-spacer { flex: 1 1 auto; }
 
+  /* 结果区 */
   .sc-result {
     margin-top: 2.5rem;
     background: #fff;
-    border: 2px solid var(--color-primary-200);
+    border: 2px solid var(--color-accent-400);
     border-radius: var(--radius-lg);
-    padding: 1.5rem 1.6rem;
+    padding: 1.6rem 1.7rem 1.8rem 1.7rem;
   }
-  .sc-result h2 { font-size: 1.4rem; }
-  .sc-result h3 { font-size: 1.1rem; margin-top: 1.5em; margin-bottom: 0.5em; }
-  .sc-topics, .sc-radars, .sc-checklists {
-    list-style: none;
-    padding: 0;
+  .sc-eyebrow {
+    color: var(--color-accent-700);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 0.4em 0;
+  }
+  .sc-verdict {
+    font-size: clamp(1.6rem, 4vw, 2.2rem);
+    font-weight: 700;
+    margin: 0 0 0.2em 0;
+    color: var(--color-accent-700);
+  }
+  .sc-verdict-desc {
+    color: var(--color-ink-700);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0 0 1.4rem 0;
+    max-width: 60ch;
+  }
+
+  .sc-score {
     display: flex;
-    flex-direction: column;
-    gap: 0.5em;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1.6rem;
+    flex-wrap: wrap;
   }
-  .sc-topics li {
-    background: var(--color-primary-50);
-    border-left: 4px solid var(--color-primary-600);
-    padding: 0.7em 1em;
-    border-radius: var(--radius);
-    color: var(--color-primary-900);
+  .sc-score-label {
+    font-size: 0.88rem;
+    color: var(--color-ink-500);
     font-weight: 500;
   }
-  .sc-radars li, .sc-checklists li {
-    background: var(--color-ink-50);
-    border: 1px solid var(--color-ink-200);
-    padding: 0.6em 0.9em;
-    border-radius: var(--radius);
+  .sc-score-bar {
+    flex: 1 1 200px;
+    height: 10px;
+    background: var(--color-ink-100);
+    border-radius: 999px;
+    overflow: hidden;
+    min-width: 120px;
   }
-  .sc-radars a, .sc-checklists a { color: var(--color-primary-700); text-decoration: none; font-weight: 500; }
-  .sc-radars a:hover, .sc-checklists a:hover { text-decoration: underline; }
-  .sc-notice { margin-top: 2em; }
+  .sc-score-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-accent-500), var(--color-primary-500));
+    transition: width 0.6s ease;
+  }
+  .sc-score-num {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--color-ink-900);
+    min-width: 2.2em;
+    text-align: right;
+  }
+  .sc-score-suffix {
+    font-size: 0.85rem;
+    color: var(--color-ink-500);
+  }
+
+  .sc-path-title {
+    font-size: 1.1rem;
+    color: var(--color-ink-900);
+    margin: 0 0 0.8em 0;
+  }
+  .sc-path {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.6rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+  .sc-path li {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-ink-200);
+    border-left: 4px solid var(--color-primary-500);
+    border-radius: var(--radius);
+    padding: 0.9rem 1.1rem;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .sc-path li:hover {
+    border-left-color: var(--color-accent-500);
+    background: #fff;
+  }
+  .sc-path-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: var(--color-primary-600);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-right: 0.6rem;
+    flex: 0 0 auto;
+  }
+  .sc-path-link {
+    color: var(--color-primary-700);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+  .sc-path-link:hover { text-decoration: underline; }
+  .sc-path-desc {
+    display: block;
+    color: var(--color-ink-600);
+    font-size: 0.9rem;
+    margin-top: 0.3em;
+    line-height: 1.5;
+  }
+
+  .sc-actions-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    margin: 1.4rem 0 1.6rem 0;
+  }
+
+  .sc-subscribe {
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-100);
+    border-radius: var(--radius-lg);
+    padding: 1.2rem 1.3rem;
+  }
+  .sc-subscribe h3 {
+    margin: 0 0 0.4em 0;
+    font-size: 1.05rem;
+    color: var(--color-ink-900);
+  }
+  .sc-subscribe-desc {
+    color: var(--color-ink-700);
+    font-size: 0.92rem;
+    margin: 0 0 0.8em 0;
+  }
+
+  @media (max-width: 480px) {
+    .sc-step { padding: 1.1rem 1rem 1.3rem 1rem; }
+    .sc-result { padding: 1.3rem 1.2rem; }
+    .sc-opt { min-height: 0; padding: 0.85rem 0.95rem; }
+  }
 </style>
 
-<script is:inline define:vars={{ radarLinks, checklistLinks }}>
-  // 优先级映射规则(基于行业公开信息)
-  const topicMap = {
-    de: { topic: '德国 LUCID 包装法 + 回收系统(EPR 包装)', radar: 'de-lucid-packaging', checklist: 'new-seller-basics' },
-    fr: { topic: '法国 EPR(包装、电气、电池等)+ Triman 标识', radar: 'france-epr-triman' },
-    it: { topic: '意大利 EPR(CONAI 等)+ 包装责任', radar: 'france-epr-triman' },
-    es: { topic: '西班牙 EPR(ECOEMBES / SIGRE 等)+ 包装责任', radar: 'france-epr-triman' },
-    gpsr: { topic: '欧盟 GPSR 通用产品安全法规 + 欧盟责任人', radar: 'eu-gpsr-responsible-person' },
-    electronic: { topic: '电子电器 CE / EMC / LVD / RoHS / EPREL 能效', radar: 'eu-eprel-energy-label' },
-    children: { topic: '儿童商品安全(Toy Safety Directive)+ EN 71 测试', radar: 'eu-child-product-warnings' },
-    cosmetic: { topic: '化妆品法规(EC 1223/2009)+ PIF 文件', radar: 'eu-gpsr-responsible-person' },
-    'food-contact': { topic: '食品接触材料法规 + FCM 声明', radar: 'eu-gpsr-responsible-person' },
-    'pre-listing': { topic: '产品上架前资料检查(CE / DoC / 测试报告)', radar: 'eu-gpsr-responsible-person' },
-    ioss: { topic: '欧盟 IOSS 跨境 VAT 申报(货值 ≤ €150 小包)', radar: 'eu-ioss-vat' },
-    brand: { topic: 'Amazon Brand Registry + 商标注册', radar: 'eu-gpsr-responsible-person' },
-    notice: { topic: '收到合规通知:48 小时应对清单', radar: 'eu-gpsr-responsible-person', checklist: 'compliance-notice-48h' },
-  };
+<script is:inline define:vars={{ paths }}>
+  (function () {
+    const totalSteps = 3;
+    let currentStep = 1;
+    const state = { seller: '', cat: '', time: '' };
 
-  const form = document.querySelector('[data-sc-form]');
-  const result = document.querySelector('[data-sc-result]');
-  const topicsEl = document.querySelector('[data-sc-topics]');
-  const radarsEl = document.querySelector('[data-sc-radars]');
-  const cksEl = document.querySelector('[data-sc-checklists]');
-  const retake = document.querySelector('[data-sc-retake]');
+    const form = document.querySelector('[data-sc-form]');
+    const result = document.querySelector('[data-sc-result]');
+    const progressBar = document.querySelector('[data-sc-progress-bar]');
+    const stepText = document.querySelector('[data-sc-step-text]');
+    const backBtn = document.querySelector('[data-sc-back]');
+    const retakeBtn = document.querySelector('[data-sc-retake]');
+    const verdictEl = document.querySelector('[data-sc-verdict]');
+    const verdictDescEl = document.querySelector('[data-sc-verdict-desc]');
+    const scoreFill = document.querySelector('[data-sc-score-fill]');
+    const scoreNum = document.querySelector('[data-sc-score-num]');
+    const pathTitleEl = document.querySelector('[data-sc-path-title]');
+    const pathEl = document.querySelector('[data-sc-path]');
 
-  function getSelected(form, name) {
-    return Array.from(form.querySelectorAll(`[name="${name}"]:checked`)).map((i) => i.value);
-  }
-  function getRadio(form, name) {
-    const el = form.querySelector(`[name="${name}"]:checked`);
-    return el ? el.value : '';
-  }
+    if (!form || !result) return;
 
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (!topicsEl || !radarsEl || !cksEl || !result) return;
-
-    const countries = getSelected(form, 'countries');
-    const categories = getSelected(form, 'categories');
-    const brand = getRadio(form, 'brand');
-    const stock = getRadio(form, 'local-stock');
-    const notice = getRadio(form, 'notice');
-
-    const topics = new Set();
-    const radars = new Set();
-    const checks = new Set();
-
-    if (countries.includes('DE')) { topics.add(topicMap.de.topic); radars.add(topicMap.de.radar); checks.add(topicMap.de.checklist || 'pre-listing-documents'); }
-    if (countries.includes('FR')) { topics.add(topicMap.fr.topic); radars.add(topicMap.fr.radar); }
-    if (countries.includes('IT')) { topics.add(topicMap.it.topic); radars.add(topicMap.it.radar); }
-    if (countries.includes('ES')) { topics.add(topicMap.es.topic); radars.add(topicMap.es.radar); }
-
-    if (categories.includes('general') || countries.length > 0) {
-      topics.add(topicMap.gpsr.topic);
-      radars.add(topicMap.gpsr.radar);
-    }
-    if (categories.includes('electronic')) { topics.add(topicMap.electronic.topic); radars.add(topicMap.electronic.radar); }
-    if (categories.includes('children')) { topics.add(topicMap.children.topic); radars.add(topicMap.children.radar); }
-    if (categories.includes('cosmetic')) { topics.add(topicMap.cosmetic.topic); radars.add(topicMap.cosmetic.radar); }
-    if (categories.includes('food-contact')) { topics.add(topicMap['food-contact'].topic); radars.add(topicMap['food-contact'].radar); }
-
-    if (brand === 'yes') { topics.add(topicMap.brand.topic); radars.add(topicMap.brand.radar); }
-    if (stock === 'no') { topics.add(topicMap.ioss.topic); radars.add(topicMap.ioss.radar); }
-    if (notice === 'yes') {
-      topics.add(topicMap.notice.topic);
-      radars.add(topicMap.notice.radar);
-      checks.add(topicMap.notice.checklist || 'compliance-notice-48h');
+    // ---- step 切换 ----
+    function showStep(n) {
+      currentStep = n;
+      form.querySelectorAll('[data-sc-step]').forEach((s) => {
+        const step = Number(s.getAttribute('data-sc-step'));
+        s.hidden = step !== n;
+      });
+      // 进度条
+      const pct = Math.round((n / totalSteps) * 100);
+      if (progressBar) progressBar.style.width = pct + '%';
+      if (stepText) stepText.textContent = '第 ' + n + ' 步 / 共 ' + totalSteps + ' 步';
+      // 返回按钮
+      if (backBtn) backBtn.hidden = n === 1;
+      // 滚动到顶部
+      const top = form.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
 
-    if (categories.length > 0) checks.add('pre-listing-documents');
-    if (countries.length > 0 && !checks.has('new-seller-basics') && (stock === 'unsure' || brand === 'unsure')) {
-      checks.add('new-seller-basics');
-    }
-
-    topicsEl.innerHTML = '';
-    if (topics.size === 0) {
-      const li = document.createElement('li');
-      li.textContent = '你的回答没有触发特定主题;建议先阅读 亚马逊欧洲站新卖家基础资料检查清单。';
-      topicsEl.appendChild(li);
-    } else {
-      topics.forEach((t) => {
-        const li = document.createElement('li');
-        li.textContent = t;
-        topicsEl.appendChild(li);
+    // ---- 选项高亮 & 自动前进 ----
+    function bindOpts(attr, key, onPick) {
+      const opts = form.querySelectorAll('[' + attr + ']');
+      opts.forEach((opt) => {
+        opt.addEventListener('click', () => {
+          // 同一组内先清空
+          opts.forEach((o) => o.setAttribute('aria-pressed', 'false'));
+          opt.setAttribute('aria-pressed', 'true');
+          const val = opt.getAttribute(attr);
+          state[key] = val;
+          // 短暂延迟,让用户看到选中态再切下一步
+          window.setTimeout(() => {
+            if (onPick) onPick(val);
+          }, 180);
+        });
       });
     }
 
-    radarsEl.innerHTML = '';
-    if (radars.size === 0) {
-      const li = document.createElement('li');
-      li.textContent = '暂无对应规则卡(请补充回答以获得更精确建议)。';
-      radarsEl.appendChild(li);
-    } else {
-      radars.forEach((slug) => {
-        const link = radarLinks[slug];
-        if (!link) return;
-        const li = document.createElement('li');
-        li.innerHTML = `<a href="${link.href}">${link.title}</a> · <a href="${link.href}" aria-label="查看 ${link.title}">查看 →</a>`;
-        radarsEl.appendChild(li);
-      });
-    }
-
-    cksEl.innerHTML = '';
-    if (checks.size === 0) checks.add('pre-listing-documents');
-    checks.forEach((slug) => {
-      const link = checklistLinks[slug];
-      if (!link) return;
-      const li = document.createElement('li');
-      li.innerHTML = `<a href="${link.href}">${link.title}</a>`;
-      cksEl.appendChild(li);
+    bindOpts('data-sc-seller', 'seller', () => {
+      showStep(2);
+    });
+    bindOpts('data-sc-cat', 'cat', () => {
+      showStep(3);
+    });
+    bindOpts('data-sc-time', 'time', () => {
+      computeResult();
     });
 
-    result.hidden = false;
-    result.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+    // ---- 返回上一步 ----
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        if (currentStep > 1) showStep(currentStep - 1);
+      });
+    }
 
-  retake?.addEventListener('click', () => {
-    if (result) result.hidden = true;
-    form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
+    // ---- 计分 & 结果 ----
+    function computeResult() {
+      const seller = state.seller;
+      const cat = state.cat;
+      const time = state.time;
+
+      // 基础分 60
+      let score = 60;
+
+      // 卖家类型
+      if (seller === 'A') score += 5;   // 新手,肯动手就行
+      if (seller === 'B') score += 10;  // 老卖家,有基础
+      if (seller === 'C') score += 5;   // 转行/扩大,有经验
+      if (seller === 'D') score -= 5;   // 观望中,动力不足
+
+      // 时间
+      if (time === 'weekly') score += 10;
+      if (time === 'daily') score += 0;
+      if (time === 'service') score -= 5;  // 花钱代理可行但贵
+      if (time === 'fast') score -= 25;    // 想当甩手掌柜,根本上不对路
+
+      // 类目风险(高风险品类微扣)
+      if (cat === 'food') score -= 5;
+      else if (cat === 'beauty') score -= 3;
+      else if (cat === 'electronic' || cat === 'toys') score -= 2;
+      // apparel / home / other = 不调整
+
+      // clamp
+      if (score < 0) score = 0;
+      if (score > 100) score = 100;
+
+      // 评语
+      let verdict, verdictDesc, color;
+      if (score >= 65) {
+        verdict = '适合 ✅';
+        verdictDesc = '你现在的状态(品类 + 时间 + 意愿)撑得起做欧洲站,合规这条线稳得住。建议按下方路径开始,别等。';
+        color = 'var(--color-accent-700)';
+      } else if (score >= 40) {
+        verdict = '还需要准备 ⚠️';
+        verdictDesc = '做欧洲站没问题,但你需要先花点时间补点基础 —— 比如先看下方路径里的入门资料,再决定要不要开店。';
+        color = 'var(--color-risk-medium-text)';
+      } else {
+        verdict = '不建议 ⛔';
+        verdictDesc = '以你现在的(品类 + 时间 + 预期)组合,做欧洲站的"试错成本"可能比收益高。建议先花 1-2 周了解规则,再决定要不要启动。';
+        color = 'var(--color-risk-high-text)';
+      }
+
+      if (verdictEl) {
+        verdictEl.textContent = verdict;
+        verdictEl.style.color = color;
+      }
+      if (verdictDescEl) verdictDescEl.textContent = verdictDesc;
+
+      if (scoreFill) scoreFill.style.width = score + '%';
+      if (scoreNum) scoreNum.textContent = String(score);
+
+      // 路径
+      const path = paths[seller] || paths.D;
+      if (pathTitleEl) pathTitleEl.textContent = path.title;
+      if (pathEl) {
+        pathEl.innerHTML = '';
+        path.items.forEach((item, i) => {
+          const li = document.createElement('li');
+          li.innerHTML =
+            '<span class="sc-path-num">' + (i + 1) + '</span>' +
+            '<span>' +
+              '<a class="sc-path-link" href="' + item.href + '">' + item.title + ' →</a>' +
+              '<span class="sc-path-desc">' + item.desc + '</span>' +
+            '</span>';
+          pathEl.appendChild(li);
+        });
+      }
+
+      // 显示结果
+      result.hidden = false;
+      window.setTimeout(() => {
+        const top = result.getBoundingClientRect().top + window.scrollY - 60;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }, 50);
+    }
+
+    // ---- 重测 ----
+    if (retakeBtn) {
+      retakeBtn.addEventListener('click', () => {
+        state.seller = '';
+        state.cat = '';
+        state.time = '';
+        form.querySelectorAll('.sc-opt').forEach((o) => o.setAttribute('aria-pressed', 'false'));
+        result.hidden = true;
+        showStep(1);
+      });
+    }
+  })();
 </script>
+</content>
+</invoke>

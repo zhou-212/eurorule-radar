@@ -107,6 +107,26 @@ const fullTitle = title.includes('欧规雷达') || title.includes('EuroRule')
     )}
   </head>
   <body>
+    {/*
+      Anti-FOUC 模式读取脚本
+      - 必须在 body 顶部以 is:inline 同步执行(不被 Astro 打包 / 不 defer)
+      - 从 localStorage 读 'weiread:mode',把 body[data-mode] 设上
+      - 没有 / 无效值 → 默认 expert (维持旧行为)
+      - 后续 ModeToggle.astro 的 CSS 规则 [body[data-mode] .mode-toggle-opt]
+        会跟随该 attribute 同步按钮高亮,保证首帧视觉正确,无闪烁
+    */}
+    <script is:inline>
+      (function () {
+        try {
+          var m = localStorage.getItem('weiread:mode');
+          if (m !== 'beginner' && m !== 'expert') m = 'expert';
+          document.body.setAttribute('data-mode', m);
+        } catch (e) {
+          // localStorage 不可用(隐私模式 / 嵌入禁用)时,fallback 到默认 expert
+          document.body.setAttribute('data-mode', 'expert');
+        }
+      })();
+    </script>
     <a href="#main" class="skip-link">跳到主要内容</a>
     <Header />
     <main id="main">

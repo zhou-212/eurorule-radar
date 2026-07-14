@@ -122,6 +122,17 @@ const articleJsonLd = {
       <span>{d.title}</span>
     </nav>
 
+    <!-- 🆕 模式提示横幅:仅在对应模式显示
+         (用 body[data-mode] + [data-show-on] 通用规则控制) -->
+    <p class="mode-banner mode-banner-beginner" data-show-on="beginner" role="note">
+      <span class="mode-banner-icon" aria-hidden="true">🌱</span>
+      <span>新手模式:这一法规用大白话讲,重点看"<strong>你要做什么</strong>"那一段</span>
+    </p>
+    <p class="mode-banner mode-banner-expert" data-show-on="expert" role="note">
+      <span class="mode-banner-icon" aria-hidden="true">⚡</span>
+      <span>老手模式:看执行细节、期限、原文链接</span>
+    </p>
+
     <header class="radar-detail-head">
       <div class="radar-detail-tags">
         <span class={`risk ${getRiskClass(d.riskLevel)}`}>风险:{d.riskLevel}</span>

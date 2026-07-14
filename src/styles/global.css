@@ -671,3 +671,49 @@ main .filter-bar .filter-row-grid {
     grid-template-columns: 1fr;
   }
 }
+
+/* ============================================
+   新手 / 老手 模式切换 (data-show-on 通用规则)
+   --------------------------------------------------------
+   - body[data-mode="beginner"]:只显示 data-show-on="beginner"
+   - body[data-mode="expert"]:  只显示 data-show-on="expert"
+   - body 无 data-mode (无 JS): 显示 expert 内容(默认)
+   - 用 !important 覆盖 Astro scoped style 的 [data-astro-cid-xxx]
+     (那些 selector 在 build 后 specificity 升到 0,2,0,普通规则
+      容易输给它们)
+   ============================================ */
+body[data-mode='beginner'] [data-show-on='expert'],
+body[data-mode='expert'] [data-show-on='beginner'] {
+  display: none !important;
+}
+
+/* 模式提示横幅(详情页 / 自检页顶部用) */
+.mode-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  text-align: center;
+  margin: 0 auto 1.25rem auto;
+  padding: 0.7em 1.1em;
+  max-width: 720px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  border-radius: var(--radius-lg);
+  border: 1px solid;
+}
+.mode-banner-icon {
+  font-size: 1.05em;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+.mode-banner-beginner {
+  background: var(--color-accent-50);
+  border-color: var(--color-accent-100);
+  color: var(--color-accent-700);
+}
+.mode-banner-expert {
+  background: var(--color-primary-50);
+  border-color: var(--color-primary-200);
+  color: var(--color-primary-800);
+}

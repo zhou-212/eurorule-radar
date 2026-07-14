@@ -1,0 +1,141 @@
+---
+/**
+ * ModeToggle.astro
+ * ----------------------------------------------------------------
+ * 新手 / 老手 模式切换 (顶栏用)
+ *   - 视觉:圆角胶囊 (pill),内含两段 (🌱 新手 | ⚡ 老手)
+ *   - 状态写在 <body data-mode="beginner" | "expert"> 上
+ *   - 持久化到 localStorage (key: weiread:mode)
+ *   - 默认 expert (维持现状)
+ *   - 初始状态由 BaseLayout 的内联 anti-flash 脚本从 localStorage
+ *     同步设到 body;本组件的 active 视觉用 CSS 跟随 body[data-mode]
+ *     (避免 FOUC)。本组件的 <script> 只负责点击切换 + 落盘。
+ * ----------------------------------------------------------------
+ */
+
+const modes = [
+  { value: 'beginner', icon: '🌱', label: '新手' },
+  { value: 'expert', icon: '⚡', label: '老手' },
+] as const;
+---
+
+<div class="mode-toggle" role="group" aria-label="选择阅读模式:新手入门 或 老手经验">
+  {modes.map((m) => (
+    <button
+      type="button"
+      class="mode-toggle-opt"
+      data-mode-opt={m.value}
+      aria-pressed={m.value === 'expert' ? 'true' : 'false'}
+    >
+      <span class="mode-toggle-icon" aria-hidden="true">{m.icon}</span>
+      <span class="mode-toggle-label">{m.label}</span>
+    </button>
+  ))}
+</div>
+
+<style>
+  .mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px;
+    background: var(--color-ink-100);
+    border: 1px solid var(--color-ink-200);
+    border-radius: 999px;
+    gap: 2px;
+  }
+  .mode-toggle-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    padding: 0.4em 0.95em;
+    border: 0;
+    background: transparent;
+    color: var(--color-ink-700);
+    font-size: 0.88rem;
+    font-weight: 500;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+    line-height: 1.2;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .mode-toggle-opt:hover:not([aria-pressed='true']) {
+    color: var(--color-ink-900);
+    background: var(--color-ink-200);
+  }
+  .mode-toggle-opt:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* 激活态:由 body[data-mode] 同步控制 (SSR 时刻即可生效,无 FOUC)
+     - body[data-mode="beginner"] 时,"beginner" 按钮激活
+     - body[data-mode="expert"]  或  body 无 data-mode (默认),"expert" 激活
+     这条规则优先级高于按钮 HTML 静态写的 aria-pressed,保证页面首帧就正确 */
+  body[data-mode='beginner'] [data-mode-opt='beginner'],
+  body[data-mode='expert'] [data-mode-opt='expert'],
+  body:not([data-mode]) [data-mode-opt='expert'] {
+    background: var(--color-primary-700);
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  }
+
+  .mode-toggle-icon {
+    font-size: 0.95em;
+    line-height: 1;
+  }
+
+  @media (max-width: 720px) {
+    .mode-toggle {
+      display: flex;
+      width: 100%;
+      justify-content: center;
+    }
+    .mode-toggle-opt {
+      flex: 1 1 auto;
+      justify-content: center;
+      padding: 0.45em 0.85em;
+      font-size: 0.85rem;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * ModeToggle 行为脚本
+   *   - 点击 → 写 localStorage + 改 body[data-mode]
+   *   - 初始视觉由 CSS 跟随 body[data-mode] 处理,这里不再 toggle class
+   *     (避免和 SSR 初始值打架)
+   */
+  const STORAGE_KEY = 'weiread:mode';
+  const VALID = new Set(['beginner', 'expert']);
+
+  const apply = (mode: string) => {
+    if (!VALID.has(mode)) mode = 'expert';
+    document.body.setAttribute('data-mode', mode);
+    // 同步 aria-pressed,便于屏幕阅读器和无样式时也能感知状态
+    document.querySelectorAll<HTMLButtonElement>('[data-mode-opt]').forEach((btn) => {
+      const isActive = btn.dataset.modeOpt === mode;
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+  };
+
+  // 点击切换
+  document.querySelectorAll<HTMLButtonElement>('[data-mode-opt]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.modeOpt || 'expert';
+      try {
+        localStorage.setItem(STORAGE_KEY, mode);
+      } catch {
+        // localStorage 不可用(隐私模式 / 嵌入禁用)时静默忽略
+      }
+      apply(mode);
+    });
+  });
+
+  // 与 BaseLayout 内联脚本设的 body[data-mode] 对齐 aria-pressed
+  // (内联脚本只动 attribute,不动按钮;这里补齐按钮状态)
+  const currentMode = document.body.getAttribute('data-mode');
+  apply(currentMode && VALID.has(currentMode) ? currentMode : 'expert');
+</script>

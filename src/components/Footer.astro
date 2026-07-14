@@ -1,5 +1,6 @@
 ---
 import { withBase } from '../lib/url';
+import EmailSubscribe from './EmailSubscribe.astro';
 
 const year = new Date().getFullYear();
 const lastUpdated = new Date().toISOString().slice(0, 10);
@@ -38,6 +39,22 @@ const lastUpdated = new Date().toISOString().slice(0, 10);
         <p class="footer-meta">© {year} 欧规雷达</p>
       </div>
     </div>
+
+    {/*
+      AdSense 空间 + 邮件订阅条
+      ----------------------------------------------------------------
+      - AdSense 占位:labeled div,清晰标出"广告位",灰底虚线,占位宽 100%
+        (AdSense 审核通过后,把 div 里的注释替换为 AdSense 投放代码即可)
+      - 邮件订阅条:EmailSubscribe 组件(留出 AdSense 空间同时沉淀私域)
+    */}
+    <div class="footer-ad-slot" data-footer-ad-slot aria-label="广告位">
+      <span class="footer-ad-slot-label">广告位 · AdSense space</span>
+      <!-- TODO: AdSense 审核通过后,把下面这行替换为 <script>...ins ...</script>  -->
+    </div>
+    <div class="footer-subscribe">
+      <EmailSubscribe />
+    </div>
+
     <p class="footer-disclaimer">
       本网站是信息整理和辅助判断工具,<strong>不构成法律、税务、认证或专业合规意见</strong>。
       所有规则与日期以原始来源为准;本站不对使用本站信息造成的损失承担责任。
@@ -106,5 +123,30 @@ const lastUpdated = new Date().toISOString().slice(0, 10);
     font-size: 0.82rem;
     color: var(--color-ink-500);
     margin: 0;
+  }
+
+  /* 🆕 AdSense 空间 — 灰底虚线 placeholder,审核通过后替换内部注释为 AdSense 代码 */
+  .footer-ad-slot {
+    margin: 1.5rem 0 1rem 0;
+    padding: 1.25rem 1rem;
+    background: var(--color-ink-50);
+    border: 1px dashed var(--color-ink-300);
+    border-radius: var(--radius);
+    text-align: center;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .footer-ad-slot-label {
+    font-size: 0.78rem;
+    color: var(--color-ink-400);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  /* 邮件订阅条 wrapper — 跟 ad slot 紧贴,视觉上连续 */
+  .footer-subscribe {
+    margin: 0 0 1.5rem 0;
+    padding: 0.75rem 0 0 0;
   }
 </style>

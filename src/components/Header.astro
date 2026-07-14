@@ -1,5 +1,6 @@
 ---
 import { withBase } from '../lib/url';
+import ModeToggle from './ModeToggle.astro';
 
 const pathname = Astro.url.pathname;
 function isActive(href: string): boolean {
@@ -26,27 +27,30 @@ const links = [
         <span class="brand-en">EuroRule Radar</span>
       </span>
     </a>
-    <nav class="nav" aria-label="主导航">
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" type="button">
-        <span class="sr-only">切换导航</span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-      </button>
-      <ul id="nav-menu" class="nav-menu">
-        {links.map((l) => (
-          <li>
-            <a
-              href={l.href}
-              class:list={['nav-link', isActive(l.href) && 'is-active']}
-              aria-current={isActive(l.href) ? 'page' : undefined}
-            >
-              {l.label}
-            </a>
-          </li>
-        ))}
-      </ul>
-    </nav>
+    <div class="header-actions">
+      <nav class="nav" aria-label="主导航">
+        <button class="nav-toggle" aria-expanded="false" aria-controls="nav-menu" type="button">
+          <span class="sr-only">切换导航</span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+        <ul id="nav-menu" class="nav-menu">
+          {links.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                class:list={['nav-link', isActive(l.href) && 'is-active']}
+                aria-current={isActive(l.href) ? 'page' : undefined}
+              >
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <ModeToggle />
+    </div>
   </div>
 </header>
 
@@ -66,6 +70,13 @@ const links = [
     justify-content: space-between;
     padding: 0.85rem 1.25rem;
     gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
   }
   .brand {
     display: flex;
@@ -161,6 +172,8 @@ const links = [
     }
     .nav-menu.is-open { display: flex; }
     .nav-link { display: block; }
+    /* 移动端:模式切换占整行,居中 */
+    .header-actions { width: 100%; }
   }
 </style>
 

@@ -33,9 +33,10 @@ const radar = defineCollection({
     //   基础规则  — 长期有效的常驻要求(GPSR / LUCID / EPR / EPREL 等)
     //   近期更新  — 90 天内有具体更新 / 修订 / 新规
     //   示例      — 编辑模板 / 演示用,不代表真实事件
+    //   新手入门  — 给"刚注册欧洲站"小白的起步课(路线图 / 名词解释 / 邮件回复模板等)
     //   待核实    — 尚未找到可靠原始来源,仅作占位
     contentKind: z
-      .enum(['基础规则', '近期更新', '示例', '待核实'])
+      .enum(['基础规则', '近期更新', '示例', '新手入门', '待核实'])
       .default('基础规则'),
     sourceName: z.string(),
     sourceUrl: z.string().url(),

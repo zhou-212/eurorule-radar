@@ -1,0 +1,298 @@
+---
+/**
+ * EmailSubscribe — 极简邮件订阅条
+ * ----------------------------------------------------------------
+ * 设计目标:
+ *   - 嵌在 footer 顶部,留出 AdSense 广告位上方一块私密订阅条
+ *   - 视觉跟 footer 链接同色系,不抢眼(留 AdSense 空间)
+ *   - 移动端 input 100% 宽(自然堆叠)
+ *   - 提交时优先 Mailchimp → 失败 Brevo → 失败展示"复制邮箱"兜底
+ *   - 全部走原生 fetch,零依赖
+ * ----------------------------------------------------------------
+ * 部署前必做(占位 + TODO):
+ *   1. 注册 Mailchimp → Audience → Signup forms → Embedded form,
+ *      拷贝 form action URL(类似 https://<dc>.list-manage.com/subscribe/post?u=...&id=...),
+ *      替换下方 __MAILCHIMP_ACTION__ 占位
+ *   2. 注册 Brevo 备份 → 同上,替换 __BREVO_ACTION__ 占位
+ *   3. 本地验证:见 handoff/email-subscribe-setup.md "验证步骤"
+ * ----------------------------------------------------------------
+ */
+---
+
+<div class="email-sub" data-email-sub>
+  <!--
+    占位 — 用户必须替换为真实 endpoint,否则全部走 fallback 复制邮箱
+    留出 2 个 endpoint 字段,部署时按需切换:
+  -->
+  <form
+    class="email-sub-form"
+    data-email-sub-form
+    novalidate
+    aria-label="邮件订阅 — 每周一条欧盟新规摘要"
+  >
+    <label class="sr-only" for="email-sub-input">邮箱地址</label>
+    <input
+      type="email"
+      id="email-sub-input"
+      name="EMAIL"
+      class="input email-sub-input"
+      placeholder="你的邮箱, 每周一条欧盟新规摘要"
+      autocomplete="email"
+      required
+    />
+    <!--
+      GDPR opt-in checkbox:
+      - 欧盟用户必须明确勾选才能订阅(否则违反 GDPR Art. 7)
+      - 非欧盟用户不强制,但放出来更合规
+      - 字段名 h:EMAIL 已与 Mailchimp 兼容
+    -->
+    <label class="email-sub-consent">
+      <input
+        type="checkbox"
+        name="gdpr_consent"
+        value="Y"
+        data-email-sub-consent
+      />
+      <span>我同意接收每周邮件(可随时取消订阅)</span>
+    </label>
+    <button
+      type="submit"
+      class="btn btn-secondary email-sub-btn"
+      data-email-sub-btn
+    >订阅</button>
+  </form>
+  <p class="email-sub-status" data-email-sub-status aria-live="polite"></p>
+  <!--
+    失败兜底:用户点订阅出错时,JS 会自动用 navigator.clipboard 复制 i@weiread.com,
+    并在 status 区域展示"已复制邮箱 i@weiread.com,请直接邮件加"
+  -->
+</div>
+
+<style>
+  .email-sub {
+    /* 容器 = 留 AdSense 空间 + 这条订阅 */
+    background: transparent;
+  }
+  .email-sub-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.6rem;
+    /* 与 footer 链接同色系 — 克制 */
+    color: var(--color-ink-700);
+  }
+  .email-sub-input {
+    flex: 1 1 220px;
+    min-width: 0;
+    /* 比通用 .input 略小,符合"不抢眼" */
+    padding: 0.45em 0.7em;
+    font-size: 0.9rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-300);
+  }
+  .email-sub-btn {
+    flex: 0 0 auto;
+    /* 不抢眼:用 btn-secondary 而不是 btn-primary */
+    padding: 0.45em 1em;
+    font-size: 0.9rem;
+    color: var(--color-primary-700);
+    background: #fff;
+    border: 1px solid var(--color-primary-300);
+  }
+  .email-sub-btn:hover {
+    background: var(--color-primary-50);
+    color: var(--color-primary-800);
+  }
+  .email-sub-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  .email-sub-consent {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.45em;
+    font-size: 0.8rem;
+    color: var(--color-ink-500);
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .email-sub-consent input {
+    width: 0.95em;
+    height: 0.95em;
+    flex-shrink: 0;
+    accent-color: var(--color-primary-600);
+    margin: 0;
+  }
+  .email-sub-status {
+    margin: 0.4em 0 0 0;
+    font-size: 0.82rem;
+    color: var(--color-ink-500);
+    min-height: 1.2em;
+  }
+  .email-sub-status.is-ok { color: var(--color-accent-700); }
+  .email-sub-status.is-err { color: var(--color-risk-high-text); }
+  /* 移动端:input 100% 宽,button 100% 宽 */
+  @media (max-width: 480px) {
+    .email-sub-input { flex: 1 1 100%; }
+    .email-sub-btn { flex: 1 1 100%; }
+  }
+</style>
+
+<script>
+  // ================================================================
+  // EmailSubscribe 提交逻辑
+  //   1) 优先 Mailchimp embedded form action (POST application/x-www-form-urlencoded)
+  //   2) 失败 fallback Brevo (同上)
+  //   3) 都失败 → 复制 i@weiread.com 到剪贴板,status 提示"邮件加"
+  //   4) 全程不引第三方 JS 库
+  // ================================================================
+
+  // ---- 占位 TODO:部署前必须替换 ----
+  const MAILCHIMP_ACTION = '__MAILCHIMP_ACTION__'; // TODO: 替换为 Mailchimp 嵌入表单的 form action URL
+  const BREVO_ACTION = '__BREVO_ACTION__';         // TODO: 替换为 Brevo 订阅表单的 form action URL
+  const FALLBACK_EMAIL = 'i@weiread.com';           // 兜底邮箱 — 失败时让用户邮件加
+
+  // 判断 endpoint 是否已配置(没被占位替换)
+  const isConfigured = (url: string): boolean => {
+    return !!url && !url.includes('__') && /^https:\/\//i.test(url.trim());
+  };
+
+  type SubmitResult = { ok: boolean; provider?: string; error?: string };
+
+  // 用 no-cors fetch POST(无法读 response,但能触发订阅)
+  // Mailchimp embedded form 提交后会在新页面显示成功页;同源 fetch + redirect:'follow' 也行
+  const postToProvider = async (url: string, formData: FormData): Promise<SubmitResult> => {
+    // Mailchimp / Brevo embedded form 期望 application/x-www-form-urlencoded
+    const params = new URLSearchParams();
+    for (const [k, v] of formData.entries()) {
+      if (typeof v === 'string') params.append(k, v);
+    }
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors', // 跨域 opaque response;无法读 status,视作 fire-and-forget
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString(),
+      });
+      // no-cors 模式下 res.ok 永远 false,res.type === 'opaque'
+      // 我们认为 POST 已发出即视为成功(行业内 Mailchimp 嵌入表单的标准做法)
+      return { ok: true, provider: url };
+    } catch (err) {
+      return { ok: false, error: (err as Error).message || '网络错误' };
+    }
+  };
+
+  const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+      // 老浏览器 / 非安全上下文 fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const root = document.querySelector<HTMLElement>('[data-email-sub]');
+  if (root) {
+    const form = root.querySelector<HTMLFormElement>('[data-email-sub-form]');
+    const btn = root.querySelector<HTMLButtonElement>('[data-email-sub-btn]');
+    const status = root.querySelector<HTMLElement>('[data-email-sub-status]');
+    const consentBox = root.querySelector<HTMLInputElement>('[data-email-sub-consent]');
+
+    if (form && btn && status) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        const email = ((data.get('EMAIL') as string | null) || '').trim();
+        const consent = !!(consentBox && consentBox.checked);
+
+        // ---- 校验 ----
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          status.textContent = '请输入有效的邮箱地址。';
+          status.className = 'email-sub-status is-err';
+          return;
+        }
+        if (!consent) {
+          status.textContent = '请勾选同意接收每周邮件后再订阅。';
+          status.className = 'email-sub-status is-err';
+          return;
+        }
+
+        // ---- 提交 ----
+        const oldBtnText = btn.textContent || '订阅';
+        btn.disabled = true;
+        btn.textContent = '提交中…';
+        status.className = 'email-sub-status';
+
+        // 优先 Mailchimp → Brevo
+        const mailchimpOk = isConfigured(MAILCHIMP_ACTION);
+        const brevoOk = isConfigured(BREVO_ACTION);
+
+        if (!mailchimpOk && !brevoOk) {
+          // 占位还没替换:直接走兜底 — 复制邮箱
+          await runFallbackCopy(status, btn, oldBtnText);
+          return;
+        }
+
+        let result: SubmitResult = { ok: false, error: 'no provider tried' };
+        if (mailchimpOk) {
+          result = await postToProvider(MAILCHIMP_ACTION, data);
+        }
+        if (!result.ok && brevoOk) {
+          result = await postToProvider(BREVO_ACTION, data);
+        }
+        if (!result.ok) {
+          await runFallbackCopy(status, btn, oldBtnText);
+          return;
+        }
+
+        // ---- 成功 ----
+        status.textContent = '✓ 已订阅,请查收确认邮件(可能在垃圾邮件里)。';
+        status.className = 'email-sub-status is-ok';
+        btn.textContent = '✅ 已订阅';
+        form.reset();
+        // 5 秒后允许再次订阅
+        window.setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = oldBtnText;
+          status.textContent = '';
+          status.className = 'email-sub-status';
+        }, 5000);
+      });
+    }
+  }
+
+  // 失败兜底:复制 FALLBACK_EMAIL + 展示"邮件加"提示
+  async function runFallbackCopy(
+    status: HTMLElement,
+    btn: HTMLButtonElement,
+    oldBtnText: string,
+  ): Promise<void> {
+    const copied = await copyToClipboard(FALLBACK_EMAIL);
+    btn.textContent = '❌ 出错';
+    if (copied) {
+      status.innerHTML = `提交失败,已把邮箱 <code>${FALLBACK_EMAIL}</code> 复制到剪贴板 — 直接发邮件到该地址加订阅。`;
+    } else {
+      status.innerHTML = `提交失败,请直接发邮件到 <code>${FALLBACK_EMAIL}</code> 加订阅(已复制剪贴板,但可能被浏览器拒绝)。`;
+    }
+    status.className = 'email-sub-status is-err';
+    window.setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = oldBtnText;
+    }, 6000);
+  }
+</script>
+</content>
+</invoke>

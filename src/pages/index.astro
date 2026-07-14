@@ -153,12 +153,28 @@ const jsonLd = {
           输入时显示前 5 条匹配规则;按上下键切换,Enter 打开,Esc 关闭。
         </p>
       </div>
+
+      <!-- 🆕 新手模式 CTA:仅在 body[data-mode="beginner"] 时显示 -->
+      <aside class="beginner-cta" data-show-on="beginner" aria-label="新手入门引导">
+        <div class="beginner-cta-icon" aria-hidden="true">🌱</div>
+        <div class="beginner-cta-body">
+          <p class="beginner-cta-title">你是新手? 30 分钟 4 步开始</p>
+          <p class="beginner-cta-desc">
+            不需要先啃 12 条法规 —— 先走一遍<strong>新卖家 90 天路线图</strong>,
+            每周 1-2 件事,从 0 走到基本合规。
+          </p>
+        </div>
+        <a href={withBase('/radar/guide-seller-90days/')} class="btn btn-primary beginner-cta-btn">
+          开始 30 分钟起步 →
+        </a>
+      </aside>
     </div>
   </section>
 
-  <!-- 🆕 近期更新(紧凑卡片,最多 3 张,带"距生效日期 X 天"倒计时) -->
+  <!-- 🆕 近期更新(紧凑卡片,最多 3 张,带"距生效日期 X 天"倒计时)
+       老手模式:关注最新法规变化;新手模式:不展示,改推入门引导 -->
   {recentUpdatesTop3.length > 0 && (
-    <section class="section section-tight section-bg" id="recent-top" aria-labelledby="recent-top-title">
+    <section class="section section-tight section-bg" id="recent-top" aria-labelledby="recent-top-title" data-show-on="expert">
       <div class="container">
         <div class="section-head">
           <h2 id="recent-top-title">🆕 近期更新</h2>
@@ -392,6 +408,56 @@ const jsonLd = {
     gap: 0.5rem 1.5rem;
     font-size: 0.92rem;
     color: var(--color-ink-700);
+  }
+
+  /* 🆕 新手模式 CTA(hero 内部,仅 beginner 模式可见) */
+  .beginner-cta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1.5rem 0 0 0;
+    padding: 1rem 1.2rem;
+    background: var(--color-accent-50);
+    border: 1px solid var(--color-accent-100);
+    border-left: 4px solid var(--color-accent-500);
+    border-radius: var(--radius-lg);
+    max-width: 720px;
+    flex-wrap: wrap;
+  }
+  .beginner-cta-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+    flex: 0 0 auto;
+  }
+  .beginner-cta-body {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+  .beginner-cta-title {
+    margin: 0 0 0.2em 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-accent-700);
+    line-height: 1.4;
+  }
+  .beginner-cta-desc {
+    margin: 0;
+    color: var(--color-ink-700);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .beginner-cta-desc strong {
+    color: var(--color-ink-900);
+  }
+  .beginner-cta-btn {
+    flex: 0 0 auto;
+  }
+  @media (max-width: 540px) {
+    .beginner-cta {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .beginner-cta-btn { width: 100%; justify-content: center; }
   }
 
   .section-head {
