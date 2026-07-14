@@ -711,13 +711,41 @@ body[data-mode='beginner'] {
   --color-primary-800: #92400e;
   --color-primary-900: #78350f;
 
-  /* 新手模式辅色:浅绿 50 / 100 起步(覆盖 accent) */
+  /* 新手模式辅色:浅绿 50 / 100 起步(覆盖 accent)
+     注意 500/600 用更柔和的鼠尾草绿,避免在浅黄背景上撞色
+     (#10b981 太亮,在 #fef3c7 上显得"玩具") */
   --color-accent-50:  #ecfdf5;
   --color-accent-100: #d1fae5;
-  --color-accent-400: #34d399;
-  --color-accent-500: #10b981;
-  --color-accent-600: #059669;
+  --color-accent-400: #6ee7b7;
+  --color-accent-500: #34d399;
+  --color-accent-600: #10b981;
   --color-accent-700: #047857;
+
+  /* 新手模式专属:大圆角 + 更大留白
+     让"轻松友好"通过形状一眼就能感受到,跟老手 6px 锐角形成对比 */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  /* 新手模式:中庸色背景(浅黄/浅绿)的阴影更柔更低 */
+  --shadow-sm: 0 1px 3px rgba(180, 83, 9, 0.08);
+  --shadow: 0 6px 18px rgba(180, 83, 9, 0.10);
+  --shadow-lg: 0 16px 40px rgba(180, 83, 9, 0.12);
+}
+
+/* 老手模式 / 默认 紧凑风格
+   - 圆角 6px 锐角,卡片信息密度高
+   - 阴影更深更紧,跟"专业严肃"语义一致 */
+body[data-mode='expert'],
+body:not([data-mode]) {
+  --radius-sm: 3px;
+  --radius: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
 }
 
 /* Mode indicator 徽章 — 显示当前模式 */
@@ -734,38 +762,126 @@ body[data-mode='beginner'] {
   border: 1px solid;
   letter-spacing: 0.02em;
 }
-.mode-indicator-icon { font-size: 0.95em; line-height: 1; }
-body[data-mode='beginner'] .mode-indicator {
-  background: var(--color-accent-50);
-  color: var(--color-accent-700);
-  border-color: var(--color-accent-100);
+.mode-indicator-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  vertical-align: middle;
 }
+/* 新手模式:浅绿底 + 深绿字 + 浅绿边框(柔和不刺眼) */
+body[data-mode='beginner'] .mode-indicator {
+  background: #d1fae5;
+  color: #166534;
+  border-color: #a7f3d0;
+}
+/* 老手模式 / 默认:深墨蓝底 + 白字(专业沉稳) */
 body[data-mode='expert'] .mode-indicator,
 body:not([data-mode]) .mode-indicator {
-  background: var(--color-primary-50);
-  color: var(--color-primary-800);
-  border-color: var(--color-primary-200);
+  background: #1e293b;
+  color: #fff;
+  border-color: #1e293b;
 }
 
-/* 切到... 文字提示(在 ModeToggle 旁边,跟随模式反向显示) */
-.mode-hint {
-  font-size: 0.85rem;
-  color: var(--color-ink-600);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  font-weight: 500;
-}
-.mode-hint-icon { font-size: 0.95em; line-height: 1; }
-
-/* 新手模式 header 背景 — 浅黄底,与主色 token 呼应 */
+/* 新手模式 header 背景 — 浅黄底,与主色 token 呼应
+   底部边框用更深的鼠尾草绿 #86c79d,在浅黄上可见,跟 hero 底部 4px 边呼应 */
 body[data-mode='beginner'] .site-header {
   background: rgba(254, 252, 232, 0.95);
-  border-bottom-color: var(--color-accent-100);
+  border-bottom: 1px solid #a7f3d0;
 }
+/* 新手模式 ERR 图标 — 浅黄底 + 深绿字 + 暖橙细边框,
+   跟浅黄绿 header 背景协调,不再撞色 */
 body[data-mode='beginner'] .brand-mark {
-  background: var(--color-accent-600);
+  background: #fef3c7;
+  color: #166534;
+  border: 2px solid #b45309;
+}
+/* 老手模式 ERR 图标 — 保持现状 (深靛蓝底 + 白字),
+   这里显式声明一遍,防止 beginner 规则误伤 */
+body[data-mode='expert'] .brand-mark,
+body:not([data-mode]) .brand-mark {
+  background: var(--color-primary-700);
+  color: #fff;
+  border: 0;
+}
+
+/* ============================================
+   老手模式首页 — 紧凑 / 锐角 / 信息密度
+   - hero / section / card 全部收紧 padding,圆角用 --radius-lg = 6px
+   - 让"严肃专业"跟新手的 18px 大圆角形成肉眼可辨的对比
+   - 用 .container 嵌套提升 specificity 到 0,3,0,
+     避免被 index.astro 的 [data-astro-cid-xxx] scoped style (0,2,0) 覆盖
+   ============================================ */
+body[data-mode='expert'] .container .hero,
+body:not([data-mode]) .container .hero {
+  padding: 2.5rem 0 1.8rem 0;
+}
+body[data-mode='expert'] .container .hero-title,
+body:not([data-mode]) .container .hero-title {
+  font-size: clamp(1.55rem, 3.2vw, 2.1rem);
+  line-height: 1.25;
+  max-width: 26ch;
+  letter-spacing: -0.005em;
+  font-weight: 600;
+}
+body[data-mode='expert'] .container .hero-sub,
+body:not([data-mode]) .container .hero-sub {
+  font-size: 0.98rem;
+  line-height: 1.55;
+  margin: 0 0 1.1em 0;
+  max-width: 64ch;
+}
+body[data-mode='expert'] .container .hero-eyebrow,
+body:not([data-mode]) .container .hero-eyebrow {
+  font-size: 0.78rem;
+  margin: 0 0 0.5em 0;
+}
+body[data-mode='expert'] .container .hero-cta,
+body:not([data-mode]) .container .hero-cta {
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+body[data-mode='expert'] .container .hero-cta .btn,
+body:not([data-mode]) .container .hero-cta .btn {
+  padding: 0.55em 1.05em;
+  font-size: 0.92rem;
+  border-radius: var(--radius);
+}
+body[data-mode='expert'] .container .hero-points,
+body:not([data-mode]) .container .hero-points {
+  gap: 0.4rem 1.2rem;
+  font-size: 0.88rem;
+}
+
+body[data-mode='expert'] .section,
+body:not([data-mode]) .section {
+  padding: 2.2rem 0;
+}
+body[data-mode='expert'] .section-tight,
+body:not([data-mode]) .section-tight {
+  padding: 1.3rem 0;
+}
+body[data-mode='expert'] .card,
+body:not([data-mode]) .card {
+  padding: 1rem 1.15rem;
+}
+body[data-mode='expert'] .container .section-head,
+body:not([data-mode]) .container .section-head {
+  margin-bottom: 1rem;
+}
+body[data-mode='expert'] .grid-3,
+body:not([data-mode]) .grid-3 {
+  gap: 1rem;
+}
+body[data-mode='expert'] .container .radar-search-input,
+body:not([data-mode]) .container .radar-search-input {
+  padding: 0.65em 0.9em 0.65em 2.6em;
+  font-size: 0.95rem;
+  border-radius: var(--radius);
+}
+body[data-mode='expert'] .container .radar-search,
+body:not([data-mode]) .container .radar-search {
+  margin-top: 1.1rem;
 }
 
 /* 新手模式导航 active 态 — 沿用 .nav-link.is-active 的样式,
@@ -776,8 +892,9 @@ body[data-mode='beginner'] .brand-mark {
    ============================================ */
 .hero-beginner {
   background: linear-gradient(180deg, #fef3c7 0%, #d1fae5 100%);
-  padding: 3.5rem 0 3rem 0;
-  border-bottom: 4px solid var(--color-accent-400);
+  padding: 5.5rem 0 5rem 0;
+  /* 降饱和的鼠尾草绿,跟浅黄底协调(原 #34d399 太亮太玩具) */
+  border-bottom: 4px solid #86c79d;
 }
 .hero-beginner-eyebrow {
   display: inline-flex;
@@ -795,36 +912,38 @@ body[data-mode='beginner'] .brand-mark {
   text-transform: uppercase;
 }
 .hero-beginner-title {
-  font-size: clamp(1.9rem, 4.5vw, 2.8rem);
-  line-height: 1.2;
+  font-size: clamp(2.3rem, 5.5vw, 3.4rem);
+  line-height: 1.18;
   max-width: 22ch;
-  margin: 0 0 0.5em 0;
+  margin: 0 0 0.55em 0;
   color: var(--color-ink-900);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  font-weight: 700;
 }
 .hero-beginner-sub {
   color: var(--color-ink-700);
-  font-size: 1.1rem;
-  line-height: 1.6;
+  font-size: 1.25rem;
+  line-height: 1.65;
   max-width: 60ch;
-  margin: 0 0 1.5em 0;
+  margin: 0 0 2em 0;
 }
 .hero-beginner-cta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.85rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 .hero-beginner-cta .btn {
-  font-size: 1.05rem;
-  padding: 0.75em 1.5em;
+  font-size: 1.12rem;
+  padding: 0.85em 1.7em;
   font-weight: 600;
+  border-radius: var(--radius-lg);
 }
 .btn-beginner-primary {
   background: var(--color-accent-600);
   color: #fff;
   border-color: var(--color-accent-600);
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.32);
 }
 .btn-beginner-primary:hover {
   background: var(--color-accent-700);
@@ -836,7 +955,7 @@ body[data-mode='beginner'] .brand-mark {
   background: #fff;
   color: var(--color-ink-900);
   border-color: var(--color-ink-300);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.06);
 }
 .btn-beginner-secondary:hover {
   background: #fffbeb;
@@ -849,8 +968,8 @@ body[data-mode='beginner'] .brand-mark {
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.5rem;
-  font-size: 0.95rem;
+  gap: 0.6rem 1.75rem;
+  font-size: 1.02rem;
   color: var(--color-ink-700);
 }
 
@@ -859,28 +978,30 @@ body[data-mode='beginner'] .brand-mark {
    ============================================ */
 .beginner-block {
   border-radius: var(--radius-lg);
-  margin: 1.5rem 0;
-  padding: 2rem 1.5rem;
+  margin: 2.5rem 0;
+  padding: 3rem 2.5rem;
   border: 1px solid;
 }
 .beginner-block-header {
   display: flex;
   align-items: center;
-  gap: 0.6em;
-  margin-bottom: 0.4em;
+  gap: 0.7em;
+  margin-bottom: 0.5em;
 }
 .beginner-block-title {
-  font-size: clamp(1.4rem, 2.6vw, 1.7rem);
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
   margin: 0;
   color: var(--color-ink-900);
-  line-height: 1.25;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
-.beginner-block-icon { font-size: 1.5em; line-height: 1; }
+.beginner-block-icon { font-size: 1.6em; line-height: 1; }
 .beginner-block-sub {
   color: var(--color-ink-700);
-  font-size: 0.98rem;
-  margin: 0 0 1.25rem 0;
-  line-height: 1.5;
+  font-size: 1.08rem;
+  margin: 0 0 1.75rem 0;
+  line-height: 1.6;
   max-width: 70ch;
 }
 
@@ -892,62 +1013,66 @@ body[data-mode='beginner'] .brand-mark {
 .beginner-5steps-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.85rem;
+  gap: 1rem;
 }
 .guide-step {
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: 1.25rem;
   background: #fff;
   border: 1px solid var(--color-ink-200);
   border-radius: var(--radius-lg);
-  padding: 1.1rem 1.3rem;
+  padding: 1.6rem 1.85rem;
   text-decoration: none;
   color: inherit;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
 }
 .guide-step:hover {
-  border-color: var(--color-accent-400);
+  border-color: var(--color-accent-500);
   box-shadow: var(--shadow);
   color: inherit;
+  transform: translateY(-1px);
 }
 .guide-step-num {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.2em;
-  height: 2.2em;
-  background: var(--color-accent-500);
+  width: 3em;
+  height: 3em;
+  background: var(--color-accent-600);
   color: #fff;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.5rem;
   border-radius: 50%;
   line-height: 1;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.28);
 }
 .guide-step-body { flex: 1 1 auto; min-width: 0; }
 .guide-step-title {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  margin: 0 0 0.3em 0;
+  margin: 0 0 0.35em 0;
   color: var(--color-ink-900);
   line-height: 1.4;
 }
 .guide-step:hover .guide-step-title { color: var(--color-accent-700); }
 .guide-step-desc {
-  font-size: 0.92rem;
+  font-size: 1rem;
   color: var(--color-ink-600);
   margin: 0;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 .guide-step-time {
   display: inline-block;
-  margin-top: 0.5em;
-  font-size: 0.8rem;
+  margin-top: 0.65em;
+  font-size: 0.85rem;
   color: var(--color-ink-500);
+  font-weight: 500;
 }
 
-/* 8 大名词先搞懂 — 浅绿底 */
+/* 8 大名词先搞懂 — 浅绿底,使用更柔和的 #c7f0d9 跟 5 步走的浅黄
+   形成暖冷对比,新手模式两种"轻松"色调都到位 */
 .beginner-block.beginner-terms {
   background: #d1fae5;
   border-color: #a7f3d0;
@@ -957,25 +1082,27 @@ body[data-mode='beginner'] .brand-mark {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  gap: 1.75rem;
 }
 .terms-cta-body { flex: 1 1 320px; min-width: 0; }
 .terms-cta-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin: 0 0 0.4em 0;
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin: 0 0 0.5em 0;
   color: var(--color-ink-900);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 .terms-cta-desc {
   color: var(--color-ink-700);
-  margin: 0 0 0.6em 0;
-  line-height: 1.55;
-  font-size: 0.98rem;
+  margin: 0 0 0.8em 0;
+  line-height: 1.6;
+  font-size: 1.05rem;
 }
 .terms-cta-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4em;
+  gap: 0.5em;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -984,9 +1111,9 @@ body[data-mode='beginner'] .brand-mark {
   display: inline-block;
   background: #fff;
   color: var(--color-ink-700);
-  font-size: 0.82rem;
-  font-weight: 500;
-  padding: 0.2em 0.7em;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.3em 0.85em;
   border: 1px solid var(--color-ink-200);
   border-radius: 999px;
 }
@@ -994,21 +1121,23 @@ body[data-mode='beginner'] .brand-mark {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.4em;
+  gap: 0.5em;
   background: var(--color-accent-700);
   color: #fff;
   border: 1px solid var(--color-accent-700);
-  padding: 0.8em 1.4em;
-  border-radius: var(--radius);
+  padding: 1em 1.8em;
+  border-radius: var(--radius-lg);
   font-weight: 600;
   text-decoration: none;
-  font-size: 1rem;
-  transition: background 0.15s, transform 0.05s;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28);
+  font-size: 1.1rem;
+  transition: background 0.15s, transform 0.05s, box-shadow 0.15s;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.32);
 }
 .terms-cta-btn:hover {
   background: var(--color-accent-600);
   color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
 }
 
 /* 还有这些新手课 — 3 列卡片 */
@@ -1019,7 +1148,7 @@ body[data-mode='beginner'] .brand-mark {
 .beginner-more-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
 }
 .beginner-more-card {
   display: flex;
@@ -1027,35 +1156,35 @@ body[data-mode='beginner'] .brand-mark {
   background: #fff;
   border: 1px solid var(--color-ink-200);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.4rem;
+  padding: 1.85rem 1.75rem;
   text-decoration: none;
   color: inherit;
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
 }
 .beginner-more-card:hover {
-  border-color: var(--color-accent-400);
+  border-color: var(--color-accent-500);
   box-shadow: var(--shadow);
   color: inherit;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
-.beginner-more-card-icon { font-size: 1.6rem; line-height: 1; margin-bottom: 0.5em; }
+.beginner-more-card-icon { font-size: 2.1rem; line-height: 1; margin-bottom: 0.65em; }
 .beginner-more-card-title {
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  margin: 0 0 0.3em 0;
+  margin: 0 0 0.4em 0;
   color: var(--color-ink-900);
-  line-height: 1.4;
+  line-height: 1.35;
 }
 .beginner-more-card:hover .beginner-more-card-title { color: var(--color-accent-700); }
 .beginner-more-card-desc {
-  font-size: 0.9rem;
+  font-size: 0.98rem;
   color: var(--color-ink-600);
-  margin: 0 0 0.6em 0;
-  line-height: 1.5;
+  margin: 0 0 0.8em 0;
+  line-height: 1.55;
   flex: 1 1 auto;
 }
 .beginner-more-card-link {
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   color: var(--color-accent-700);
   font-weight: 600;
   text-decoration: none;
@@ -1072,20 +1201,20 @@ body[data-mode='beginner'] .brand-mark {
   background: var(--color-ink-50);
   border: 1px solid var(--color-ink-200);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.5rem;
-  margin: 1.5rem 0 0 0;
+  padding: 2rem 2.25rem;
+  margin: 2rem 0 0 0;
 }
 .beginner-trust-title {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.5em 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.6em 0;
   color: var(--color-ink-900);
 }
 .beginner-trust p {
   color: var(--color-ink-700);
-  margin: 0.3em 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
+  margin: 0.4em 0;
+  font-size: 0.98rem;
+  line-height: 1.65;
 }
 .beginner-trust strong { color: var(--color-ink-900); }
 
