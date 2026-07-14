@@ -5,7 +5,7 @@
  * 设计目标:
  *   - 嵌在 footer 顶部,留出 AdSense 广告位上方一块私密订阅条
  *   - 视觉跟 footer 链接同色系,不抢眼(留 AdSense 空间)
- *   - 移动端 input 100% 宽(自然堆叠)
+ *   - 移动端 input 100% 宽(自然堆叠) + 触屏设备加大点击区
  *   - 提交时优先 Mailchimp → 失败 Brevo → 失败展示"复制邮箱"兜底
  *   - 全部走原生 fetch,零依赖
  * ----------------------------------------------------------------
@@ -39,6 +39,7 @@
       placeholder="你的邮箱, 每周一条欧盟新规摘要"
       autocomplete="email"
       required
+      aria-describedby="email-sub-fallback"
     />
     <!--
       GDPR opt-in checkbox:
@@ -63,9 +64,16 @@
   </form>
   <p class="email-sub-status" data-email-sub-status aria-live="polite"></p>
   <!--
-    失败兜底:用户点订阅出错时,JS 会自动用 navigator.clipboard 复制 i@weiread.com,
-    并在 status 区域展示"已复制邮箱 i@weiread.com,请直接邮件加"
+    可见的兜底说明:
+    - 占位 __MAILCHIMP_ACTION__ 还没替换时,这一行一直显示,告诉用户"点了可能没反应"
+      以及"直接邮件 i@weiread.com"的备选入口
+    - JS 在端点配齐后(MAILCHIMP_ACTION 或 BREVO_ACTION 任一为真实 URL)
+      会自动 hidden 这一行,避免 Mailchimp 接上后还显示旧提示
+    - 这条说明也是点击失败后的"二次兜底"—— 状态条失败信息会被它补充
   -->
+  <p class="email-sub-fallback" id="email-sub-fallback" data-email-sub-fallback>
+    如果点了没反应,说明 Mailchimp 还没接上 —— 你也可以<a href="mailto:i@weiread.com?subject=%E8%AE%A2%E9%98%85%E6%AC%A7%E8%A7%84%E9%9B%B7%E8%BE%BE%E5%91%A8%E6%8A%A5">直接发邮件到 i@weiread.com</a>订阅,我手动把你加进名单。
+  </p>
 </div>
 
 <style>
@@ -93,15 +101,22 @@
   .email-sub-btn {
     flex: 0 0 auto;
     /* 不抢眼:用 btn-secondary 而不是 btn-primary */
-    padding: 0.45em 1em;
+    padding: 0.5em 1.1em;
     font-size: 0.9rem;
     color: var(--color-primary-700);
     background: #fff;
     border: 1px solid var(--color-primary-300);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
   }
   .email-sub-btn:hover {
     background: var(--color-primary-50);
     color: var(--color-primary-800);
+  }
+  .email-sub-btn:active {
+    background: var(--color-primary-100);
   }
   .email-sub-btn:disabled {
     opacity: 0.7;
@@ -132,10 +147,28 @@
   }
   .email-sub-status.is-ok { color: var(--color-accent-700); }
   .email-sub-status.is-err { color: var(--color-risk-high-text); }
+  /* 可见的兜底说明 — 在占位未替换时一直显示,配置好后 JS 会隐藏 */
+  .email-sub-fallback {
+    margin: 0.4em 0 0 0;
+    font-size: 0.78rem;
+    color: var(--color-ink-500);
+    line-height: 1.45;
+  }
+  .email-sub-fallback a {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+  }
+  .email-sub-fallback[hidden] { display: none; }
   /* 移动端:input 100% 宽,button 100% 宽 */
   @media (max-width: 480px) {
     .email-sub-input { flex: 1 1 100%; }
     .email-sub-btn { flex: 1 1 100%; }
+  }
+  /* 触屏设备: iOS 不自动缩放 + 44px 最小可点击区(WCAG 2.5.5) */
+  @media (pointer: coarse) {
+    .email-sub-input { font-size: 16px; padding: 0.6em 0.8em; min-height: 44px; }
+    .email-sub-btn { padding: 0.65em 1.2em; min-height: 44px; }
+    .email-sub-consent { padding: 0.25em 0; }
   }
 </style>
 
@@ -210,30 +243,52 @@
     const btn = root.querySelector<HTMLButtonElement>('[data-email-sub-btn]');
     const status = root.querySelector<HTMLElement>('[data-email-sub-status]');
     const consentBox = root.querySelector<HTMLInputElement>('[data-email-sub-consent]');
+    const fallback = root.querySelector<HTMLElement>('[data-email-sub-fallback]');
+
+    // ---- 端点已配齐时,隐藏可见的兜底说明 ----
+    if (fallback) {
+      if (isConfigured(MAILCHIMP_ACTION) || isConfigured(BREVO_ACTION)) {
+        fallback.setAttribute('hidden', '');
+      }
+    }
 
     if (form && btn && status) {
+      // 防重复提交(双重保险,即便按钮 disabled 也会兜住)
+      let inFlight = false;
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (inFlight) return;
+
         const data = new FormData(form);
         const email = ((data.get('EMAIL') as string | null) || '').trim();
         const consent = !!(consentBox && consentBox.checked);
 
-        // ---- 校验 ----
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-          status.textContent = '请输入有效的邮箱地址。';
+        // ---- 校验:更明确的错误原因 ----
+        if (!email) {
+          status.textContent = '请输入邮箱地址。';
           status.className = 'email-sub-status is-err';
+          (form.querySelector('input[type="email"]') as HTMLInputElement | null)?.focus();
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          status.textContent = '邮箱格式不对, 看看是不是漏了 @ 或 .com 这部分。';
+          status.className = 'email-sub-status is-err';
+          (form.querySelector('input[type="email"]') as HTMLInputElement | null)?.focus();
           return;
         }
         if (!consent) {
-          status.textContent = '请勾选同意接收每周邮件后再订阅。';
+          status.textContent = '请先勾选"我同意接收每周邮件"再订阅。';
           status.className = 'email-sub-status is-err';
           return;
         }
 
-        // ---- 提交 ----
+        // ---- 进入提交态:按钮变 "提交中…", 不可重复点击 ----
         const oldBtnText = btn.textContent || '订阅';
+        inFlight = true;
         btn.disabled = true;
         btn.textContent = '提交中…';
+        status.textContent = '正在发送, 请稍候…';
         status.className = 'email-sub-status';
 
         // 优先 Mailchimp → Brevo
@@ -243,33 +298,50 @@
         if (!mailchimpOk && !brevoOk) {
           // 占位还没替换:直接走兜底 — 复制邮箱
           await runFallbackCopy(status, btn, oldBtnText);
+          inFlight = false;
           return;
         }
 
         let result: SubmitResult = { ok: false, error: 'no provider tried' };
+        let firstNetError = '';
         if (mailchimpOk) {
           result = await postToProvider(MAILCHIMP_ACTION, data);
+          if (!result.ok && result.error) firstNetError = result.error;
         }
         if (!result.ok && brevoOk) {
-          result = await postToProvider(BREVO_ACTION, data);
+          const r2 = await postToProvider(BREVO_ACTION, data);
+          if (r2.ok) {
+            result = r2;
+          } else if (r2.error) {
+            firstNetError = firstNetError || r2.error;
+          }
         }
         if (!result.ok) {
-          await runFallbackCopy(status, btn, oldBtnText);
+          // 网络/提交出错,提示用户重试或用邮件兜底
+          btn.textContent = '❌ 提交失败';
+          status.innerHTML = `网络出错或邮件服务临时不可达 (${firstNetError || 'fetch failed'}), 请检查网络后重试, 或直接发邮件到 <code>${FALLBACK_EMAIL}</code> 加订阅。`;
+          status.className = 'email-sub-status is-err';
+          window.setTimeout(() => {
+            btn.disabled = false;
+            btn.textContent = oldBtnText;
+            inFlight = false;
+          }, 6000);
           return;
         }
 
         // ---- 成功 ----
-        status.textContent = '✓ 已订阅,请查收确认邮件(可能在垃圾邮件里)。';
+        status.textContent = '✓ 已订阅, 请查收确认邮件(可能在垃圾邮件里)。';
         status.className = 'email-sub-status is-ok';
-        btn.textContent = '✅ 已订阅';
+        btn.textContent = '✅ 已订阅, 查收邮件确认';
         form.reset();
-        // 5 秒后允许再次订阅
+        // 8 秒后允许再次订阅(给用户足够时间看到状态)
         window.setTimeout(() => {
           btn.disabled = false;
           btn.textContent = oldBtnText;
           status.textContent = '';
           status.className = 'email-sub-status';
-        }, 5000);
+          inFlight = false;
+        }, 8000);
       });
     }
   }
@@ -283,16 +355,14 @@
     const copied = await copyToClipboard(FALLBACK_EMAIL);
     btn.textContent = '❌ 出错';
     if (copied) {
-      status.innerHTML = `提交失败,已把邮箱 <code>${FALLBACK_EMAIL}</code> 复制到剪贴板 — 直接发邮件到该地址加订阅。`;
+      status.innerHTML = `Mailchimp 还没接上, 已把邮箱 <code>${FALLBACK_EMAIL}</code> 复制到剪贴板 — 直接发邮件加订阅即可。`;
     } else {
-      status.innerHTML = `提交失败,请直接发邮件到 <code>${FALLBACK_EMAIL}</code> 加订阅(已复制剪贴板,但可能被浏览器拒绝)。`;
+      status.innerHTML = `Mailchimp 还没接上, 请直接发邮件到 <code>${FALLBACK_EMAIL}</code> 加订阅。`;
     }
     status.className = 'email-sub-status is-err';
     window.setTimeout(() => {
       btn.disabled = false;
       btn.textContent = oldBtnText;
-    }, 6000);
+    }, 8000);
   }
 </script>
-</content>
-</invoke>

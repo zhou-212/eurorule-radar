@@ -1,0 +1,424 @@
+---
+/**
+ * 浮动 4 按钮(右下角 FAB)
+ * ------------------------------------------------------------
+ * 调研依据:competitor-research-beginner-content.md 的"建议 4"
+ *   - 卖家精灵 / 雨果网 / AMZ123 都用浮动 4 按钮,是跨境圈"标配"
+ *   - 当前 weiread.com 站外推广到知乎,但站内无承接私域入口
+ *
+ * 4 个按钮(竖向排列, 间距 8px):
+ *   1. 回顶 (↑)  - 滚动 200px 后才显示, 平滑滚到顶部
+ *   2. 下载 (⬇)  - 跳到 /checklists/first-30-days-survival/ 救命清单
+ *   3. 咨询 (💬) - mailto:i@weiread.com
+ *   4. 微信群    - 弹出 QR 模态框
+ *
+ * 视觉:
+ *   - 48x48 圆形, 半透明黑底 rgba(0,0,0,0.6), hover 变实心
+ *   - 桌面: 距离右 16px, 底 16px
+ *   - 移动: 距离右 12px, 底 12px
+ *   - 打印: 隐藏(.no-print + 打印样式)
+ *   - 屏幕阅读器: 提供 aria-label
+ *
+ * 实现说明:
+ *   - 组件用 Astro 静态 HTML 输出 4 个按钮 + 模态 DOM
+ *   - 交互 JS 写在 <script> 块,Astro 自动打包 + 全站去重
+ *   - 回顶按钮初始 hidden, JS 监听 scroll 事件
+ *   - 微信群模态: 打开/关闭/ESC/点背景 都处理
+ * ------------------------------------------------------------
+ */
+import { withBase } from '../lib/url';
+
+const checklistHref = withBase('/checklists/first-30-days-survival/');
+const qrSrc = withBase('/wechat-qr.svg');
+const contactEmail = 'i@weiread.com';
+---
+
+<aside
+  class="floating-actions no-print"
+  data-floating-actions
+  aria-label="页面快捷操作"
+>
+  <button
+    type="button"
+    class="fab fab-back-to-top"
+    data-fab-action="top"
+    aria-label="回到页面顶部"
+    hidden
+  >
+    <span class="fab-icon" aria-hidden="true">↑</span>
+  </button>
+
+  <a
+    href={checklistHref}
+    class="fab fab-download"
+    data-fab-action="download"
+    aria-label="下载新手救命清单(头 30 天必做 10 件事)"
+  >
+    <span class="fab-icon" aria-hidden="true">⬇</span>
+  </a>
+
+  <a
+    href={`mailto:${contactEmail}`}
+    class="fab fab-contact"
+    data-fab-action="contact"
+    aria-label={`邮件咨询合规顾问 ${contactEmail}`}
+  >
+    <span class="fab-icon" aria-hidden="true">💬</span>
+  </a>
+
+  <button
+    type="button"
+    class="fab fab-wechat"
+    data-fab-action="wechat"
+    aria-label="扫码加入卖家交流群"
+    aria-haspopup="dialog"
+    aria-controls="floating-actions-wechat-modal"
+  >
+    <span class="fab-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+        <path
+          fill="currentColor"
+          d="M8.5 4C4.91 4 2 6.46 2 9.5c0 1.71.94 3.23 2.41 4.23l-.6 1.84 2.13-1.07c.79.18 1.62.3 2.49.3.18 0 .35-.01.52-.02-.11-.4-.18-.82-.18-1.25 0-2.76 2.69-5 6-5 .22 0 .44.01.65.04C15.04 5.69 12.04 4 8.5 4zm-2.5 4a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm5 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM14.5 10c-3.04 0-5.5 2.13-5.5 4.75S11.46 19.5 14.5 19.5c.66 0 1.29-.09 1.88-.25l1.87.94-.5-1.55A4.49 4.49 0 0 0 20 14.75C20 12.13 17.54 10 14.5 10zm-2 2.25a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5zm4 0a.75.75 0 1 1 0 1.5.75.75 0 0 1 0-1.5z"
+        />
+      </svg>
+    </span>
+  </button>
+</aside>
+
+<!-- 微信群模态框(默认隐藏, JS 控制显示) -->
+<div
+  class="wechat-modal"
+  id="floating-actions-wechat-modal"
+  data-wechat-modal
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="floating-actions-wechat-title"
+  aria-describedby="floating-actions-wechat-desc"
+  hidden
+>
+  <div class="wechat-modal-backdrop" data-wechat-close aria-hidden="true"></div>
+  <div class="wechat-modal-card" role="document">
+    <button
+      type="button"
+      class="wechat-modal-close"
+      data-wechat-close
+      aria-label="关闭"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
+    <h2 class="wechat-modal-title" id="floating-actions-wechat-title">
+      扫码加入卖家交流群
+    </h2>
+    <p class="wechat-modal-desc" id="floating-actions-wechat-desc">
+      群里都是做亚马逊欧洲站的中国卖家,日常聊 GPSR / CE / EPR / LUCID 等合规执行。
+    </p>
+    <div class="wechat-modal-qr-wrap">
+      <img
+        src={qrSrc}
+        alt="欧规雷达卖家交流群二维码(占位图,正式码待运营替换)"
+        width="200"
+        height="200"
+        class="wechat-modal-qr"
+        loading="lazy"
+      />
+    </div>
+    <p class="wechat-modal-email">
+      不会扫码 / 二维码过期?直接发邮件:
+      <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+    </p>
+  </div>
+</div>
+
+<style>
+  /* ============================================
+     浮动按钮容器 — 右下角
+     ============================================ */
+  .floating-actions {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 40;            /* 低于 header (z-50), 高于一般内容 */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* 不抢屏幕:容器本身无背景,无边框 */
+  }
+  @media (max-width: 480px) {
+    .floating-actions {
+      right: 12px;
+      bottom: 12px;
+    }
+  }
+
+  /* ============================================
+     FAB 按钮(48x48 圆)
+     ============================================ */
+  .fab {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #ffffff;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);
+    transition:
+      background 0.18s ease,
+      transform 0.12s ease,
+      box-shadow 0.18s ease,
+      opacity 0.18s ease;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .fab:hover {
+    background: rgba(0, 0, 0, 0.92);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.28);
+  }
+  .fab:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.6);
+  }
+  .fab:active {
+    transform: translateY(0);
+  }
+  .fab[hidden] {
+    display: none !important;
+  }
+  .fab-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .fab-icon svg {
+    display: block;
+  }
+
+  /* ============================================
+     微信模态
+     ============================================ */
+  .wechat-modal[hidden] {
+    display: none !important;
+  }
+  .wechat-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 60;            /* 高于浮动按钮 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .wechat-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  .wechat-modal-card {
+    position: relative;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 1.6rem 1.4rem 1.4rem 1.4rem;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid var(--color-ink-200);
+    animation: wechat-modal-in 0.18s ease-out;
+  }
+  @keyframes wechat-modal-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wechat-modal-card { animation: none; }
+  }
+  .wechat-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--color-ink-500);
+    cursor: pointer;
+    border-radius: var(--radius);
+    font-size: 1.4rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .wechat-modal-close:hover {
+    background: var(--color-ink-100);
+    color: var(--color-ink-900);
+  }
+  .wechat-modal-close:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+  .wechat-modal-title {
+    font-size: 1.15rem;
+    margin: 0 0 0.4em 0;
+    color: var(--color-ink-900);
+  }
+  .wechat-modal-desc {
+    color: var(--color-ink-600);
+    font-size: 0.92rem;
+    margin: 0 0 1em 0;
+    line-height: 1.5;
+  }
+  .wechat-modal-qr-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 1em 0;
+    padding: 0.6rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    width: fit-content;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .wechat-modal-qr {
+    display: block;
+    width: 200px;
+    height: 200px;
+  }
+  .wechat-modal-email {
+    color: var(--color-ink-600);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+  .wechat-modal-email a {
+    color: var(--color-primary-700);
+  }
+
+  /* ============================================
+     打印: 浮动按钮 + 模态都隐藏
+     ============================================ */
+  @media print {
+    .floating-actions,
+    .wechat-modal {
+      display: none !important;
+    }
+  }
+</style>
+
+<script>
+  /**
+   * FloatingActions 交互:
+   *   - 回顶按钮:scroll > 200px 显示,点击平滑滚到顶部
+   *   - 微信群模态:打开 / 关闭 / ESC / 点背景
+   */
+  function setup() {
+    const fabRoot = document.querySelector<HTMLElement>('[data-floating-actions]');
+    if (!fabRoot) return;
+
+    /* ---------- 回顶按钮 ---------- */
+    const topBtn = fabRoot.querySelector<HTMLButtonElement>('[data-fab-action="top"]');
+    if (topBtn) {
+      const THRESHOLD = 200;
+      let ticking = false;
+      const update = () => {
+        const y = window.scrollY || window.pageYOffset || 0;
+        if (y > THRESHOLD) {
+          if (topBtn.hasAttribute('hidden')) topBtn.removeAttribute('hidden');
+        } else {
+          if (!topBtn.hasAttribute('hidden')) topBtn.setAttribute('hidden', '');
+        }
+        ticking = false;
+      };
+      const onScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(update);
+          ticking = true;
+        }
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      update(); // 初始状态(如刷新时已滚动)
+      topBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+        // 平滑滚完之后把焦点放回主要内容开头,方便键盘用户
+        if (!reduced) {
+          window.setTimeout(() => {
+            const main = document.getElementById('main');
+            if (main) {
+              const focusable = main.querySelector<HTMLElement>(
+                'h1, h2, a[href], button, [tabindex]:not([tabindex="-1"])'
+              );
+              if (focusable) focusable.focus({ preventScroll: true });
+            }
+          }, 500);
+        }
+      });
+    }
+
+    /* ---------- 微信群模态 ---------- */
+    const wechatBtn = fabRoot.querySelector<HTMLButtonElement>('[data-fab-action="wechat"]');
+    const modal = document.getElementById('floating-actions-wechat-modal') as HTMLElement | null;
+    if (wechatBtn && modal) {
+      let lastFocus: HTMLElement | null = null;
+
+      const open = () => {
+        lastFocus = (document.activeElement as HTMLElement) || null;
+        modal.removeAttribute('hidden');
+        // 焦点移到关闭按钮
+        window.setTimeout(() => {
+          const closeBtn = modal.querySelector<HTMLButtonElement>('.wechat-modal-close');
+          closeBtn?.focus();
+        }, 0);
+        // 锁滚动(只在桌面/平板,移动端体验差可省)
+        document.documentElement.style.overflow = 'hidden';
+      };
+      const close = () => {
+        modal.setAttribute('hidden', '');
+        document.documentElement.style.overflow = '';
+        // 焦点还回去
+        if (lastFocus && typeof lastFocus.focus === 'function') {
+          lastFocus.focus({ preventScroll: true });
+        }
+      };
+
+      wechatBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        open();
+      });
+
+      // 关闭:点背景 / 点 ×
+      modal.querySelectorAll<HTMLElement>('[data-wechat-close]').forEach((el) => {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          close();
+        });
+      });
+
+      // 关闭:ESC
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.hasAttribute('hidden')) {
+          close();
+        }
+      });
+    }
+  }
+  setup();
+</script>

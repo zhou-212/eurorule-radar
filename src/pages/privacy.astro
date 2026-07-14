@@ -26,7 +26,7 @@ const breadcrumb = {
       <span>隐私说明</span>
     </nav>
     <h1>隐私说明</h1>
-    <p class="updated">最后更新:<time datetime="2026-07-13">2026-07-13</time></p>
+    <p class="updated">最后更新:<time datetime="2026-07-15">2026-07-15</time></p>
 
     <div class="prose">
       <p>欧规雷达(以下简称"本站")尊重你的隐私。本站使用 <strong>GitHub Pages 静态托管</strong>,第一阶段不部署后端服务,也不内置第三方追踪代码。访问本站时,你的数据由 GitHub Pages 和浏览器 / DNS 提供方按其各自隐私政策处理。</p>
@@ -44,14 +44,11 @@ const breadcrumb = {
       <p>行动清单的勾选状态会保存在你的<strong>浏览器本地</strong>(localStorage),用于下次访问恢复进度。删除浏览器数据会清除这些记录。清除不影响其它浏览器或设备。</p>
       <h3>(2) 邮件订阅</h3>
       <p>
-        <strong>当前状态:订阅功能筹备中,当前不收集、不保存、不发送任何邮箱数据。</strong>
-        站内的订阅表单按钮在配置完成前为<strong>禁用</strong>状态;若你尝试提交,浏览器会阻止,且不会发出任何网络请求。
+        <strong>当前状态:订阅服务正在接入,接入完成前不收集、不保存、不发送任何邮箱数据。</strong>
+        站内的订阅表单在 <code>__MAILCHIMP_ACTION__</code> / <code>__BREVO_ACTION__</code> 占位替换前,点击提交会直接走兜底提示(让用户直接发邮件到 <code>i@weiread.com</code>),不会向任何第三方邮件服务发送数据。
       </p>
       <p>
-        启用条件:运营在 <code>public/runtime-config.js</code> 填入真实的 <code>API_BASE_URL</code> 后,表单会变为可用,提交的邮箱数据会通过 <code>POST &#123;API_BASE_URL&#125;/api/v1/subscriptions</code> 发送到自建后端。在此之前,本站不会调用任何第三方邮件服务(Tally / Brevo / ConvertKit 等)。
-      </p>
-      <p>
-        启用后,数据将由你的自建后端按你自己的隐私政策处理;本站只作为前端,不对后端数据保存或传输承担责任。
+        接入完成后,数据将由 Mailchimp / Brevo(已签 DPA + SCC)按其各自隐私政策处理;本站仅作为前端,不对邮件服务的数据保存或传输承担责任。<strong>详细数据处理规则见下方第 11 节"📧 邮件订阅数据处理"</strong>。
       </p>
       <h3>(3) 访问统计(可选)</h3>
       <p>本站不内置任何分析代码。运营者可能通过 GitHub Pages 的基础访问日志查看总访问量(不包含个人识别信息)。</p>
@@ -90,7 +87,47 @@ const breadcrumb = {
       <p>我们可能在必要时更新本隐私说明,更新会在本站"最后更新"字段标注。</p>
 
       <h2>10. 联系</h2>
-      <p>对隐私有疑问,可联系:<code>YOUR_CONTACT_EMAIL@example.com</code>(占位,部署前替换为你的真实邮箱)。</p>
+      <p>对隐私有疑问,可联系:<code>i@weiread.com</code>。我们会在 30 天内回复。</p>
+
+      <h2>11. 📧 邮件订阅数据处理</h2>
+      <p>如果你订阅了我们的每周新规摘要邮件,以下说明我们如何收集、使用、存储和保护你的数据。本节遵循 GDPR 第 13、15、17 条信息告知义务。</p>
+
+      <h3>11.1 我们使用什么服务</h3>
+      <p>邮件订阅服务由 <strong>Mailchimp</strong>(默认)或 <strong>Brevo</strong>(备份)提供,二者均为 GDPR 合规的邮件营销服务商,已签署数据处理协议(DPA)并采用欧盟标准合同条款(SCC)。</p>
+      <p><em>占位:实际接入服务以本页顶部"最后更新"日期为准;Mailchimp / Brevo 接入前不收集任何邮箱数据。</em></p>
+
+      <h3>11.2 我们收集什么</h3>
+      <ul>
+        <li><strong>邮箱地址</strong>(必填,用于发送周报)</li>
+        <li><strong>提交时的 IP 地址和时间戳</strong>(由邮件服务商记录,用于反垃圾和异常检测,<strong>不用于画像</strong>)</li>
+        <li><strong>GDPR opt-in 勾选状态</strong>(用于证明你已明确同意接收邮件,符合 GDPR Art. 7)</li>
+      </ul>
+
+      <h3>11.3 怎么用</h3>
+      <p>你的邮箱<strong>仅用于</strong>:每周三上午(北京时间)发送一条欧盟新规摘要(欧规雷达 周报)。</p>
+      <p><strong>不会</strong>用于:</p>
+      <ul>
+        <li>发送广告、第三方促销或联盟营销邮件</li>
+        <li>出售或出租给任何第三方</li>
+        <li>与你的网站访问行为、你的产品或你的店铺数据交叉关联</li>
+      </ul>
+
+      <h3>11.4 怎么退订</h3>
+      <p>每封邮件<strong>底部</strong>都包含一个 <code>unsubscribe</code> 链接(由 Mailchimp / Brevo 自动生成),点击立即生效,不需要登录账号,不需要理由。</p>
+      <p>退订后 30 天内,你的邮箱会从主发件列表中删除;但保留在"已退订"档案中一段时间以防误发(GDPR Art. 17 允许的合法处理例外)。</p>
+
+      <h3>11.5 你的权利(GDPR Art. 13 / 15 / 17)</h3>
+      <p>你可以随时行使以下权利:</p>
+      <ul>
+        <li><strong>查阅(Art. 15)</strong>:写信给 <code>i@weiread.com</code>,我们 30 天内导出你订阅时的全部记录(邮箱 / IP / 时间 / 同意状态)</li>
+        <li><strong>更改为同一个邮箱(Art. 16)</strong>:拼错的邮箱、想换收件地址,邮件告知即可</li>
+        <li><strong>删除(Art. 17)</strong>:同上邮件告知,我们 30 天内从主列表清除;已退订的也会在 30 天内从档案中彻底删除</li>
+        <li><strong>撤回同意(Art. 7(3))</strong>:等同于退订,一键完成</li>
+        <li><strong>投诉(GDPR Art. 77)</strong>:如认为处理违反 GDPR,可向所在国数据保护监管机构投诉</li>
+      </ul>
+
+      <h3>11.6 政策生效日期</h3>
+      <p>本节内容自 <time datetime="2026-07-15">2026-07-15</time> 起生效;接入真实邮件服务后,我们会在此页面更新"最后更新"日期。</p>
     </div>
   </div>
 </BaseLayout>

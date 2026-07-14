@@ -1,0 +1,136 @@
+---
+/**
+ * /guide/ — 入门指南总目录
+ * ------------------------------------------------------------
+ * 给 /guide/{slug} 系列做总入口 + 站内锚链接。
+ * 此页面纯新增,不影响 RSS / search.json / 现有 Radar 详情。
+ * ------------------------------------------------------------
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+/**
+ * 复用 [slug].astro 里的 GUIDES 配置 — 这里不 import 那个文件(避免循环),
+ * 而是手动维护一份"显示用"精简列表,保证即使 [slug].astro 配置变更也不影响索引。
+ * slug 必须与 [slug].astro GUIDES 中的 slug 一致。
+ */
+const guides = [
+  { slug: 'gpsr',     shortName: 'GPSR',         desc: '欧盟产品安全总章程 + 欧代(2024-12-13 全面生效)。' },
+  { slug: 'ppwr',     shortName: 'PPWR',         desc: '新包装法 2026-08-12 全面执行,物质/最小化/标签/可回收。' },
+  { slug: 'batteries', shortName: 'Batteries',    desc: '含电池商品触发:碳足迹/再生原料/电池护照/回收效率。' },
+  { slug: 'cra',      shortName: 'CRA',          desc: '网络弹性法案 2027-12-11 起,联网硬件+软件默认安全+漏洞披露。' },
+  { slug: 'espr',     shortName: 'ESPR',         desc: '可持续产品法规,DPP 数字产品护照分阶段落地。' },
+  { slug: 'eudr',     shortName: 'EUDR',         desc: '反毁林法规 2025-12-30 大企业,7 类商品要尽职调查。' },
+  { slug: 'pld',      shortName: 'PLD',          desc: '产品责任指令 2026-12-09 各国转化,软件/AI 责任升级。' },
+  { slug: 'lucid',    shortName: 'LUCID',        desc: '德国包装法 + 回收系统,亚马逊 DE 强制。' },
+  { slug: 'epr',      shortName: 'EPR (FR)',     desc: '法国 EPR 多类目注册 + Triman 标识,亚马逊 FR 强制。' },
+  { slug: 'start',    shortName: '新手起步',     desc: '90 天路线图 + 8 个名词 + 第一站选择 + 邮件回复模板。' },
+];
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '入门指南', item: siteStr ? `${siteStr}guide/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="入门指南"
+  description="按法规分组的亚马逊欧洲站新手入门指南:GPSR / PPWR / Batteries / CRA / ESPR / EUDR / PLD / LUCID / EPR 全收录,每个指南 10-15 分钟可读完。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>入门指南</span>
+    </nav>
+
+    <header class="guide-index-head">
+      <h1>入门指南</h1>
+      <p class="page-intro">
+        按法规分组的亚马逊欧洲站新手入门指南 —— 每个指南都是大白话 + 行动步骤 + 常见问题,10-15 分钟读完心里有底。
+        调研依据:
+        雨果网 <code>/guide/{`{平台}`}</code> 多平台结构化路径在跨境圈 SEO 价值高,
+        我们把 12 张 Radar 卡改造成 <code>/guide/{`{法规}`}</code> 长尾路径,帮新手"按法规查"。
+      </p>
+    </header>
+
+    <div class="grid grid-2">
+      {guides.map((g) => (
+        <a class="guide-tile card card-hover card-link" href={withBase(`/guide/${g.slug}/`)}>
+          <span class="guide-tile-tag">入门指南 · {g.shortName}</span>
+          <h2 class="guide-tile-title">
+            /guide/{g.slug} →
+          </h2>
+          <p class="guide-tile-desc">{g.desc}</p>
+        </a>
+      ))}
+    </div>
+
+    <div class="notice notice-info">
+      <strong>提示:</strong>每个指南页都汇总了相关 Radar 详情卡 + 新手入门课 + 行动清单,
+      加上"如何行动 5 步"+"常见问题 3-5 个 Q&A"。建议从
+      <a href={withBase('/guide/start/')}>「新手起步」</a>
+      开始,按路线图 90 天走完基本合规。
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .guide-index-head { margin: 0.5rem 0 1.5rem 0; }
+  .page-intro {
+    color: var(--color-ink-600);
+    font-size: 1rem;
+    max-width: 60ch;
+    margin: 0 0 2rem 0;
+    line-height: 1.7;
+  }
+  .page-intro code {
+    font-size: 0.9em;
+    background: var(--color-ink-100);
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-sm);
+  }
+
+  .guide-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .guide-tile:hover { color: inherit; }
+  .guide-tile-tag {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 0.15em 0.65em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 999px;
+  }
+  .guide-tile-title {
+    font-size: 1.05rem;
+    margin: 0;
+    color: var(--color-ink-900);
+    font-family: var(--font-mono);
+    word-break: break-all;
+  }
+  .guide-tile:hover .guide-tile-title {
+    color: var(--color-primary-700);
+  }
+  .guide-tile-desc {
+    color: var(--color-ink-600);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+</style>

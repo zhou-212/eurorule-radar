@@ -1,0 +1,505 @@
+---
+/**
+ * /guide/{slug} 长尾 SEO 着陆页
+ * ------------------------------------------------------------
+ * 调研依据:competitor-research-beginner-content.md 的"建议 1"
+ *   - 雨果网 /guide/{平台} 多平台结构化路径 — SEO 价值高
+ *   - weiread.com 现有 /radar/{slug} 难打长尾词,改造成 /guide/{法规}
+ *     可以做"GPSR 入门 / PPWR 入门"这类长尾搜索
+ *
+ * 每个 /guide/{slug} 页面 = 法规的"一站式入门指南":
+ *   1. Hero:法规全名 + 一句话定位
+ *   2. SEO opening(大白话 200-300 字)
+ *   3. 相关 Radar 详情卡(主卡 + 同类目卡)
+ *   4. 相关新手入门课(contentKind=新手入门 的雷达卡)
+ *   5. 相关清单
+ *   6. "如何行动" 4-5 步
+ *   7. "常见问题" 3-5 Q&A
+ *   8. 邮件订阅 CTA + 免责声明
+ *
+ * 实现:
+ *   - getStaticPaths 列出 10 个 slug
+ *   - 用 getCollection('radar') + getCollection('checklists') 拿数据
+ *   - 不改 schema / 不改 RSS / 不改 search.json(纯新增)
+ * ------------------------------------------------------------
+ */
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RadarCard from '../../components/RadarCard.astro';
+import ChecklistCard from '../../components/ChecklistCard.astro';
+import EmailSubscribe from '../../components/EmailSubscribe.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+import { SITE_DEFAULTS } from '../../lib/radar';
+import { formatDate } from '../../lib/date';
+import { buildGuidesConfig, type GuideConfig } from '../../lib/guide-config';
+
+/* ============================================================
+   getStaticPaths:为每个 slug 聚合内容
+   配置数据(10 个 guide slug)在 src/lib/guide-config.ts 里
+   ============================================================ */
+export async function getStaticPaths() {
+  // 从独立 .ts 文件取配置 — Astro 5 把 getStaticPaths 提到模块顶部,
+  // 同模块顶层 const 会被剥离,但 ES import 会被正确打包。
+  const GUIDES: GuideConfig[] = buildGuidesConfig();
+
+  // 一次性拉全 radar + checklists(用 map 高效查)
+  const allRadar = await getCollection('radar', ({ data }) => !data.draft);
+  const allChecklists = await getCollection('checklists');
+  const radarById = new Map(
+    allRadar.map((r) => [r.id.replace(/\.(md|mdx)$/, ''), r])
+  );
+
+  return GUIDES.map((g) => {
+    const primary = radarById.get(g.primaryRadarId) ?? null;
+
+    /* --- 相关 Radar(主卡 + 同类目卡) --- */
+    const relatedRadar = allRadar
+      .filter((r) => r.id !== (primary?.id ?? ''))
+      .filter((r) =>
+        r.data.categories.some((c) => g.relatedRadarCategories.includes(c))
+      )
+      .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate)
+      .slice(0, 6);
+
+    /* --- 相关新手入门课 --- */
+    const allBeginner = allRadar.filter(
+      (r) => r.data.contentKind === '新手入门' && r.id !== (primary?.id ?? '')
+    );
+    const relatedBeginner = allBeginner
+      .filter((r) =>
+        // 优先用 tags / categories 匹配
+        r.data.tags.some((t) => g.relatedBeginnerTags.includes(t)) ||
+        r.data.categories.some((c) => g.relatedBeginnerTags.includes(c))
+      )
+      .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate);
+    // 如果按 tag 匹配没拿到(罕见),fallback 取最新 4 个新手入门
+    const beginnerFinal = relatedBeginner.length > 0
+      ? relatedBeginner.slice(0, 4)
+      : allBeginner
+          .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate)
+          .slice(0, 4);
+
+    /* --- 相关清单 --- */
+    const relatedChecklists = allChecklists
+      .filter((c) => c.data.tags.some((t) => g.relatedChecklistTags.includes(t)))
+      .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate)
+      .slice(0, 4);
+    // 兜底:如果一个清单都没匹配上,推一个"通用新卖家基础"
+    const checklistFinal = relatedChecklists.length > 0
+      ? relatedChecklists
+      : allChecklists
+          .filter((c) => c.id === 'new-seller-basics')
+          .slice(0, 1);
+
+    return {
+      params: { slug: g.slug },
+      props: {
+        config: g,
+        primary,
+        relatedRadar,
+        relatedBeginner: beginnerFinal,
+        relatedChecklists: checklistFinal,
+      },
+    };
+  });
+}
+
+interface PageProps {
+  config: GuideConfig;
+  primary: CollectionEntry<'radar'> | null;
+  relatedRadar: CollectionEntry<'radar'>[];
+  relatedBeginner: CollectionEntry<'radar'>[];
+  relatedChecklists: CollectionEntry<'checklists'>[];
+}
+
+const { config, primary, relatedRadar, relatedBeginner, relatedChecklists } =
+  Astro.props as PageProps;
+
+const siteStr = siteAsDir(Astro.site);
+const pageUrl = siteStr ? `${siteStr}guide/${config.slug}/` : `/guide/${config.slug}/`;
+
+/* breadcrumb + article json-ld(SEO) */
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '入门指南', item: siteStr ? `${siteStr}guide/` : undefined },
+    { '@type': 'ListItem', position: 3, name: config.fullName, item: pageUrl },
+  ],
+};
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: config.fullName,
+  description: config.seoDescription,
+  inLanguage: 'zh-CN',
+  author: { '@type': 'Organization', name: SITE_DEFAULTS.name },
+  publisher: {
+    '@type': 'Organization',
+    name: SITE_DEFAULTS.name,
+    logo: siteStr ? { '@type': 'ImageObject', url: `${siteStr}favicon.svg` } : undefined,
+  },
+  mainEntityOfPage: pageUrl,
+};
+---
+
+<BaseLayout
+  title={config.fullName}
+  description={config.seoDescription}
+  type="article"
+  jsonLd={[breadcrumb, articleJsonLd]}
+>
+  <article class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/guide/')}>入门指南</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>{config.shortName}</span>
+    </nav>
+
+    <!-- Hero -->
+    <header class="guide-hero">
+      <p class="guide-eyebrow">入门指南 · {config.shortName}</p>
+      <h1>{config.fullName}</h1>
+      <p class="guide-one-liner">{config.oneLiner}</p>
+    </header>
+
+    <!-- SEO opening(大白话) -->
+    <section class="guide-opening prose">
+      <p>{config.opening}</p>
+    </section>
+
+    {primary && (
+      <section class="guide-primary">
+        <h2>主法规卡 · {config.shortName} 是什么</h2>
+        <div class="grid grid-2">
+          <RadarCard entry={primary} />
+        </div>
+        <p class="guide-link-row">
+          👉 看完整法规细节 →
+          <a href={withBase(`/radar/${primary.id.replace(/\.(md|mdx)$/, '')}/`)}>
+            {primary.data.title}
+          </a>
+        </p>
+      </section>
+    )}
+
+    <!-- 相关 Radar 详情卡(同类目) -->
+    {relatedRadar.length > 0 && (
+      <section class="guide-related">
+        <h2>相关法规 / Radar 详情</h2>
+        <div class="grid grid-2">
+          {relatedRadar.map((r) => <RadarCard entry={r} />)}
+        </div>
+      </section>
+    )}
+
+    <!-- 相关新手入门课 -->
+    {relatedBeginner.length > 0 && (
+      <section class="guide-related">
+        <h2>新手入门课</h2>
+        <p class="guide-section-intro">
+          第一次接触 {config.shortName}?这几张入门课从"是什么 / 谁要遵守 / 第一步做什么"讲起,看完了心里有底。
+        </p>
+        <ul class="guide-link-list">
+          {relatedBeginner.map((r) => {
+            const id = r.id.replace(/\.(md|mdx)$/, '');
+            return (
+              <li>
+                <a href={withBase(`/radar/${id}/`)}>{r.data.title}</a>
+                <span class="guide-link-meta"> · {r.data.summary.slice(0, 60)}…</span>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+    )}
+
+    <!-- 相关清单 -->
+    {relatedChecklists.length > 0 && (
+      <section class="guide-related">
+        <h2>行动清单</h2>
+        <p class="guide-section-intro">
+          这些清单都可在浏览器中勾选,完成后打印为 PDF 自留证据。
+        </p>
+        <div class="grid grid-2">
+          {relatedChecklists.map((c) => <ChecklistCard entry={c} />)}
+        </div>
+      </section>
+    )}
+
+    <!-- 如何行动 -->
+    <section class="guide-actions">
+      <h2>如何行动({config.actionSteps.length} 步)</h2>
+      <ol class="guide-action-list">
+        {config.actionSteps.map((s, i) => (
+          <li class="guide-action-item">
+            <div class="guide-action-num" aria-hidden="true">{i + 1}</div>
+            <div class="guide-action-body">
+              <h3 class="guide-action-title">{s.title}</h3>
+              <p class="guide-action-text">{s.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <!-- 常见问题 -->
+    <section class="guide-faq">
+      <h2>常见问题</h2>
+      <div class="guide-faq-list">
+        {config.faq.map((f) => (
+          <details class="guide-faq-item">
+            <summary class="guide-faq-q">
+              <span class="guide-faq-q-label">Q</span>
+              {f.q}
+            </summary>
+            <div class="guide-faq-a">
+              <span class="guide-faq-a-label">A</span>
+              <p>{f.a}</p>
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- CTA: 邮件订阅 -->
+    <section class="guide-cta">
+      <h2>{config.shortName} 后续更新,怎么不错过?</h2>
+      <p>
+        法规在持续修订、亚马逊合规通知在变,每个工作日我们整理一条
+        "今天欧盟发生了什么"给你 —— 每周一条,5 分钟读完。
+      </p>
+      <EmailSubscribe />
+    </section>
+
+    <!-- 免责声明 -->
+    <div class="notice notice-danger">
+      <strong>免责声明:</strong>{SITE_DEFAULTS.name}是<strong>信息整理和辅助判断工具</strong>,
+      <strong>不构成法律、税务、认证或专业合规意见</strong>。{config.shortName}
+      涉及的具体执行(尤其产品类目细分、阈值、时限)以你产品适用指令的官方原文为准,
+      或咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。本页最后核对:
+      <time datetime={primary?.data.verifiedDate.toISOString()}>
+        {primary ? formatDate(primary.data.verifiedDate) : '持续关注'}
+      </time>。
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .guide-hero {
+    margin: 0.5rem 0 1.5rem 0;
+  }
+  .guide-eyebrow {
+    display: inline-block;
+    margin: 0 0 0.4em 0;
+    padding: 0.2em 0.7em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .guide-hero h1 {
+    margin: 0 0 0.3em 0;
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  }
+  .guide-one-liner {
+    color: var(--color-ink-700);
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .guide-opening {
+    margin: 1.5rem 0 2rem 0;
+    padding: 1.1rem 1.3rem;
+    background: var(--color-info-bg);
+    border-left: 4px solid var(--color-primary-500);
+    border-radius: var(--radius);
+    color: var(--color-ink-700);
+    line-height: 1.75;
+  }
+  .guide-opening p { margin: 0; }
+
+  .guide-primary { margin: 2rem 0; }
+  .guide-link-row {
+    margin-top: 1rem;
+    color: var(--color-ink-700);
+    font-size: 0.95rem;
+  }
+  .guide-section-intro {
+    color: var(--color-ink-600);
+    font-size: 0.95rem;
+    margin: -0.3em 0 1em 0;
+    line-height: 1.6;
+  }
+
+  .guide-related {
+    margin: 2.5rem 0 1rem 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .guide-related h2 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .guide-link-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .guide-link-list li {
+    padding: 0.7em 0;
+    border-bottom: 1px dashed var(--color-ink-200);
+    line-height: 1.6;
+  }
+  .guide-link-list li:last-child { border-bottom: none; }
+  .guide-link-list a {
+    font-weight: 500;
+  }
+  .guide-link-meta {
+    color: var(--color-ink-500);
+    font-size: 0.9rem;
+  }
+
+  /* 行动步骤(编号 + 标题 + 正文) */
+  .guide-actions { margin: 2.5rem 0 1rem 0; }
+  .guide-actions h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .guide-action-list {
+    list-style: none;
+    counter-reset: step;
+    padding: 0;
+    margin: 0;
+  }
+  .guide-action-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--color-ink-200);
+    align-items: flex-start;
+  }
+  .guide-action-item:last-child { border-bottom: none; }
+  .guide-action-num {
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--color-primary-700);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 0.1em;
+  }
+  .guide-action-body { flex: 1; min-width: 0; }
+  .guide-action-title {
+    font-size: 1.05rem;
+    margin: 0 0 0.3em 0;
+    color: var(--color-ink-900);
+  }
+  .guide-action-text {
+    color: var(--color-ink-700);
+    line-height: 1.7;
+    margin: 0;
+    font-size: 0.96rem;
+  }
+
+  /* FAQ(原生 <details> 折叠) */
+  .guide-faq { margin: 2.5rem 0 1rem 0; }
+  .guide-faq h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .guide-faq-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .guide-faq-item {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    transition: border-color 0.15s;
+  }
+  .guide-faq-item[open] {
+    border-color: var(--color-primary-300);
+  }
+  .guide-faq-q {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.8em 1em;
+    font-weight: 500;
+    color: var(--color-ink-900);
+    display: flex;
+    gap: 0.6em;
+    align-items: flex-start;
+  }
+  .guide-faq-q::-webkit-details-marker { display: none; }
+  .guide-faq-q::after {
+    content: '+';
+    margin-left: auto;
+    color: var(--color-ink-500);
+    font-size: 1.2rem;
+    line-height: 1;
+    transition: transform 0.15s;
+  }
+  .guide-faq-item[open] .guide-faq-q::after {
+    content: '−';
+    color: var(--color-primary-700);
+  }
+  .guide-faq-q-label,
+  .guide-faq-a-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: 50%;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--color-primary-700);
+  }
+  .guide-faq-a {
+    padding: 0 1em 1em 1em;
+    display: flex;
+    gap: 0.6em;
+    color: var(--color-ink-700);
+    line-height: 1.7;
+  }
+  .guide-faq-a p { margin: 0; }
+
+  /* CTA */
+  .guide-cta {
+    margin: 2.5rem 0 2rem 0;
+    padding: 1.5rem 1.5rem;
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-lg);
+  }
+  .guide-cta h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.4em 0;
+    color: var(--color-primary-800);
+  }
+  .guide-cta p {
+    color: var(--color-ink-700);
+    margin: 0 0 1em 0;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 640px) {
+    .guide-action-item {
+      gap: 0.7rem;
+    }
+    .guide-action-num {
+      width: 1.7rem;
+      height: 1.7rem;
+      font-size: 0.85rem;
+    }
+  }
+</style>
