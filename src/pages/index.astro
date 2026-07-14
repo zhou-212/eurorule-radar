@@ -6,8 +6,8 @@ import CalendarEvent from '../components/CalendarEvent.astro';
 import SubscribeForm from '../components/SubscribeForm.astro';
 import { getCollection } from 'astro:content';
 import calendarData from '../content/calendar/events.json';
-import { SITE_DEFAULTS } from '../lib/radar';
-import { daysFromNow } from '../lib/date';
+import { SITE_DEFAULTS, getRiskClass } from '../lib/radar';
+import { daysFromNow, formatDate } from '../lib/date';
 import { withBase, siteAsDir } from '../lib/url';
 import { getRadarRules, getContentKindKey } from '../lib/radar-source';
 
@@ -31,6 +31,9 @@ try {
 // contentKind 字段);`data.contentKind` 仍是中文展示值(给 RadarCard.astro
 // 渲染徽标,锁定文件不能改)。
 const recentUpdates = radars.filter((r) => getContentKindKey(r) === 'update');
+// 顶部紧凑区块:最多 3 张"近期更新"卡片,带"距 effectiveDate 的天数"
+// 没有时不渲染整个 section(留出空状态说明给下方"近期更新(已核对)"区块)
+const recentUpdatesTop3 = recentUpdates.slice(0, 3);
 const basicRules = radars.filter((r) => getContentKindKey(r) === 'basic');
 const basicFeatured = basicRules.filter((r) => r.data.featured).slice(0, 3);
 const basicOthers = basicRules.filter((r) => !r.data.featured).slice(0, 3);
@@ -97,6 +100,48 @@ const jsonLd = {
       </ul>
     </div>
   </section>
+
+  <!-- 🆕 近期更新(紧凑卡片,最多 3 张,带"距生效日期 X 天"倒计时) -->
+  {recentUpdatesTop3.length > 0 && (
+    <section class="section section-tight section-bg" id="recent-top" aria-labelledby="recent-top-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="recent-top-title">🆕 近期更新</h2>
+          <a href={withBase('/radar/')} class="section-head-link">查看全部 →</a>
+        </div>
+        <div class="grid grid-3">
+          {recentUpdatesTop3.map((r) => {
+            const slug = r.id.replace(/\.(md|mdx)$/, '');
+            const href = withBase(`/radar/${slug}/`);
+            const eff = r.data.effectiveDate;
+            const days = eff ? daysFromNow(eff) : null;
+            const dayText =
+              days === null
+                ? '持续关注'
+                : days > 0
+                  ? `还有 ${days} 天`
+                  : days === 0
+                    ? '今天生效'
+                    : `已生效 ${-days} 天`;
+            return (
+              <a href={href} class="card card-hover recent-mini">
+                <div class="recent-mini-top">
+                  <span class={`risk ${getRiskClass(r.data.riskLevel)}`}>风险:{r.data.riskLevel}</span>
+                  <span class={`recent-mini-days ${days !== null && days <= 14 && days >= 0 ? 'is-urgent' : days !== null && days < 0 ? 'is-past' : ''}`}>{dayText}</span>
+                </div>
+                <h3 class="recent-mini-title">{r.data.title}</h3>
+                {eff && (
+                  <p class="recent-mini-eff">
+                    生效日期:<time datetime={eff.toISOString()}>{formatDate(eff)}</time>
+                  </p>
+                )}
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  )}
 
   <!-- 近期更新 / 基础规则 -->
   <section class="section section-tight" id="latest">
@@ -387,4 +432,59 @@ const jsonLd = {
   }
   .empty-card p { margin: 0.4em 0; }
   .empty-card .empty-meta { font-size: 0.9rem; color: var(--color-ink-500); }
+
+  /* 🆕 近期更新 紧凑卡片 */
+  .recent-mini {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+  }
+  .recent-mini:hover {
+    border-color: var(--color-accent-400);
+    color: inherit;
+  }
+  .recent-mini-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .recent-mini-title {
+    font-size: 1.05rem;
+    line-height: 1.45;
+    margin: 0;
+    color: var(--color-ink-900);
+  }
+  .recent-mini:hover .recent-mini-title {
+    color: var(--color-primary-700);
+  }
+  .recent-mini-eff {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-ink-500);
+  }
+  .recent-mini-days {
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.2em 0.65em;
+    border-radius: var(--radius-sm);
+    background: var(--color-ink-100);
+    color: var(--color-ink-700);
+    border: 1px solid var(--color-ink-200);
+    white-space: nowrap;
+  }
+  .recent-mini-days.is-urgent {
+    background: var(--color-risk-medium-bg);
+    color: var(--color-risk-medium-text);
+    border-color: var(--color-risk-medium-border);
+  }
+  .recent-mini-days.is-past {
+    background: var(--color-risk-high-bg);
+    color: var(--color-risk-high-text);
+    border-color: var(--color-risk-high-border);
+  }
 </style>

@@ -18,6 +18,32 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
 
+/**
+ * 提取 markdown 原文的第一段(简介):
+ *  - 跳过空行
+ *  - 遇到标题(## / ### ...)即停止
+ *  - 同段内的多行用空格连接
+ *  - 限制 200 字,过长加省略号
+ */
+function firstParagraph(md: string): string {
+  if (!md) return '';
+  const lines = md.split(/\r?\n/);
+  const buf: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (buf.length > 0) break;
+      continue;
+    }
+    if (/^#{1,6}\s/.test(trimmed)) break;
+    buf.push(trimmed);
+  }
+  const text = buf.join(' ');
+  if (text.length <= 200) return text;
+  return text.slice(0, 200) + '…';
+}
+const firstPara = firstParagraph(entry.body || '');
+
 // 相关规则:同 categories 交集
 const allRadars = (await getCollection('radar', ({ data }) => !data.draft))
   .filter((r) => r.id !== entry.id);
@@ -79,7 +105,23 @@ const articleJsonLd = {
         <span class={`status ${getStatusClass(d.status)}`}>{d.status}</span>
         <span class={`kind ${getContentKindClass(d.contentKind)}`}>内容状态:{d.contentKind}</span>
       </div>
-      <h1>{d.title}</h1>
+      <div class="radar-detail-title-row">
+        <h1>{d.title}</h1>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm copy-summary-btn"
+          data-copy-summary
+          data-cs-title={d.title}
+          data-cs-status={d.status}
+          data-cs-risk={d.riskLevel}
+          data-cs-effective={d.effectiveDate ? d.effectiveDate.toISOString().slice(0, 10) : ''}
+          data-cs-slug={slug}
+          data-cs-summary={firstPara}
+          aria-label="复制 Markdown 摘要到剪贴板"
+        >
+          <span class="copy-default">📋 复制摘要</span>
+        </button>
+      </div>
       <p class="radar-detail-summary">{d.summary}</p>
       <dl class="radar-detail-meta">
         <div><dt>内容状态</dt><dd>{d.contentKind}</dd></div>
@@ -153,9 +195,108 @@ const articleJsonLd = {
   </article>
 </BaseLayout>
 
+<script>
+  // 复制 Markdown 摘要:vanilla JS + navigator.clipboard
+  // 每个详情页有且仅有一个 .copy-summary-btn 按钮
+  const btn = document.querySelector<HTMLButtonElement>('.copy-summary-btn');
+  if (btn) {
+    const label = btn.querySelector<HTMLSpanElement>('.copy-default') || btn;
+    const ORIG = label.textContent || '📋 复制摘要';
+    let resetTimer: number | null = null;
+
+    const build = () => {
+      const ds = btn.dataset;
+      const title = ds.csTitle || '';
+      const status = ds.csStatus || '';
+      const risk = ds.csRisk || '';
+      const eff = ds.csEffective || '';
+      const slug = ds.csSlug || '';
+      const summary = ds.csSummary || '';
+      const url = `https://weiread.com/radar/${slug}/`;
+      const effLine = eff ? `- 生效日期: ${eff}` : '- 生效日期: 持续关注';
+      return [
+        `### ${title}`,
+        `- 状态: ${status}`,
+        `- 风险等级: ${risk}`,
+        effLine,
+        `- 链接: ${url}`,
+        '',
+        '## 简要',
+        summary,
+      ].join('\n');
+    };
+
+    const setState = (text: string, state: 'ok' | 'err' | null) => {
+      label.textContent = text;
+      if (state) btn.setAttribute('data-state', state);
+      else btn.removeAttribute('data-state');
+      if (resetTimer) window.clearTimeout(resetTimer);
+      resetTimer = window.setTimeout(() => {
+        label.textContent = ORIG;
+        btn.removeAttribute('data-state');
+      }, 2000);
+    };
+
+    btn.addEventListener('click', async () => {
+      const text = build();
+      // 优先用 navigator.clipboard
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          setState('✅ 已复制', 'ok');
+          return;
+        }
+        // 兜底:临时 textarea + execCommand('copy')
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '0';
+        ta.style.left = '0';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) {
+          setState('✅ 已复制', 'ok');
+        } else {
+          setState('❌ 请手动复制', 'err');
+        }
+      } catch {
+        setState('❌ 请手动复制', 'err');
+      }
+    });
+  }
+</script>
+
 <style>
   .radar-detail-head { margin-bottom: 1.5rem; }
   .radar-detail-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.7rem; }
+  .radar-detail-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin: 0.3em 0 0.4em 0;
+  }
+  .radar-detail-title-row h1 { margin: 0; flex: 1 1 auto; min-width: 0; }
+  .copy-summary-btn {
+    flex-shrink: 0;
+    margin-top: 0.4em;
+    cursor: pointer;
+  }
+  .copy-summary-btn[data-state='ok'] {
+    background: var(--color-accent-50);
+    color: var(--color-accent-700);
+    border-color: var(--color-accent-100);
+  }
+  .copy-summary-btn[data-state='err'] {
+    background: var(--color-risk-high-bg);
+    color: var(--color-risk-high-text);
+    border-color: var(--color-risk-high-border);
+  }
   .radar-detail-summary {
     color: var(--color-ink-700);
     font-size: 1.1rem;
