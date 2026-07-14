@@ -1,46 +1,27 @@
-name: Build and Deploy to GitHub Pages
+name: Build and deploy to weiread.com (user page)
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
+# 不使用 deploy-pages 直接部署到本仓(本仓是源码仓)。
+# 改为: build → 同步 dist 到 zhou-212/zhou-212.github.io 仓的 main 分支,
+# GitHub Pages 会在 user page 仓自动发布到 weiread.com。
+# 因此 permissions 不需要 pages:write / id-token:write。
+
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: eurorule-radar-pages
   cancel-in-progress: false
-
-# =================================================================
-# 部署模式:
-#   模式 A — 自定义域名根路径:
-#     - 在 GitHub 仓库 Settings → Secrets and variables → Actions → Variables
-#       添加 SITE = 你的完整生产 URL(如 https://eurorule.example.com)
-#     - 可选:另添加 BASE 变量覆盖默认 /,一般不需要
-#     - 在 public/CNAME.example 复制为 public/CNAME,内容改为一行真实域名
-#
-#   模式 B — GitHub Pages 项目页(默认):
-#     - 不设 SITE / 不设 BASE,工作流自动:
-#         SITE = https://<owner>.github.io/eurorule-radar
-#         BASE = /eurorule-radar/
-#     - 站内所有链接、sitemaps、RSS、canonical、OG、面包屑
-#       都会自动加上 /eurorule-radar/ 前缀
-#
-#   模式 C — GitHub Pages 项目页 + 自定义 BASE:
-#     - 不设 SITE(自动拼)
-#     - 添加 BASE 变量(覆盖默认 /eurorule-radar/)
-#     - 例如把站点放在 https://<owner>.github.io/eu-radar/ 时:
-#         BASE=/eu-radar/
-# =================================================================
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -52,69 +33,114 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
-      - name: Determine SITE and BASE
-        id: site_base
-        run: |
-          if [ -n "${{ vars.SITE }}" ]; then
-            SITE_VALUE="${{ vars.SITE }}"
-            echo "Using custom SITE from GitHub Variables: $SITE_VALUE"
-          else
-            SITE_VALUE="https://${GITHUB_REPOSITORY_OWNER}.github.io/eurorule-radar"
-            echo "Using default GitHub Pages URL: $SITE_VALUE"
-          fi
-          echo "site=$SITE_VALUE" >> "$GITHUB_OUTPUT"
-
-          # BASE 优先从 vars.BASE 读,缺省:
-          #   - 自定义 SITE (vars.SITE 存在) -> /
-          #   - 否则(项目页默认) -> /eurorule-radar/
-          if [ -n "${{ vars.BASE }}" ]; then
-            BASE_VALUE="${{ vars.BASE }}"
-            echo "Using custom BASE from GitHub Variables: $BASE_VALUE"
-          elif [ -n "${{ vars.SITE }}" ]; then
-            BASE_VALUE="/"
-            echo "Custom SITE set, defaulting BASE to /"
-          else
-            BASE_VALUE="/eurorule-radar/"
-            echo "GitHub Pages project page, defaulting BASE to /eurorule-radar/"
-          fi
-          # 归一化:确保以 / 开头、非根时尾部带 /
-          case "$BASE_VALUE" in
-            "") BASE_VALUE="/" ;;
-          esac
-          if [ "$BASE_VALUE" != "/" ]; then
-            case "$BASE_VALUE" in
-              /*) ;;
-              *)  BASE_VALUE="/$BASE_VALUE" ;;
-            esac
-            case "$BASE_VALUE" in
-              */) ;;
-              *)  BASE_VALUE="$BASE_VALUE/" ;;
-            esac
-          fi
-          echo "base=$BASE_VALUE" >> "$GITHUB_OUTPUT"
-          echo "Final: SITE=$SITE_VALUE  BASE=$BASE_VALUE"
-
-      - name: Build
+      - name: Build (SITE=weiread.com, BASE=/)
         env:
-          SITE: ${{ steps.site_base.outputs.site }}
-          BASE: ${{ steps.site_base.outputs.base }}
+          SITE: https://weiread.com
+          BASE: /
         run: npm run build:fast
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: dist
           path: ./dist
+          retention-days: 7
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: ./dist
+
+      - name: Sync dist to zhou-212/zhou-212.github.io (user page)
+        env:
+          PUSH_TOKEN: ${{ secrets.PAGES_PUSH_TOKEN }}
+          USER_PAGE_REPO: zhou-212/zhou-212.github.io
+          DEPLOY_BRANCH: main
+          EXPECTED_CNAME: weiread.com
+        run: |
+          set -euo pipefail
+
+          if [ -z "$PUSH_TOKEN" ]; then
+            echo "::error::PAGES_PUSH_TOKEN secret is missing. See README § 部署."
+            exit 1
+          fi
+
+          # 1) shallow clone user page 仓
+          git clone --depth 1 --branch "$DEPLOY_BRANCH" \
+            "https://x-access-token:${PUSH_TOKEN}@github.com/${USER_PAGE_REPO}.git" \
+            user-page
+          cd user-page
+
+          # 2) 保留 GitHub Pages 关键配置文件:
+          #      CNAME     — custom domain (weiread.com)
+          #      .nojekyll — 禁用 Jekyll 渲染(让 _astro 走原始路径)
+          declare -a KEEP=()
+          for f in CNAME .nojekyll; do
+            if [ -f "$f" ]; then
+              KEEP+=("$f")
+            else
+              echo "::warning::$f not found in $USER_PAGE_REPO; creating empty placeholder."
+            fi
+          done
+
+          # 3) CNAME sanity:如果现有 CNAME 不是 EXPECTED_CNAME,大声报警但继续
+          if [ -f CNAME ] && [ "$(cat CNAME | tr -d '\r\n' | tr -d ' ')" != "$EXPECTED_CNAME" ]; then
+            echo "::warning::CNAME on user page repo is '$(cat CNAME)', expected '$EXPECTED_CNAME'."
+            echo "         Workflow will not modify CNAME, but verify DNS / GitHub Pages settings."
+          fi
+
+          # 4) 删除除保留文件 / .git 外的所有文件
+          git rm -r --cached . >/dev/null 2>&1 || true
+          while IFS= read -r -d '' entry; do
+            rel="${entry#./}"
+            skip=0
+            for k in "${KEEP[@]}"; do
+              if [ "$rel" = "$k" ]; then skip=1; break; fi
+            done
+            case "$rel" in
+              .git) skip=1 ;;
+              .git/*) skip=1 ;;
+            esac
+            if [ $skip -eq 0 ]; then rm -rf "$rel"; fi
+          done < <(find . -mindepth 1 -maxdepth 1 -print0)
+
+          # 5) 拷新 dist 过来
+          cd ..
+          cp -r dist/. user-page/
+          cd user-page
+
+          # 6) 不该进 user page 仓 main 分支的 dist 产物(纯文档占位)
+          rm -f CNAME.example          # 模板占位,真实 CNAME 在 KEEP 里
+          rm -f runtime-config.example.js
+          # runtime-config.example.js 是订阅后端集成的 example 模板,
+          # 部署到生产会让用户误以为可以直接用;删了,只在源码仓有 example。
+          # 真正启用后端时,用户会自己 cp + 填 API_BASE_URL 然后单独 push。
+          # 见 README § 部署 → "接入订阅后端"。
+
+          # 7) commit + push
+          git config user.name  "eurorule-radar-bot"
+          git config user.email "actions@users.noreply.github.com"
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes in dist; nothing to push."
+            exit 0
+          fi
+
+          echo "---- final tree (top-level only) ----"
+          ls -la | head -40
+
+          git commit -m "deploy: sync dist from zhou-212/eurorule-radar@${{ github.sha }}
+
+          Triggered by: ${{ github.event_name }} on ${{ github.ref }}
+          Source commit: ${{ github.sha }}
+          Source repo:   ${{ github.repository }}"
+
+          git push \
+            "https://x-access-token:${PUSH_TOKEN}@github.com/${USER_PAGE_REPO}.git" \
+            "HEAD:${DEPLOY_BRANCH}"
