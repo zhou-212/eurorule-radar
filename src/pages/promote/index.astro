@@ -1,0 +1,453 @@
+---
+/**
+ * /promote/ — 站外推广草稿集中站
+ * ------------------------------------------------------------
+ * 给运营者(用户自己)用的内部页面:把知乎/小红书/即刻/V2EX/周报/30天日历
+ * 草稿集中显示,每条带"复制到剪贴板"按钮
+ * 不是公开 landing(SEO 不友好但用户自己用方便)
+ * ------------------------------------------------------------
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+import { buildPromoteBundle, type Platform } from '../../lib/promote-config';
+
+const siteStr = siteAsDir(Astro.site);
+const bundle = buildPromoteBundle();
+
+// 按平台分组 + 平台顺序
+const PLATFORM_ORDER: Platform[] = ['知乎', '小红书', '即刻', 'V2EX', '邮件周报', '30天日历'];
+const PLATFORM_DESC: Record<Platform, string> = {
+  '知乎': '搜索流量主入口,长尾问题回答 800-1500 字',
+  '小红书': '种草 + 引流,图文并茂,标题党 + emoji',
+  '即刻': '短帖 + 圈内讨论,300-500 字',
+  'V2EX': '技术向讨论,附真实案例',
+  '邮件周报': '订阅用户周报模板,可直接用',
+  '30天日历': '按周排好的内容日历,逐日发布',
+};
+const PLATFORM_ICON: Record<Platform, string> = {
+  '知乎': '💡',
+  '小红书': '📕',
+  '即刻': '⚡',
+  'V2EX': '🔧',
+  '邮件周报': '📧',
+  '30天日历': '📅',
+};
+
+const itemsByPlatform = PLATFORM_ORDER.map((p) => ({
+  platform: p,
+  items: bundle.items.filter((i) => i.platform === p),
+})).filter((g) => g.items.length > 0);
+
+const totalWords = bundle.items.reduce((s, i) => s + i.estWords, 0);
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '推广草稿', item: siteStr ? `${siteStr}promote/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="站外推广草稿"
+  description="运营者内部页面 — 知乎 / 小红书 / 即刻 / V2EX / 邮件周报 / 30天日历 草稿集中可复制。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>推广草稿</span>
+    </nav>
+
+    <header class="promote-head">
+      <h1>📣 站外推广草稿</h1>
+      <p class="page-intro">
+        <strong>内部运营页</strong> — 知乎 / 小红书 / 即刻 / V2EX / 邮件周报 / 30 天日历的发布草稿。
+        一共 <strong>{bundle.items.length} 条</strong>,总 <strong>{totalWords.toLocaleString()}</strong> 字,每条都有"复制"按钮。
+        <br>改一改直接发出去,不用再翻文件夹。
+      </p>
+      <div class="promote-meta-row">
+        <span class="promote-stat">📝 <strong>{bundle.items.length}</strong> 条草稿</span>
+        <span class="promote-stat">✍️ <strong>{totalWords.toLocaleString()}</strong> 字</span>
+        <span class="promote-stat">🎯 <strong>{itemsByPlatform.length}</strong> 个平台</span>
+      </div>
+      <div class="promote-cta-row">
+        <button type="button" class="btn btn-secondary" data-expand-all>展开全部</button>
+        <button type="button" class="btn btn-secondary" data-collapse-all>折叠全部</button>
+        <button type="button" class="btn btn-secondary" data-copy-all-titles>复制所有标题</button>
+      </div>
+    </header>
+
+    {itemsByPlatform.map((group) => (
+      <section class="promote-group">
+        <header class="promote-group-head">
+          <h2>
+            <span class="promote-group-icon" aria-hidden="true">{PLATFORM_ICON[group.platform]}</span>
+            {group.platform}
+            <span class="promote-group-count">{group.items.length} 条</span>
+          </h2>
+          <p class="promote-group-desc">{PLATFORM_DESC[group.platform]}</p>
+        </header>
+
+        <div class="promote-list">
+          {group.items.map((item) => (
+            <article class="promote-item card" data-pm-item data-item-id={item.id}>
+              <header class="promote-item-head">
+                <h3 class="promote-item-title">{item.title}</h3>
+                <p class="promote-item-intent">{item.intent}</p>
+                <div class="promote-item-meta">
+                  <span class="promote-item-words">约 {item.estWords} 字</span>
+                  {item.tags && item.tags.length > 0 && (
+                    <div class="promote-item-tags">
+                      {item.tags.map((t) => <span class="tag">#{t}</span>)}
+                    </div>
+                  )}
+                </div>
+              </header>
+              <details class="promote-item-body" data-pm-body>
+                <summary class="promote-item-summary">📄 展开正文(可复制)</summary>
+                <div class="promote-item-content">
+                  {item.meta?.publishTip && (
+                    <div class="promote-tip">
+                      <strong>💡 发布建议:</strong>{item.meta.publishTip}
+                    </div>
+                  )}
+                  {item.meta?.imageDir && (
+                    <div class="promote-tip">
+                      <strong>🖼 配图:</strong>{item.meta.imageDir}
+                    </div>
+                  )}
+                  <textarea
+                    class="promote-textarea"
+                    readonly
+                    data-pm-textarea
+                    rows="12"
+                    aria-label={`${item.platform} 草稿正文: ${item.title}`}
+                  >{item.body}</textarea>
+                  <div class="promote-item-actions">
+                    <button type="button" class="btn btn-primary btn-sm" data-pm-copy data-item-title={item.title}>
+                      📋 复制正文
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-pm-copy-titles>
+                      📋 复制标题
+                    </button>
+                    <span class="promote-copy-status" data-pm-status>就绪</span>
+                  </div>
+                </div>
+              </details>
+            </article>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <section class="promote-cta-block">
+      <h2>批量操作</h2>
+      <p>如果你想把所有草稿一次性打包到本地:</p>
+      <pre class="promote-code"><code>node D:\OU\handoff\promote-config-gen.cjs  # 重新生成 promote-config.ts
+# 或者直接复制 D:\OU\promotion\ 原始 6 个 .md 文件</code></pre>
+    </section>
+
+    <div class="notice notice-info">
+      <strong>使用建议:</strong>
+      <ol>
+        <li>展开一条 → 看正文 → 改"通用 CTA"(替换成你自己的微信号/公众号)→ 复制</li>
+        <li>每个平台有自己的发布节奏,别一天发 5 条(被识别为 spam)</li>
+        <li>30 天日历按 day 1-30 排好,每周 3-4 条最稳</li>
+        <li>配图去 <code>D:\OU\promotion\xiaohongshu-images\</code> 找(45 张,post1-post5 子目录)</li>
+      </ol>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .promote-head { margin: 0.5rem 0 2rem 0; }
+  .promote-head h1 {
+    margin: 0 0 0.3em 0;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+  }
+  .page-intro {
+    color: var(--color-ink-700);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin: 0 0 1rem 0;
+    max-width: 70ch;
+  }
+  .promote-meta-row {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin: 0 0 1rem 0;
+  }
+  .promote-stat {
+    padding: 0.25em 0.8em;
+    background: var(--color-ink-50);
+    color: var(--color-ink-700);
+    font-size: 0.88rem;
+    border-radius: 999px;
+  }
+  .promote-stat strong {
+    color: var(--color-primary-700);
+    font-weight: 700;
+  }
+  .promote-cta-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .promote-group {
+    margin: 2.5rem 0 1.5rem 0;
+  }
+  .promote-group-head {
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-ink-200);
+  }
+  .promote-group-head h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--color-ink-900);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .promote-group-icon {
+    font-size: 1.4rem;
+  }
+  .promote-group-count {
+    margin-left: auto;
+    padding: 0.2em 0.7em;
+    background: var(--color-primary-50);
+    color: var(--color-primary-700);
+    font-size: 0.85rem;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .promote-group-desc {
+    color: var(--color-ink-600);
+    font-size: 0.9rem;
+    margin: 0.4em 0 0 0;
+  }
+
+  .promote-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .promote-item {
+    padding: 1.2rem 1.4rem;
+  }
+  .promote-item-head {
+    margin: 0 0 0.5rem 0;
+  }
+  .promote-item-title {
+    margin: 0 0 0.3em 0;
+    font-size: 1.05rem;
+    color: var(--color-ink-900);
+    font-weight: 600;
+  }
+  .promote-item-intent {
+    color: var(--color-ink-700);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0 0 0.5em 0;
+  }
+  .promote-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+  }
+  .promote-item-words {
+    background: var(--color-ink-50);
+    padding: 0.1em 0.6em;
+    border-radius: 999px;
+  }
+  .promote-item-tags {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+  .promote-item-tags .tag {
+    color: var(--color-ink-600);
+    background: transparent;
+    padding: 0;
+    font-size: 0.82rem;
+  }
+
+  .promote-item-body {
+    margin-top: 0.7rem;
+    border-top: 1px dashed var(--color-ink-200);
+    padding-top: 0.7rem;
+  }
+  .promote-item-summary {
+    list-style: none;
+    cursor: pointer;
+    color: var(--color-primary-700);
+    font-weight: 500;
+    font-size: 0.92rem;
+    padding: 0.3em 0;
+  }
+  .promote-item-summary::-webkit-details-marker { display: none; }
+  .promote-item-summary::before {
+    content: '▶';
+    display: inline-block;
+    margin-right: 0.4em;
+    transition: transform 0.15s;
+  }
+  .promote-item-body[open] .promote-item-summary::before {
+    transform: rotate(90deg);
+  }
+  .promote-item-content {
+    padding: 0.8rem 0 0 0;
+  }
+  .promote-tip {
+    background: var(--color-info-bg, #eff6ff);
+    border-left: 3px solid var(--color-primary-500);
+    padding: 0.6em 0.9em;
+    border-radius: var(--radius-sm, 4px);
+    margin: 0 0 0.8rem 0;
+    color: var(--color-ink-800);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  .promote-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 0.8em 0.9em;
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    background: #fafafa;
+    color: var(--color-ink-800);
+    resize: vertical;
+  }
+  .promote-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    background: #fff;
+  }
+  .promote-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.6rem;
+  }
+  .promote-copy-status {
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+    margin-left: auto;
+  }
+  .promote-copy-status.is-ok {
+    color: #16a34a;
+    font-weight: 600;
+  }
+  .promote-copy-status.is-err {
+    color: #b91c1c;
+  }
+
+  .promote-cta-block {
+    margin: 2.5rem 0 1.5rem 0;
+    padding: 1.3rem 1.5rem;
+    background: var(--color-ink-50);
+    border-radius: var(--radius);
+  }
+  .promote-cta-block h2 { font-size: 1.1rem; margin: 0 0 0.5em 0; }
+  .promote-code {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-sm, 4px);
+    padding: 0.7em 0.9em;
+    font-size: 0.88rem;
+    color: var(--color-ink-700);
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  @media (max-width: 720px) {
+    .promote-group-head h2 {
+      flex-wrap: wrap;
+    }
+    .promote-group-count {
+      margin-left: 0;
+    }
+  }
+</style>
+
+<script>
+  // 复制按钮
+  async function copyText(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // fallback: 用 document.execCommand
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+  function flashStatus(statusEl: HTMLElement, text: string, type: 'is-ok' | 'is-err' | '') {
+    statusEl.textContent = text;
+    statusEl.classList.remove('is-ok', 'is-err');
+    if (type) statusEl.classList.add(type);
+    setTimeout(() => {
+      statusEl.textContent = '就绪';
+      statusEl.classList.remove('is-ok', 'is-err');
+    }, 2000);
+  }
+
+  // 单条复制
+  document.querySelectorAll('[data-pm-copy]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const item = (btn as HTMLElement).closest('[data-pm-item]');
+      const ta = item?.querySelector('[data-pm-textarea]') as HTMLTextAreaElement | null;
+      const status = item?.querySelector('[data-pm-status]') as HTMLElement | null;
+      if (!ta || !status) return;
+      const ok = await copyText(ta.value);
+      flashStatus(status, ok ? '✅ 已复制' : '❌ 复制失败', ok ? 'is-ok' : 'is-err');
+    });
+  });
+  // 单条复制标题
+  document.querySelectorAll('[data-pm-copy-titles]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const titles = Array.from(document.querySelectorAll('.promote-item-title')).map((el) => (el as HTMLElement).textContent?.trim() || '');
+      const ok = await copyText(titles.join('\n'));
+      alert(ok ? `已复制 ${titles.length} 个标题` : '复制失败');
+    });
+  });
+
+  // 展开/折叠全部
+  const expandAll = document.querySelector('[data-expand-all]');
+  const collapseAll = document.querySelector('[data-collapse-all]');
+  expandAll?.addEventListener('click', () => {
+    document.querySelectorAll('[data-pm-body]').forEach((b) => { (b as HTMLDetailsElement).open = true; });
+  });
+  collapseAll?.addEventListener('click', () => {
+    document.querySelectorAll('[data-pm-body]').forEach((b) => { (b as HTMLDetailsElement).open = false; });
+  });
+  // 复制所有标题
+  const copyAllTitles = document.querySelector('[data-copy-all-titles]');
+  copyAllTitles?.addEventListener('click', async () => {
+    const titles = Array.from(document.querySelectorAll('.promote-item-title')).map((el) => (el as HTMLElement).textContent?.trim() || '');
+    const ok = await copyText(titles.join('\n'));
+    alert(ok ? `已复制 ${titles.length} 个标题到剪贴板` : '复制失败');
+  });
+</script>
