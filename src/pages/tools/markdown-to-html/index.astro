@@ -1,0 +1,686 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '工具集', item: siteStr ? `${siteStr}tools/` : undefined },
+    { '@type': 'ListItem', position: 3, name: 'Markdown 转 HTML', item: siteStr ? `${siteStr}tools/markdown-to-html/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="Markdown 转 HTML — 实时预览,博客 / 邮件 / 文档都能用"
+  description="左边写 Markdown,右边实时显示渲染好的 HTML。一键复制 HTML 源码,或下载成 .html 文件。"
+  jsonLd={breadcrumb}
+>
+  <div class="container md-wrap" data-tool-id="markdown-to-html">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/tools/')}>工具集</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>Markdown 转 HTML</span>
+    </nav>
+
+    <header class="md-hero">
+      <h1>Markdown 转 HTML — 实时预览,博客 / 邮件 / 文档都能用</h1>
+      <p class="md-tagline">
+        左边写 Markdown,右边实时看到渲染效果。
+        写完直接<strong>复制 HTML 源码</strong>或<strong>下载成 .html 文件</strong>,粘到博客、邮件、Notion 都能用。
+      </p>
+    </header>
+
+    <!-- 3 步说明 -->
+    <ol class="md-steps" aria-label="使用步骤">
+      <li><span class="md-step-num">1</span><span>在左边写 Markdown(用上面的工具栏快速加粗/插链接/加引用)</span></li>
+      <li><span class="md-step-num">2</span><span>右边实时显示渲染结果,可切换到"HTML 源码"看代码</span></li>
+      <li><span class="md-step-num">3</span><span>点"复制 HTML"或"下载 .html"拿走成品</span></li>
+    </ol>
+
+    <!-- 工具主体 -->
+    <section class="md-tool" aria-label="Markdown 转 HTML 工具">
+      <!-- 顶部:工具栏 + 动作 -->
+      <div class="md-toolbar" role="toolbar" aria-label="Markdown 编辑工具栏">
+        <div class="md-toolbar-group">
+          <button type="button" class="md-tb-btn" data-md-wrap="bold" title="加粗 **text**" aria-label="加粗">
+            <strong>B</strong>
+          </button>
+          <button type="button" class="md-tb-btn" data-md-wrap="italic" title="斜体 *text*" aria-label="斜体">
+            <em>I</em>
+          </button>
+          <button type="button" class="md-tb-btn" data-md-wrap="heading" title="标题 ##" aria-label="标题">
+            H
+          </button>
+          <button type="button" class="md-tb-btn" data-md-wrap="link" title="链接 [text](url)" aria-label="链接">
+            🔗
+          </button>
+          <button type="button" class="md-tb-btn" data-md-wrap="code" title="代码 `code`" aria-label="行内代码">
+            &lt;/&gt;
+          </button>
+          <button type="button" class="md-tb-btn" data-md-wrap="quote" title="引用 > " aria-label="引用">
+            ❝
+          </button>
+          <button type="button" class="md-tb-btn" data-md-wrap="list" title="无序列表 -" aria-label="无序列表">
+            •
+          </button>
+        </div>
+        <div class="md-toolbar-group md-toolbar-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-md-sample>示例</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-md-clear>清空</button>
+          <span class="md-toolbar-sep" aria-hidden="true"></span>
+          <button type="button" class="btn btn-secondary btn-sm" data-md-copy>复制 HTML</button>
+          <button type="button" class="btn btn-primary btn-sm" data-md-download>下载 .html</button>
+        </div>
+      </div>
+
+      <!-- 左右两栏 -->
+      <div class="md-panes">
+        <!-- 输入 -->
+        <div class="md-pane md-pane-input">
+          <label class="label" for="md-input">Markdown 源码</label>
+          <textarea
+            id="md-input"
+            class="textarea md-textarea"
+            data-md-input
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder="# 标题&#10;&#10;开始写 Markdown...&#10;&#10;**加粗**、*斜体*、`代码`、[链接](https://example.com) 都支持"
+            aria-label="Markdown 源码输入框"
+          ></textarea>
+          <p class="md-input-meta">
+            <span data-md-char-count>0</span> 字符
+          </p>
+        </div>
+
+        <!-- 输出 -->
+        <div class="md-pane md-pane-output">
+          <div class="md-pane-head">
+            <div class="md-viewtabs" role="tablist" aria-label="输出视图">
+              <button type="button" class="md-viewtab is-active" role="tab" data-md-view="preview" aria-selected="true">预览</button>
+              <button type="button" class="md-viewtab" role="tab" data-md-view="source" aria-selected="false">HTML 源码</button>
+            </div>
+          </div>
+          <!-- 预览视图 -->
+          <div
+            class="md-preview"
+            data-md-preview
+            role="tabpanel"
+            aria-label="Markdown 渲染预览"
+          ><p class="md-empty">在左边写 Markdown,这里会实时显示渲染结果。</p></div>
+          <!-- 源码视图 -->
+          <pre
+            class="md-source"
+            data-md-source
+            role="tabpanel"
+            aria-label="HTML 源码"
+            hidden
+          ><code data-md-source-code>—</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部说明 -->
+    <section class="md-why">
+      <h2>为什么用这个工具?</h2>
+      <p>
+        写公众号、邮件签名、Notion、博客文章,Markdown 写起来快,但很多平台不直接渲染 Markdown。
+        这个工具把 Markdown 转成干净 HTML,直接粘过去就能用。
+      </p>
+      <p>
+        渲染用的是 <code>marked</code> 这个开源库(GitHub README 用的同款),
+        全部在浏览器里跑,<strong>内容不经过任何服务器</strong>。
+        下载的 .html 文件可以本地用浏览器打开,也可以直接发到博客 / 工单 / 邮件。
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .md-wrap { max-width: 1180px; }
+
+  .md-hero { margin: 0.5rem 0 1.5rem 0; }
+  .md-hero h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 0.4em 0; }
+  .md-tagline {
+    color: var(--color-ink-600);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    margin: 0;
+    max-width: 68ch;
+  }
+  .md-tagline strong { color: var(--color-ink-900); }
+
+  /* 步骤条 */
+  .md-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .md-steps li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.85rem;
+    color: var(--color-ink-700);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  .md-step-num {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 720px) {
+    .md-steps { grid-template-columns: 1fr; }
+  }
+
+  /* 工具主体 */
+  .md-tool {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 0.85rem 1.25rem 1.25rem 1.25rem;
+  }
+
+  /* 工具栏 */
+  .md-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.4rem 0 0.7rem 0;
+    border-bottom: 1px solid var(--color-ink-200);
+    margin-bottom: 1rem;
+  }
+  .md-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+  }
+  .md-toolbar-sep {
+    width: 1px;
+    height: 1.4em;
+    background: var(--color-ink-200);
+    margin: 0 0.2rem;
+  }
+  .md-tb-btn {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-sm);
+    color: var(--color-ink-700);
+    font-size: 0.95rem;
+    width: 2rem;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    line-height: 1;
+  }
+  .md-tb-btn:hover {
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-300);
+    color: var(--color-primary-700);
+  }
+  .md-tb-btn:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* 双栏 */
+  .md-panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 880px) {
+    .md-panes { grid-template-columns: 1fr; }
+  }
+
+  .md-pane { display: flex; flex-direction: column; min-width: 0; }
+  .md-pane .label { margin-bottom: 0.4em; }
+
+  .md-textarea {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    min-height: 460px;
+    resize: vertical;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .md-input-meta {
+    margin: 0.4em 0 0 0;
+    color: var(--color-ink-500);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 输出区 */
+  .md-pane-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4em;
+  }
+  .md-viewtabs {
+    display: flex;
+    gap: 0.2rem;
+    border-bottom: 1px solid transparent;
+  }
+  .md-viewtab {
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    padding: 0.3em 0.85em;
+    font-size: 0.88rem;
+    color: var(--color-ink-600);
+    cursor: pointer;
+    position: relative;
+    top: 1px;
+  }
+  .md-viewtab:hover { color: var(--color-ink-900); }
+  .md-viewtab.is-active {
+    color: var(--color-primary-700);
+    background: #fff;
+    border-color: var(--color-ink-200);
+    border-bottom: 1px solid #fff;
+    font-weight: 600;
+  }
+  .md-viewtab:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: -2px;
+  }
+
+  .md-preview {
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    background: #fff;
+    padding: 1rem 1.25rem;
+    min-height: 460px;
+    max-height: 70vh;
+    overflow: auto;
+    color: var(--color-ink-900);
+    line-height: 1.7;
+    font-size: 0.95rem;
+  }
+  .md-preview h1, .md-preview h2, .md-preview h3, .md-preview h4 {
+    margin: 0.8em 0 0.4em 0;
+    line-height: 1.3;
+  }
+  .md-preview h1 { font-size: 1.6rem; }
+  .md-preview h2 { font-size: 1.35rem; }
+  .md-preview h3 { font-size: 1.15rem; }
+  .md-preview p { margin: 0.6em 0; }
+  .md-preview ul, .md-preview ol { margin: 0.6em 0; padding-left: 1.5em; }
+  .md-preview li { margin: 0.2em 0; }
+  .md-preview code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--color-ink-100);
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-sm);
+  }
+  .md-preview pre {
+    font-family: var(--font-mono);
+    background: var(--color-ink-50);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.8em 1em;
+    overflow-x: auto;
+    font-size: 0.88em;
+  }
+  .md-preview pre code { background: transparent; padding: 0; }
+  .md-preview blockquote {
+    margin: 0.8em 0;
+    padding: 0.4em 0.9em;
+    border-left: 3px solid var(--color-ink-300);
+    background: var(--color-ink-50);
+    color: var(--color-ink-700);
+  }
+  .md-preview a { color: var(--color-primary-700); text-decoration: underline; }
+  .md-preview hr {
+    border: none;
+    border-top: 1px solid var(--color-ink-200);
+    margin: 1.2em 0;
+  }
+  .md-preview table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.8em 0;
+    font-size: 0.9em;
+  }
+  .md-preview th, .md-preview td {
+    border: 1px solid var(--color-ink-200);
+    padding: 0.4em 0.7em;
+    text-align: left;
+  }
+  .md-preview th { background: var(--color-ink-50); }
+  .md-preview img { max-width: 100%; height: auto; }
+  .md-empty {
+    color: var(--color-ink-400);
+    text-align: center;
+    margin: 2em 0;
+  }
+
+  /* HTML 源码视图 */
+  .md-source {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    min-height: 460px;
+    max-height: 70vh;
+    overflow: auto;
+    background: var(--color-ink-50);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.95rem;
+    margin: 0;
+    color: var(--color-ink-900);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .md-source code {
+    font-family: inherit;
+    font-size: inherit;
+    background: transparent;
+    padding: 0;
+  }
+
+  /* 底部说明 */
+  .md-why {
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .md-why h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.6em 0;
+    color: var(--color-ink-900);
+  }
+  .md-why p {
+    color: var(--color-ink-700);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .md-why code {
+    font-size: 0.88em;
+    background: var(--color-ink-100);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-sm);
+  }
+  .md-why strong { color: var(--color-ink-900); }
+</style>
+
+<script>
+  import { marked } from 'marked';
+
+  // 配置 marked:GFM 开关 + 不转义原始 HTML(允许在 md 里写 html)
+  marked.setOptions({
+    gfm: true,
+    breaks: false,
+  });
+
+  // ============== DOM ==============
+  const input = document.querySelector<HTMLTextAreaElement>('[data-md-input]')!;
+  const charCount = document.querySelector<HTMLElement>('[data-md-char-count]')!;
+  const preview = document.querySelector<HTMLElement>('[data-md-preview]')!;
+  const source = document.querySelector<HTMLPreElement>('[data-md-source]')!;
+  const sourceCode = document.querySelector<HTMLElement>('[data-md-source-code]')!;
+  const viewTabs = document.querySelectorAll<HTMLButtonElement>('[data-md-view]');
+  const copyBtn = document.querySelector<HTMLButtonElement>('[data-md-copy]')!;
+  const downloadBtn = document.querySelector<HTMLButtonElement>('[data-md-download]')!;
+  const sampleBtn = document.querySelector<HTMLButtonElement>('[data-md-sample]')!;
+  const clearBtn = document.querySelector<HTMLButtonElement>('[data-md-clear]')!;
+  const tbBtns = document.querySelectorAll<HTMLButtonElement>('[data-md-wrap]');
+
+  const SAMPLE = `# 你好,这是 Markdown 预览
+
+> 一行字变 HTML,所见即所得。
+
+## 主要功能
+
+- 写 **加粗**、*斜体*、~~删除线~~ 都行
+- 写 \`行内代码\` 和代码块
+- 插入 [链接](https://example.com)
+- 列无序 / 有序列表
+- 写 \`\`\`js\nconsole.log('代码块')\n\`\`\`
+
+## 代码块
+
+\`\`\`js
+function hello(name) {
+  return \`Hi, \${name}!\`;
+}
+\`\`\`
+
+## 表格
+
+| 功能 | 支持 |
+| --- | --- |
+| 标题 | ✅ |
+| 列表 | ✅ |
+| 代码 | ✅ |
+
+---
+
+写完直接复制右侧的 HTML 源码。
+`;
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  // ============== 渲染 ==============
+  function render(): void {
+    const md = input.value;
+    charCount.textContent = String(md.length);
+    if (md.trim() === '') {
+      preview.innerHTML = '<p class="md-empty">在左边写 Markdown,这里会实时显示渲染结果。</p>';
+      sourceCode.textContent = '—';
+      return;
+    }
+    let html: string;
+    try {
+      html = marked.parse(md, { async: false }) as string;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      html = '<p style="color:var(--color-risk-high-text)">渲染失败:' + escapeHtml(msg) + '</p>';
+    }
+    preview.innerHTML = html;
+    sourceCode.textContent = html;
+  }
+
+  // ============== 工具栏插入 ==============
+  function wrapSelection(before: string, after: string, placeholder = ''): void {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const before_text = input.value.slice(0, start);
+    const selected = input.value.slice(start, end);
+    const after_text = input.value.slice(end);
+    const inner = selected || placeholder;
+    const inserted = before + inner + after;
+    input.value = before_text + inserted + after_text;
+    // 重新聚焦并把光标放在中间
+    const newCursorStart = before_text.length + before.length;
+    const newCursorEnd = newCursorStart + inner.length;
+    input.focus();
+    input.setSelectionRange(newCursorStart, newCursorEnd);
+    render();
+  }
+
+  /** 行级操作:在每行行首加 prefix(支持多行) */
+  function prefixLines(prefix: string): void {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const before = input.value.slice(0, start);
+    const selected = input.value.slice(start, end);
+    const after = input.value.slice(end);
+    // 找到所在行
+    const lineStart = before.lastIndexOf('\n') + 1;
+    const block = before.slice(lineStart) + selected;
+    const lines = block.split('\n');
+    const newBlock = lines.map((ln) => prefix + ln).join('\n');
+    // 替换回去
+    input.value = before.slice(0, lineStart) + newBlock + after;
+    input.focus();
+    // 选中刚处理的那段
+    const newStart = lineStart;
+    const newEnd = lineStart + newBlock.length;
+    input.setSelectionRange(newStart, newEnd);
+    render();
+  }
+
+  // ============== 事件 ==============
+  tbBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const kind = btn.getAttribute('data-md-wrap');
+      if (kind === 'bold') wrapSelection('**', '**', '加粗文字');
+      else if (kind === 'italic') wrapSelection('*', '*', '斜体文字');
+      else if (kind === 'code') wrapSelection('`', '`', 'code');
+      else if (kind === 'link') wrapSelection('[', '](https://)', '链接文字');
+      else if (kind === 'heading') prefixLines('## ');
+      else if (kind === 'quote') prefixLines('> ');
+      else if (kind === 'list') prefixLines('- ');
+    });
+  });
+
+  // 视图切换
+  viewTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const view = tab.getAttribute('data-md-view');
+      viewTabs.forEach((x) => {
+        const active = x === tab;
+        x.classList.toggle('is-active', active);
+        x.setAttribute('aria-selected', String(active));
+      });
+      if (view === 'preview') {
+        preview.hidden = false;
+        source.hidden = true;
+      } else {
+        preview.hidden = true;
+        source.hidden = false;
+      }
+    });
+  });
+
+  // 输入即处理(轻量节流)
+  let timer: number | undefined;
+  input.addEventListener('input', () => {
+    if (timer !== undefined) window.clearTimeout(timer);
+    timer = window.setTimeout(render, 80);
+  });
+
+  // 示例 / 清空
+  sampleBtn.addEventListener('click', () => {
+    input.value = SAMPLE;
+    render();
+    input.focus();
+  });
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    render();
+    input.focus();
+  });
+
+  // 复制 HTML
+  copyBtn.addEventListener('click', async () => {
+    const html = sourceCode.textContent || '';
+    if (!html || html === '—') return;
+    try {
+      await navigator.clipboard.writeText(html);
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = '已复制 ✓';
+      window.setTimeout(() => {
+        copyBtn.textContent = orig;
+      }, 1200);
+    } catch {
+      // 兜底
+      const range = document.createRange();
+      range.selectNodeContents(sourceCode);
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+  });
+
+  // 下载 .html
+  downloadBtn.addEventListener('click', () => {
+    const html = sourceCode.textContent || '';
+    if (!html || html === '—') return;
+    const titleMatch = input.value.match(/^#\s+(.+)$/m);
+    const title = titleMatch ? titleMatch[1].trim() : 'markdown-export';
+    const full = `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>${escapeHtml(title)}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; max-width: 760px; margin: 2rem auto; padding: 0 1rem; line-height: 1.7; color: #1f2937; }
+h1, h2, h3, h4 { line-height: 1.3; }
+code { background: #f1f5f9; padding: 0.1em 0.35em; border-radius: 3px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
+pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1em 1.2em; overflow-x: auto; }
+pre code { background: transparent; padding: 0; }
+blockquote { margin: 1em 0; padding: 0.4em 1em; border-left: 3px solid #cbd5e1; background: #f8fafc; color: #475569; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #e2e8f0; padding: 0.4em 0.7em; text-align: left; }
+th { background: #f8fafc; }
+hr { border: none; border-top: 1px solid #e2e8f0; margin: 1.5em 0; }
+a { color: #4338ca; }
+</style>
+</head>
+<body>
+${html}
+</body>
+</html>
+`;
+    const blob = new Blob([full], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // 文件名用标题 + 时间
+    const safeName = title.replace(/[\\/:*?"<>|]/g, '-').slice(0, 50);
+    const ts = new Date().toISOString().slice(0, 10);
+    a.download = `${safeName}-${ts}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+
+  // 初始
+  render();
+</script>

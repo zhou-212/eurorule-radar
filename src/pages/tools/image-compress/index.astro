@@ -1,0 +1,635 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '工具集', item: siteStr ? `${siteStr}tools/` : undefined },
+    { '@type': 'ListItem', position: 3, name: '图片压缩', item: siteStr ? `${siteStr}tools/image-compress/` : undefined },
+  ],
+};
+
+const formatOptions = [
+  { value: 'auto', label: '自动 (按原图)',  hint: '原图是 PNG → 压成 PNG;是 JPG → 压成 JPG' },
+  { value: 'jpeg', label: '强制 JPG',        hint: '文件最小,适合照片;不支持透明' },
+  { value: 'png',  label: '强制 PNG',        hint: '支持透明,文件较大;适合 logo/截图' },
+  { value: 'webp', label: 'WebP',            hint: '现代浏览器都支持,文件比 JPG 还小' },
+];
+---
+
+<BaseLayout
+  title="图片压缩 — 浏览器本地压缩,不上传服务器"
+  description="把 JPG / PNG / WebP 在浏览器里压小一点,清晰度自己调,支持批量。文件不上传,适合站外配图、详情页优化、产品图打包。"
+  jsonLd={breadcrumb}
+>
+  <div class="container tool-wrap" data-tool-id="image-compress">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/tools/')}>工具集</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>图片压缩</span>
+    </nav>
+
+    <header class="tool-hero">
+      <h1>🖼️ 图片压缩</h1>
+      <p class="tool-tagline">把图片压小再发,清晰度自己调,批量也行。文件全程在你浏览器里,不会上传到任何服务器。</p>
+    </header>
+
+    <!-- 全局选项 -->
+    <section class="card options-card" aria-labelledby="opt-title">
+      <h2 id="opt-title" class="options-title">压缩选项 (作用到所有图片)</h2>
+      <div class="options-row">
+        <div class="form-row">
+          <label for="ic-quality" class="label">质量: <span data-ic-quality-val>75</span> %</label>
+          <input id="ic-quality" type="range" class="range" min="10" max="100" step="1" value="75" data-ic-quality />
+          <p class="form-help">70-80 是甜点:文件小,人眼看不出差别。低于 50 会开始糊</p>
+        </div>
+        <div class="form-row">
+          <label for="ic-format" class="label">输出格式</label>
+          <select id="ic-format" class="select" data-ic-format>
+            {formatOptions.map((opt) => (
+              <option value={opt.value} data-hint={opt.hint}>{opt.label}</option>
+            ))}
+          </select>
+          <p class="form-help" data-ic-format-hint>{formatOptions[0].hint}</p>
+        </div>
+        <div class="form-row">
+          <label for="ic-max-w" class="label">限制宽度 (可空)</label>
+          <input id="ic-max-w" type="number" class="input" min="100" max="8000" step="10" placeholder="例如 1920" data-ic-max-w />
+          <p class="form-help">超过这个宽度的图会按比例缩到这个宽度;空着就不缩尺寸</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 拖入 / 选择 -->
+    <section class="card dropzone-card">
+      <div
+        class="dropzone"
+        data-ic-dropzone
+        tabindex="0"
+        role="button"
+        aria-label="点这里或拖入图片 (支持 JPG / PNG / WebP)"
+      >
+        <div class="dropzone-icon" aria-hidden="true">📁</div>
+        <p class="dropzone-text"><strong>把图片拖到这里</strong>,或者<a href="#" data-ic-pick>点这儿选图</a></p>
+        <p class="dropzone-help">支持 JPG / PNG / WebP,可一次选多张</p>
+        <input type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" multiple data-ic-input />
+      </div>
+    </section>
+
+    <!-- 队列 -->
+    <section class="queue-card card" hidden data-ic-queue-section aria-labelledby="queue-title">
+      <div class="queue-header">
+        <h2 id="queue-title" class="queue-title">队列 (<span data-ic-count>0</span>)</h2>
+        <div class="queue-actions">
+          <button type="button" class="btn btn-ghost btn-sm" data-ic-clear>清空</button>
+          <button type="button" class="btn btn-primary" data-ic-compress-all>全部压缩</button>
+        </div>
+      </div>
+      <ul class="queue" data-ic-queue></ul>
+    </section>
+
+    <!-- 模板:队列项,通过 JS 复制填充 -->
+    <template data-ic-item-tpl>
+      <li class="queue-item" data-ic-item>
+        <div class="qi-thumb" data-ic-thumb></div>
+        <div class="qi-body">
+          <p class="qi-name" data-ic-name></p>
+          <p class="qi-meta">
+            <span data-ic-orig-size></span>
+            <span class="qi-meta-sep">·</span>
+            <span data-ic-orig-dim></span>
+          </p>
+          <p class="qi-result" data-ic-result hidden>
+            <strong data-ic-new-size></strong>
+            <span class="qi-savings" data-ic-savings></span>
+            <span class="qi-meta-sep">·</span>
+            <span data-ic-new-dim></span>
+          </p>
+        </div>
+        <div class="qi-actions">
+          <button type="button" class="btn btn-primary btn-sm" data-ic-compress>压缩</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-ic-download hidden>下载</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-ic-remove aria-label="从队列删除">×</button>
+        </div>
+        <p class="qi-error" data-ic-error hidden role="alert"></p>
+      </li>
+    </template>
+
+    <section class="tool-why">
+      <h2>为什么这个工具能帮你?</h2>
+      <p>详情页 / Listing / 微信文章,图大了加载慢,用户体验差,有时平台 (亚马逊 / 微信) 还会自动压一遍,压完糊得没法看。手动开 Photoshop 太重,装个客户端又占地方。这个工具用浏览器自带的 canvas 重采样,文件全程不出你的电脑,公司内网/客户图也能放心压。</p>
+      <p>产品图打包一次,几百张图丢进来,选 JPG 75% 质量,点"全部压缩",下载下来就是小一截但清晰度看不太出差别的图集。运营同事不会用 PS,也能靠这个 3 步搞定。</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .tool-wrap { max-width: 1080px; }
+  .tool-hero { margin: 0.5rem 0 1.75rem 0; }
+  .tool-hero h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin: 0 0 0.4em 0; }
+  .tool-tagline { color: var(--color-ink-600); font-size: 1.05rem; max-width: 60ch; margin: 0; }
+
+  .options-card { margin-bottom: 1.25rem; }
+  .options-title { font-size: 1.05rem; margin: 0 0 0.9rem 0; }
+  .options-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 760px) {
+    .options-row { grid-template-columns: 1fr; }
+  }
+
+  .range { width: 100%; accent-color: var(--color-primary-600); }
+
+  .dropzone {
+    border: 2px dashed var(--color-ink-300);
+    border-radius: var(--radius-lg);
+    background: var(--color-ink-50);
+    padding: 2.2rem 1.2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .dropzone:hover, .dropzone:focus-visible {
+    border-color: var(--color-primary-500);
+    background: var(--color-primary-50);
+    outline: none;
+  }
+  .dropzone.is-dragover {
+    border-color: var(--color-primary-600);
+    background: var(--color-primary-50);
+    border-style: solid;
+  }
+  .dropzone-icon { font-size: 2.4rem; margin-bottom: 0.4rem; }
+  .dropzone-text { margin: 0 0 0.3em 0; color: var(--color-ink-700); }
+  .dropzone-help { margin: 0; color: var(--color-ink-500); font-size: 0.85rem; }
+  .dropzone a { color: var(--color-primary-700); }
+
+  .queue-card { margin-top: 1.25rem; }
+  .queue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    flex-wrap: wrap;
+  }
+  .queue-title { font-size: 1.05rem; margin: 0; }
+  .queue-actions { display: flex; gap: 0.5rem; }
+
+  .queue {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .queue-item {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.7rem 0.9rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+  }
+  .qi-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-sm);
+    background: var(--color-ink-100) center / cover no-repeat;
+    border: 1px solid var(--color-ink-200);
+    flex-shrink: 0;
+  }
+  .qi-body { min-width: 0; }
+  .qi-name {
+    margin: 0 0 0.2em 0;
+    font-weight: 500;
+    color: var(--color-ink-900);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .qi-meta, .qi-result {
+    margin: 0;
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+  }
+  .qi-result { color: var(--color-accent-700); margin-top: 0.2em; }
+  .qi-savings {
+    background: var(--color-accent-50);
+    color: var(--color-accent-700);
+    border: 1px solid var(--color-accent-100);
+    border-radius: 999px;
+    padding: 0.05em 0.55em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-left: 0.35em;
+  }
+  .qi-meta-sep { color: var(--color-ink-300); margin: 0 0.35em; }
+  .qi-actions { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .qi-error {
+    grid-column: 1 / -1;
+    margin: 0.3rem 0 0 0;
+    padding: 0.5em 0.7em;
+    background: var(--color-risk-high-bg);
+    color: var(--color-risk-high-text);
+    border: 1px solid var(--color-risk-high-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+  }
+  .qi-status-busy {
+    grid-column: 1 / -1;
+    color: var(--color-primary-700);
+    font-size: 0.85rem;
+    margin: 0.2rem 0 0 0;
+  }
+  @media (max-width: 640px) {
+    .queue-item { grid-template-columns: 56px minmax(0, 1fr); row-gap: 0.5rem; }
+    .qi-thumb { width: 56px; height: 56px; }
+    .qi-actions { grid-column: 1 / -1; justify-content: flex-start; }
+  }
+
+  .tool-why {
+    margin-top: 2.5rem;
+    padding: 1.4rem 1.5rem;
+    background: var(--color-primary-50);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--color-primary-500);
+  }
+  .tool-why h2 { font-size: 1.15rem; margin: 0 0 0.6em 0; color: var(--color-ink-900); }
+  .tool-why p { color: var(--color-ink-700); margin: 0 0 0.7em 0; line-height: 1.7; }
+  .tool-why p:last-child { margin-bottom: 0; }
+</style>
+
+<script>
+  const $ = <T extends HTMLElement = HTMLElement>(sel: string, root: ParentNode = document) =>
+    root.querySelector(sel) as T | null;
+  const $$ = <T extends HTMLElement = HTMLElement>(sel: string, root: ParentNode = document) =>
+    Array.from(root.querySelectorAll(sel)) as T[];
+
+  // ============== 状态 ==============
+  interface Item {
+    id: number;
+    file: File;
+    origSize: number;
+    origWidth: number;
+    origHeight: number;
+    origUrl: string;          // ObjectURL 缩略图
+    compressed?: Blob;
+    compressedUrl?: string;
+    compressedName?: string;
+    compressedWidth?: number;
+    compressedHeight?: number;
+    status: 'idle' | 'busy' | 'done' | 'error';
+    errorMsg?: string;
+  }
+  const items: Item[] = [];
+  let nextId = 1;
+
+  // ============== DOM ==============
+  const dropzone = $('[data-ic-dropzone]') as HTMLDivElement;
+  const input = $('[data-ic-input]') as HTMLInputElement;
+  const pickLink = $('[data-ic-pick]') as HTMLAnchorElement;
+  const queue = $('[data-ic-queue]') as HTMLUListElement;
+  const queueSection = $('[data-ic-queue-section]') as HTMLElement;
+  const countEl = $('[data-ic-count]') as HTMLElement;
+  const clearBtn = $('[data-ic-clear]') as HTMLButtonElement;
+  const compressAllBtn = $('[data-ic-compress-all]') as HTMLButtonElement;
+  const tpl = $('[data-ic-item-tpl]') as HTMLTemplateElement;
+  const qualityInput = $('[data-ic-quality]') as HTMLInputElement;
+  const qualityVal = $('[data-ic-quality-val]') as HTMLElement;
+  const formatInput = $('[data-ic-format]') as HTMLSelectElement;
+  const formatHint = $('[data-ic-format-hint]') as HTMLElement;
+  const maxWInput = $('[data-ic-max-w]') as HTMLInputElement;
+
+  // ============== 工具 ==============
+  function humanBytes(n: number): string {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  function detectExtFromMime(mime: string): string {
+    if (mime === 'image/jpeg') return 'jpg';
+    if (mime === 'image/png') return 'png';
+    if (mime === 'image/webp') return 'webp';
+    return 'img';
+  }
+
+  function getOutputMime(format: string, origMime: string): string {
+    if (format === 'jpeg') return 'image/jpeg';
+    if (format === 'png') return 'image/png';
+    if (format === 'webp') return 'image/webp';
+    // auto:跟随原图,但 webp 保持 webp
+    if (origMime === 'image/png') return 'image/png';
+    if (origMime === 'image/webp') return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  function syncFormatHint() {
+    const opt = formatInput.selectedOptions[0];
+    if (opt && formatHint) formatHint.textContent = opt.dataset.hint ?? '';
+  }
+
+  // ============== 添加文件 ==============
+  function addFiles(fileList: FileList | File[]) {
+    const accepted: File[] = [];
+    const rejected: string[] = [];
+    for (const f of Array.from(fileList)) {
+      if (/^image\/(jpeg|png|webp)$/.test(f.type)) {
+        accepted.push(f);
+      } else {
+        rejected.push(`${f.name} (格式不支持)`);
+      }
+    }
+    if (rejected.length) {
+      console.warn('跳过不支持的文件:', rejected);
+    }
+    accepted.forEach((file) => items.push(createItem(file)));
+    renderQueue();
+  }
+
+  function createItem(file: File): Item {
+    const item: Item = {
+      id: nextId++,
+      file,
+      origSize: file.size,
+      origWidth: 0,
+      origHeight: 0,
+      origUrl: '',
+      status: 'idle',
+    };
+    // 异步读取尺寸
+    const url = URL.createObjectURL(file);
+    item.origUrl = url;
+    const img = new Image();
+    img.onload = () => {
+      item.origWidth = img.naturalWidth;
+      item.origHeight = img.naturalHeight;
+      updateItemRow(item);
+    };
+    img.onerror = () => {
+      item.status = 'error';
+      item.errorMsg = '图片读取失败,文件可能已损坏';
+      updateItemRow(item);
+    };
+    img.src = url;
+    return item;
+  }
+
+  // ============== 渲染队列 ==============
+  function renderQueue() {
+    queue.innerHTML = '';
+    if (items.length === 0) {
+      queueSection.hidden = true;
+      return;
+    }
+    queueSection.hidden = false;
+    countEl.textContent = String(items.length);
+    items.forEach((item) => queue.appendChild(buildRow(item)));
+  }
+
+  function buildRow(item: Item): HTMLElement {
+    const node = (tpl.content.cloneNode(true) as DocumentFragment).querySelector('[data-ic-item]') as HTMLElement;
+    node.dataset.id = String(item.id);
+    return updateItemRow(item, node);
+  }
+
+  function updateItemRow(item: Item, node?: HTMLElement): HTMLElement {
+    const n = node ?? $(`[data-ic-item][data-id="${item.id}"]`);
+    if (!n) return document.createElement('div');
+    const thumb = $('[data-ic-thumb]', n) as HTMLElement;
+    const name = $('[data-ic-name]', n) as HTMLElement;
+    const origSize = $('[data-ic-orig-size]', n) as HTMLElement;
+    const origDim = $('[data-ic-orig-dim]', n) as HTMLElement;
+    const result = $('[data-ic-result]', n) as HTMLElement;
+    const newSize = $('[data-ic-new-size]', n) as HTMLElement;
+    const savings = $('[data-ic-savings]', n) as HTMLElement;
+    const newDim = $('[data-ic-new-dim]', n) as HTMLElement;
+    const compressBtn = $('[data-ic-compress]', n) as HTMLButtonElement;
+    const downloadBtn = $('[data-ic-download]', n) as HTMLButtonElement;
+    const errorEl = $('[data-ic-error]', n) as HTMLElement;
+
+    thumb.style.backgroundImage = `url("${item.origUrl}")`;
+    name.textContent = item.file.name;
+    origSize.textContent = humanBytes(item.origSize);
+    origDim.textContent = item.origWidth
+      ? `${item.origWidth}×${item.origHeight}`
+      : '读取中…';
+
+    if (item.status === 'idle') {
+      compressBtn.hidden = false;
+      compressBtn.disabled = false;
+      compressBtn.textContent = '压缩';
+      result.hidden = true;
+      downloadBtn.hidden = true;
+      errorEl.hidden = true;
+    } else if (item.status === 'busy') {
+      compressBtn.hidden = false;
+      compressBtn.disabled = true;
+      compressBtn.textContent = '压缩中…';
+      result.hidden = true;
+      downloadBtn.hidden = true;
+      errorEl.hidden = true;
+    } else if (item.status === 'done' && item.compressed) {
+      compressBtn.hidden = true;
+      result.hidden = false;
+      downloadBtn.hidden = false;
+      errorEl.hidden = true;
+      newSize.textContent = `→ ${humanBytes(item.compressed.size)}`;
+      const pct = Math.round((1 - item.compressed.size / item.origSize) * 100);
+      savings.textContent = pct > 0 ? `省 ${pct}%` : pct < 0 ? `大 ${Math.abs(pct)}%` : '大小相同';
+      newDim.textContent = item.compressedWidth
+        ? `${item.compressedWidth}×${item.compressedHeight}`
+        : '';
+      const isShrink = item.compressed.size < item.origSize;
+      savings.style.color = isShrink ? 'var(--color-accent-700)' : 'var(--color-ink-500)';
+      savings.style.borderColor = isShrink ? 'var(--color-accent-100)' : 'var(--color-ink-200)';
+      savings.style.background = isShrink ? 'var(--color-accent-50)' : 'var(--color-ink-50)';
+    } else if (item.status === 'error') {
+      compressBtn.hidden = false;
+      compressBtn.disabled = false;
+      compressBtn.textContent = '重试';
+      result.hidden = true;
+      downloadBtn.hidden = true;
+      errorEl.hidden = false;
+      errorEl.textContent = item.errorMsg || '处理失败';
+    }
+    return n;
+  }
+
+  // ============== 压缩 ==============
+  async function compressOne(item: Item) {
+    item.status = 'busy';
+    item.errorMsg = undefined;
+    updateItemRow(item);
+
+    try {
+      const quality = Math.max(0.1, Math.min(1, parseInt(qualityInput.value, 10) / 100));
+      const format = formatInput.value;
+      const outMime = getOutputMime(format, item.file.type);
+      const maxW = parseInt(maxWInput.value || '0', 10);
+
+      // 加载原图
+      const img = await loadImage(item.origUrl);
+      let w = img.naturalWidth;
+      let h = img.naturalHeight;
+      if (maxW > 0 && w > maxW) {
+        h = Math.round((h * maxW) / w);
+        w = maxW;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas 2D 上下文不可用');
+
+      // 高质量缩放
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // toBlob 的 quality 对 PNG 无效 (PNG 无损),所以 PNG 用户感知不到质量调节
+      const blob: Blob | null = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('浏览器没能生成图片'))), outMime, quality);
+      });
+
+      // 清理:用完原图 ObjectURL 释放
+      // (注意:缩略图背景还在用 origUrl,不能释放)
+      item.compressed = blob;
+      item.compressedUrl = URL.createObjectURL(blob);
+      item.compressedWidth = w;
+      item.compressedHeight = h;
+      const ext = detectExtFromMime(outMime);
+      const baseName = item.file.name.replace(/\.[^.]+$/, '');
+      item.compressedName = `${baseName}-min.${ext}`;
+      item.status = 'done';
+      updateItemRow(item);
+    } catch (e) {
+      item.status = 'error';
+      item.errorMsg = e instanceof Error ? e.message : '未知错误';
+      updateItemRow(item);
+    }
+  }
+
+  function loadImage(url: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('图片加载失败'));
+      img.src = url;
+    });
+  }
+
+  // ============== 事件 ==============
+  // 拖入
+  ['dragenter', 'dragover'].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('is-dragover');
+    })
+  );
+  ['dragleave', 'drop'].forEach((ev) =>
+    dropzone.addEventListener(ev, (e) => {
+      e.preventDefault();
+      if (ev === 'dragleave' && (e as DragEvent).relatedTarget) return;
+      dropzone.classList.remove('is-dragover');
+    })
+  );
+  dropzone.addEventListener('drop', (e) => {
+    const dt = (e as DragEvent).dataTransfer;
+    if (dt?.files?.length) addFiles(dt.files);
+  });
+  dropzone.addEventListener('click', (e) => {
+    // 防止点 a 标签时冒泡触发两次
+    if ((e.target as HTMLElement).closest('[data-ic-pick]')) return;
+    input.click();
+  });
+  pickLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    input.click();
+  });
+  dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      input.click();
+    }
+  });
+  input.addEventListener('change', () => {
+    if (input.files?.length) addFiles(input.files);
+    // 重置,允许选同一文件
+    input.value = '';
+  });
+
+  // 队列按钮代理
+  queue.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const row = target.closest('[data-ic-item]') as HTMLElement | null;
+    if (!row) return;
+    const id = parseInt(row.dataset.id ?? '0', 10);
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+
+    if (target.matches('[data-ic-compress]')) {
+      compressOne(item);
+    } else if (target.matches('[data-ic-download]')) {
+      if (!item.compressedUrl || !item.compressedName) return;
+      const a = document.createElement('a');
+      a.href = item.compressedUrl;
+      a.download = item.compressedName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else if (target.matches('[data-ic-remove]')) {
+      // 释放 ObjectURL
+      URL.revokeObjectURL(item.origUrl);
+      if (item.compressedUrl) URL.revokeObjectURL(item.compressedUrl);
+      const idx = items.findIndex((i) => i.id === id);
+      if (idx >= 0) items.splice(idx, 1);
+      renderQueue();
+    }
+  });
+
+  // 清空
+  clearBtn.addEventListener('click', () => {
+    items.forEach((i) => {
+      URL.revokeObjectURL(i.origUrl);
+      if (i.compressedUrl) URL.revokeObjectURL(i.compressedUrl);
+    });
+    items.length = 0;
+    renderQueue();
+  });
+
+  // 全部压缩
+  compressAllBtn.addEventListener('click', async () => {
+    const pending = items.filter((i) => i.status !== 'done' && i.status !== 'busy');
+    if (!pending.length) return;
+    compressAllBtn.disabled = true;
+    compressAllBtn.textContent = '压缩中…';
+    // 串行处理,避免大文件爆内存
+    for (const item of pending) {
+      await compressOne(item);
+    }
+    compressAllBtn.disabled = false;
+    compressAllBtn.textContent = '全部压缩';
+  });
+
+  // 选项变化
+  qualityInput.addEventListener('input', () => {
+    if (qualityVal) qualityVal.textContent = qualityInput.value;
+  });
+  formatInput.addEventListener('change', syncFormatHint);
+  syncFormatHint();
+</script>

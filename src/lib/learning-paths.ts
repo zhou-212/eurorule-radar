@@ -338,5 +338,53 @@ export function buildLearningPaths(): LearnPath[] {
         }
       ],
     },
+    {
+      slug: 'product-sourcing-compliance',
+      title: '选品合规调研',
+      subtitle: '亚马逊欧洲站选品前 60 分钟的合规快速排查',
+      icon: '🎯',
+      audience: '新卖家 / 选品新手 / 转类目老卖家',
+      estTotalMinutes: 60,
+      whyItMatters:
+        '选错品 = 上架后立刻被下架、库存压着走不出、罚款 + 扣货。新品上市前 60 分钟的合规预排查能省 5-15 万 € 后续合规费 + 库存成本。这条路径按"先高风险类目 → 再易踩坑材质 → 再平台强制"3 维度排查,80% 卖家能在 60 分钟内识别"这个品能不能卖"。',
+      finalReward: '走完 60 分钟,你会得到:1 张"产品合规检查表"+ 1 个"能不能卖"的明确判断(卖 / 缓卖 / 不卖)+ 1 个合规总成本预算。这是新品上市前的最后一道门,带去采购/选品/小组成员会直接能用。',
+      steps: [
+        {
+          id: 'step-1',
+          title: '5 类高风险类目先排除',
+          href: '/eu/radar/eu-child-product-warnings/',
+          estMinutes: 15,
+          desc: '5 类高风险类目(食品 / 医疗 / 儿童玩具 / 化妆品 / 化学品)在欧盟需特殊许可证或强制认证,小卖家直接避开,除非你已经有相关供应链。1 张速查卡,5 分钟排除。',
+        },
+        {
+          id: 'step-2',
+          title: '6 种"易踩坑"材质快速过',
+          href: '/eu/radar/eu-rohs-2011-65/',
+          estMinutes: 15,
+          desc: '带电池 / 含磁铁 / 接触食品 / 含塑料 / 含金属 / 含木包装,每一类都对应不同法规(RoHS / REACH / FCMA / LUCID / IOSS)。15 分钟过一遍你的产品,哪些碰了就标黄。',
+        },
+        {
+          id: 'step-3',
+          title: '4 个平台强制资质清点',
+          href: '/eu/radar/eu-gpsr-responsible-person/',
+          estMinutes: 15,
+          desc: 'GPSR 责任人 / 欧代 / EPR 注册 / 品牌备案(Amazon Brand Registry)4 项是平台强制的,缺一就限流。每项检查你的后台是否已配齐,15 分钟 4 项过完。',
+        },
+        {
+          id: 'step-4',
+          title: '3 步核算合规总成本',
+          href: '/eu/radar/eu-fcma-2024-1808/',
+          estMinutes: 10,
+          desc: '检测费(€1000-5000)+ 责任人(€200-500/年)+ EPR(€100-1000/年)+ CE/UKCA(€500-2000/产品)= 总成本 ÷ 预期销量 = 单件合规成本。>售价 30% 建议换品。',
+        },
+        {
+          id: 'step-5',
+          title: '1 张合规检查表打勾',
+          href: '/eu/checklists/new-seller-basics/',
+          estMinutes: 5,
+          desc: '走完 4 步,填 1 张"产品合规检查表"(商品/类目/材质/法规/资质/预算),过勾就上,不过勾就再调研。5 分钟收尾,带去采购谈判。',
+        },
+      ],
+    },
   ];;
 }

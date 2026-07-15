@@ -1,0 +1,560 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '工具集', item: siteStr ? `${siteStr}tools/` : undefined },
+    { '@type': 'ListItem', position: 3, name: 'JSON 格式化', item: siteStr ? `${siteStr}tools/json-format/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="JSON 格式化 — 校验 / 缩进 / 转 YAML,程序员工具"
+  description="左边粘 JSON,右边自动美化。校验报错会告诉你第几行错了。还能压缩、转 YAML。所有处理都在浏览器里完成。"
+  jsonLd={breadcrumb}
+>
+  <div class="container jf-wrap" data-tool-id="json-format">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/tools/')}>工具集</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>JSON 格式化</span>
+    </nav>
+
+    <header class="jf-hero">
+      <h1>JSON 格式化 — 校验 / 缩进 / 转 YAML,程序员工具</h1>
+      <p class="jf-tagline">
+        左边粘 JSON,右边自动美化。报错会告诉你<strong>第几行第几列</strong>错了。
+        还能一键压缩、转成 YAML。所有计算在你浏览器里完成,不会上传。
+      </p>
+    </header>
+
+    <!-- 3 步说明 -->
+    <ol class="jf-steps" aria-label="使用步骤">
+      <li><span class="jf-step-num">1</span><span>把 JSON 贴到左边框</span></li>
+      <li><span class="jf-step-num">2</span><span>选上方的操作(格式化 / 压缩 / 校验 / 转 YAML)</span></li>
+      <li><span class="jf-step-num">3</span><span>右边实时显示结果,有错误会标红</span></li>
+    </ol>
+
+    <!-- 工具主体 -->
+    <section class="jf-tool" aria-label="JSON 格式化工具">
+      <!-- Tab 栏 -->
+      <div class="jf-tabs" role="tablist" aria-label="操作类型">
+        <button type="button" class="jf-tab is-active" role="tab" data-jf-tab="format" aria-selected="true">格式化</button>
+        <button type="button" class="jf-tab" role="tab" data-jf-tab="minify" aria-selected="false">压缩</button>
+        <button type="button" class="jf-tab" role="tab" data-jf-tab="validate" aria-selected="false">校验 JSON</button>
+        <button type="button" class="jf-tab" role="tab" data-jf-tab="yaml" aria-selected="false">转为 YAML</button>
+      </div>
+
+      <!-- 左右两栏 -->
+      <div class="jf-panes">
+        <!-- 输入 -->
+        <div class="jf-pane jf-pane-input">
+          <header class="jf-pane-head">
+            <label class="label" for="jf-input">输入 JSON</label>
+            <div class="jf-pane-actions">
+              <button type="button" class="btn btn-ghost btn-sm" data-jf-sample>示例</button>
+              <button type="button" class="btn btn-ghost btn-sm" data-jf-clear>清空</button>
+            </div>
+          </header>
+          <textarea
+            id="jf-input"
+            class="textarea jf-textarea"
+            data-jf-input
+            spellcheck="false"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            placeholder='把 JSON 贴到这里,例如 {"name":"Alex","age":30}'
+            aria-label="JSON 输入框"
+          ></textarea>
+          <p class="jf-input-meta">
+            <span data-jf-char-count>0</span> 字符 · <span data-jf-line-count>0</span> 行
+          </p>
+        </div>
+
+        <!-- 输出 -->
+        <div class="jf-pane jf-pane-output">
+          <header class="jf-pane-head">
+            <span class="label" id="jf-output-label">输出</span>
+            <div class="jf-pane-actions">
+              <button type="button" class="btn btn-ghost btn-sm" data-jf-copy>复制</button>
+            </div>
+          </header>
+          <pre class="jf-output" data-jf-output aria-labelledby="jf-output-label" aria-live="polite"><code data-jf-output-code>—</code></pre>
+        </div>
+      </div>
+
+      <!-- 状态条 -->
+      <div class="jf-status" data-jf-status aria-live="polite"></div>
+    </section>
+
+    <!-- 底部说明 -->
+    <section class="jf-why">
+      <h2>为什么用这个工具?</h2>
+      <p>
+        写 API、读 config、排查报错,JSON 几乎是每天打交道的东西。IDE 自带格式化,
+        但经常不够:比如报错信息是"<code>Unexpected token at position 423</code>",光看位置不知道错哪。
+      </p>
+      <p>
+        这个工具会告诉你<strong>第几行第几列</strong>,把错误位置标出来;还内置了压缩、转 YAML,
+        一个工具顶四个。数据<strong>不上传</strong>,断网也能用。
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .jf-wrap { max-width: 1180px; }
+
+  .jf-hero { margin: 0.5rem 0 1.5rem 0; }
+  .jf-hero h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 0.4em 0; }
+  .jf-tagline {
+    color: var(--color-ink-600);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    margin: 0;
+    max-width: 68ch;
+  }
+  .jf-tagline strong { color: var(--color-ink-900); }
+
+  /* 步骤条 */
+  .jf-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .jf-steps li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.85rem;
+    color: var(--color-ink-700);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  .jf-step-num {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 720px) {
+    .jf-steps { grid-template-columns: 1fr; }
+  }
+
+  /* 工具主体 */
+  .jf-tool {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem 1.25rem 1.25rem;
+  }
+
+  /* Tabs */
+  .jf-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    border-bottom: 1px solid var(--color-ink-200);
+    margin-bottom: 1rem;
+  }
+  .jf-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 0.5em 1.1em;
+    font-size: 0.95rem;
+    color: var(--color-ink-600);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    position: relative;
+    top: 1px;
+  }
+  .jf-tab:hover { color: var(--color-ink-900); background: var(--color-ink-50); }
+  .jf-tab.is-active {
+    color: var(--color-primary-700);
+    background: #fff;
+    border-color: var(--color-ink-200);
+    border-bottom: 1px solid #fff;
+    font-weight: 600;
+  }
+  .jf-tab:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: -2px;
+  }
+
+  /* 双栏 */
+  .jf-panes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 880px) {
+    .jf-panes { grid-template-columns: 1fr; }
+  }
+
+  .jf-pane { display: flex; flex-direction: column; min-width: 0; }
+  .jf-pane-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4em;
+  }
+  .jf-pane-head .label { margin-bottom: 0; }
+  .jf-pane-actions { display: flex; gap: 0.4rem; }
+
+  .jf-textarea {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    min-height: 420px;
+    resize: vertical;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .jf-textarea.is-error {
+    border-color: var(--color-risk-high-border);
+    background: var(--color-risk-high-bg);
+  }
+
+  .jf-input-meta {
+    margin: 0.4em 0 0 0;
+    color: var(--color-ink-500);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 输出框 */
+  .jf-output {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    min-height: 420px;
+    max-height: 70vh;
+    overflow: auto;
+    background: var(--color-ink-50);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.75rem 0.95rem;
+    margin: 0;
+    color: var(--color-ink-900);
+    white-space: pre;
+    word-break: normal;
+  }
+  .jf-output code {
+    font-family: inherit;
+    font-size: inherit;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+
+  /* 错误标红 */
+  .jf-output.jf-output-error {
+    background: var(--color-risk-high-bg);
+    border-color: var(--color-risk-high-border);
+    color: var(--color-risk-high-text);
+  }
+  .jf-output .jf-err-line {
+    display: inline-block;
+    background: rgba(220, 38, 38, 0.15);
+    color: var(--color-risk-high-text);
+    padding: 0 0.3em;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+  }
+
+  /* 状态条 */
+  .jf-status {
+    margin-top: 0.85rem;
+    min-height: 1.4em;
+    font-size: 0.9rem;
+  }
+  .jf-status-ok { color: var(--color-accent-700); }
+  .jf-status-err { color: var(--color-risk-high-text); }
+  .jf-status-info { color: var(--color-info-text); }
+
+  /* 底部说明 */
+  .jf-why {
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .jf-why h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.6em 0;
+    color: var(--color-ink-900);
+  }
+  .jf-why p {
+    color: var(--color-ink-700);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .jf-why code {
+    font-size: 0.88em;
+    background: var(--color-ink-100);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-sm);
+  }
+  .jf-why strong { color: var(--color-ink-900); }
+</style>
+
+<script>
+  import * as yaml from 'js-yaml';
+
+  type TabId = 'format' | 'minify' | 'validate' | 'yaml';
+  const tabs: NodeListOf<HTMLButtonElement> = document.querySelectorAll('[data-jf-tab]');
+  const input = document.querySelector<HTMLTextAreaElement>('[data-jf-input]')!;
+  const output = document.queryElement<HTMLPreElement>('[data-jf-output]')!;
+  const outputCode = document.queryElement<HTMLElement>('[data-jf-output-code]')!;
+  const status = document.querySelector<HTMLElement>('[data-jf-status]')!;
+  const charCount = document.querySelector<HTMLElement>('[data-jf-char-count]')!;
+  const lineCount = document.querySelector<HTMLElement>('[data-jf-line-count]')!;
+  const copyBtn = document.querySelector<HTMLButtonElement>('[data-jf-copy]')!;
+  const sampleBtn = document.querySelector<HTMLButtonElement>('[data-jf-sample]')!;
+  const clearBtn = document.querySelector<HTMLButtonElement>('[data-jf-clear]')!;
+  const outputLabel = document.getElementById('jf-output-label')!;
+
+  let currentTab: TabId = 'format';
+
+  const SAMPLE = `{
+  "name": "Alex",
+  "age": 30,
+  "isSeller": true,
+  "tags": ["amazon", "欧洲站"],
+  "address": {
+    "city": "深圳",
+    "country": "CN"
+  },
+  "orders": null
+}`;
+
+  const TAB_LABEL: Record<TabId, string> = {
+    format: '格式化结果',
+    minify: '压缩结果',
+    validate: '校验结果',
+    yaml: 'YAML 输出',
+  };
+
+  // ============== 工具 ==============
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  /**
+   * 把 JSON.parse 的报错位置 (line, column) 提取出来。
+   * V8 错误信息形如:
+   *   "Unexpected token } in JSON at position 42"
+   *   "Expected property name or '}' in JSON at position 17 (line 3 column 5)"
+   * Firefox 形如:
+   *   "JSON.parse: expected property name or '}' at line 3 column 5 of the JSON data"
+   */
+  function parseErrorPos(text: string, err: Error): { line: number; col: number; pos: number } {
+    const msg = err.message || '';
+    // 优先匹配 "line X column Y" 形式
+    let m = msg.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+    if (m) {
+      const line = Number(m[1]);
+      const col = Number(m[2]);
+      return { line, col, pos: 0 };
+    }
+    // 退回 position 形式
+    m = msg.match(/at position\s+(\d+)/i);
+    if (m) {
+      const pos = Number(m[1]);
+      const upto = text.slice(0, pos);
+      const lines = upto.split('\n');
+      return { line: lines.length, col: lines[lines.length - 1].length + 1, pos };
+    }
+    return { line: 0, col: 0, pos: 0 };
+  }
+
+  /** 用 pos/line/col 高亮错误附近的行 */
+  function highlightError(text: string, err: Error): string {
+    const { line, col } = parseErrorPos(text, err);
+    if (!line) return escapeHtml(err.message);
+    const lines = text.split('\n');
+    if (line > lines.length) return escapeHtml(err.message);
+    const target = lines[line - 1] || '';
+    const before = escapeHtml(target.slice(0, Math.max(0, col - 1)));
+    const at = escapeHtml(target.slice(Math.max(0, col - 1), col) || '·');
+    const after = escapeHtml(target.slice(col));
+    return (
+      escapeHtml(err.message) +
+      '\n\n第 ' + line + ' 行,第 ' + col + ' 列:\n' +
+      before + '<span class="jf-err-line">' + at + '</span>' + after
+    );
+  }
+
+  function setStatus(text: string, kind: 'ok' | 'err' | 'info' | ''): void {
+    status.textContent = text;
+    status.className = 'jf-status' + (kind ? ' jf-status-' + kind : '');
+  }
+
+  function setOutput(html: string, isError: boolean): void {
+    outputCode.innerHTML = html;
+    if (isError) {
+      output.classList.add('jf-output-error');
+      input.classList.add('is-error');
+    } else {
+      output.classList.remove('jf-output-error');
+      input.classList.remove('is-error');
+    }
+  }
+
+  function updateMeta(): void {
+    const text = input.value;
+    charCount.textContent = String(text.length);
+    lineCount.textContent = String(text === '' ? 0 : text.split('\n').length);
+  }
+
+  // ============== 主流程 ==============
+  function process(): void {
+    const text = input.value;
+    outputLabel.textContent = TAB_LABEL[currentTab];
+
+    if (text.trim() === '') {
+      outputCode.textContent = '—';
+      output.classList.remove('jf-output-error');
+      input.classList.remove('is-error');
+      setStatus('', '');
+      return;
+    }
+
+    if (currentTab === 'validate') {
+      try {
+        JSON.parse(text);
+        setStatus('✅ 这是合法的 JSON,没有错误。', 'ok');
+        setOutput('JSON 合法,无需修复 ✅', false);
+      } catch (e) {
+        const err = e as Error;
+        setStatus('❌ JSON 不合法:' + err.message, 'err');
+        setOutput(highlightError(text, err), true);
+      }
+      return;
+    }
+
+    // format / minify / yaml — 先 parse
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      const err = e as Error;
+      const where = parseErrorPos(text, err);
+      const whereStr = where.line ? ' (第 ' + where.line + ' 行,第 ' + where.col + ' 列)' : '';
+      setStatus('❌ 解析失败:' + err.message + whereStr, 'err');
+      setOutput(highlightError(text, err), true);
+      return;
+    }
+
+    if (currentTab === 'format') {
+      const out = JSON.stringify(parsed, null, 2);
+      setOutput(escapeHtml(out), false);
+      setStatus('✅ 格式化完成', 'ok');
+    } else if (currentTab === 'minify') {
+      const out = JSON.stringify(parsed);
+      setOutput(escapeHtml(out), false);
+      const ratio = text.length === 0 ? 0 : Math.round(((text.length - out.length) / text.length) * 100);
+      const saved = ratio > 0 ? ' (省了 ' + ratio + '%)' : '';
+      setStatus('✅ 压缩完成' + saved, 'ok');
+    } else if (currentTab === 'yaml') {
+      try {
+        const out = yaml.dump(parsed, { indent: 2, lineWidth: 100, noRefs: true });
+        setOutput(escapeHtml(out), false);
+        setStatus('✅ 已转为 YAML', 'ok');
+      } catch (e) {
+        const err = e as Error;
+        setStatus('❌ 转 YAML 失败:' + err.message, 'err');
+        setOutput(escapeHtml(err.message), true);
+      }
+    }
+  }
+
+  // ============== 事件 ==============
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      const t = tab.getAttribute('data-jf-tab') as TabId;
+      currentTab = t;
+      tabs.forEach((x) => {
+        const active = x === tab;
+        x.classList.toggle('is-active', active);
+        x.setAttribute('aria-selected', String(active));
+      });
+      process();
+    });
+  });
+
+  // 输入即处理(轻量节流)
+  let timer: number | undefined;
+  input.addEventListener('input', () => {
+    updateMeta();
+    if (timer !== undefined) window.clearTimeout(timer);
+    timer = window.setTimeout(process, 80);
+  });
+
+  sampleBtn.addEventListener('click', () => {
+    input.value = SAMPLE;
+    updateMeta();
+    process();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    updateMeta();
+    process();
+    input.focus();
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const text = outputCode.textContent || '';
+    if (!text || text === '—') return;
+    try {
+      await navigator.clipboard.writeText(text);
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = '已复制 ✓';
+      window.setTimeout(() => {
+        copyBtn.textContent = orig;
+      }, 1200);
+    } catch {
+      // 兜底:选中文本
+      const range = document.createRange();
+      range.selectNodeContents(outputCode);
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    }
+  });
+
+  updateMeta();
+</script>

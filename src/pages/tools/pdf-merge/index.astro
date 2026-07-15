@@ -1,0 +1,726 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '工具集', item: siteStr ? `${siteStr}tools/` : undefined },
+    { '@type': 'ListItem', position: 3, name: 'PDF 合并', item: siteStr ? `${siteStr}tools/pdf-merge/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="PDF 合并 — 多个 PDF 拼成一个,浏览器本地完成"
+  description="把多个 PDF 拖进来,排好顺序,一键合并下载。文件不离开你的电脑,纯浏览器处理。"
+  jsonLd={breadcrumb}
+>
+  <div class="container pm-wrap" data-tool-id="pdf-merge">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/tools/')}>工具集</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>PDF 合并</span>
+    </nav>
+
+    <header class="pm-hero">
+      <h1>PDF 合并 — 多个 PDF 拼成一个,浏览器本地完成</h1>
+      <p class="pm-tagline">
+        拖几个 PDF 进来,排好顺序,点一下就合成一个新文件。所有东西都在你浏览器里跑,
+        <strong>文件不离开你的电脑</strong>,也不需要注册。
+      </p>
+    </header>
+
+    <!-- 3-5 步式说明 -->
+    <ol class="pm-steps" aria-label="使用步骤">
+      <li><span class="pm-step-num">1</span><span>把 PDF 拖到下面那个大框里,或者点框选文件</span></li>
+      <li><span class="pm-step-num">2</span><span>按住左边的 ⠿ 拖动,调整文件前后顺序</span></li>
+      <li><span class="pm-step-num">3</span><span>点「合并 PDF」,等几秒钟,下载合好的新文件</span></li>
+    </ol>
+
+    <!-- 工具主体 -->
+    <section class="pm-tool card" aria-label="PDF 合并工具">
+      <!-- 拖入区 -->
+      <div
+        class="pm-dropzone"
+        data-pm-dropzone
+        role="button"
+        tabindex="0"
+        aria-label="拖入或点击选择 PDF 文件"
+      >
+        <input
+          type="file"
+          multiple
+          accept="application/pdf,.pdf"
+          class="pm-file-input"
+          data-pm-file-input
+          aria-label="选择 PDF 文件"
+        />
+        <div class="pm-dropzone-inner">
+          <div class="pm-dropzone-icon" aria-hidden="true">📄</div>
+          <p class="pm-dropzone-title">把 PDF 拖到这里,或 <span class="pm-dropzone-link">点此选择文件</span></p>
+          <p class="pm-dropzone-hint">支持选多个 · 仅处理 PDF · 文件不会上传</p>
+        </div>
+      </div>
+
+      <!-- 文件列表 -->
+      <section
+        class="pm-filelist-wrap"
+        data-pm-filelist-wrap
+        hidden
+        aria-label="待合并文件列表"
+      >
+        <header class="pm-filelist-head">
+          <h2>待合并文件 (<span data-pm-count>0</span>)</h2>
+          <p class="pm-filelist-hint">按住 ⠿ 拖动,调整顺序;顺序就是合并后的顺序</p>
+        </header>
+        <ol class="pm-filelist" data-pm-filelist role="list"></ol>
+
+        <!-- 汇总 -->
+        <div class="pm-summary" aria-live="polite">
+          <div class="pm-summary-row">
+            <span class="pm-summary-label">总大小</span>
+            <span class="pm-summary-value" data-pm-total-size>0 B</span>
+          </div>
+          <div class="pm-summary-row pm-summary-result" data-pm-result-row hidden>
+            <span class="pm-summary-label">合并后大小</span>
+            <span class="pm-summary-value" data-pm-merged-size>—</span>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="pm-actions">
+          <button type="button" class="btn btn-ghost" data-pm-reset>重置</button>
+          <button type="button" class="btn btn-primary" data-pm-merge disabled>
+            <span data-pm-merge-label>合并 PDF</span>
+          </button>
+        </div>
+
+        <!-- 下载区 -->
+        <div class="pm-download" data-pm-download hidden>
+          <p class="pm-download-msg">✅ 合并完成!</p>
+          <a class="btn btn-primary" data-pm-download-link href="#" download>
+            ⬇ 下载合并后的 PDF
+          </a>
+        </div>
+
+        <!-- 错误提示 -->
+        <p class="pm-error" data-pm-error hidden role="alert"></p>
+      </section>
+    </section>
+
+    <!-- 底部:为什么这个工具能帮你 -->
+    <section class="pm-why">
+      <h2>为什么用这个工具?</h2>
+      <p>
+        你可能遇到过:把发票、合同、检测报告拼成一份给亚马逊或代理,或者把多份 PDF 上传到一个工单。
+        不少在线 PDF 工具会先把文件传到他们的服务器——<strong>你的商业文件、报价单、客户信息,别人都看得见</strong>。
+      </p>
+      <p>
+        这个工具完全在浏览器里跑,用的是 <code>pdf-lib</code> 这个开源库,
+        <strong>点完「合并」,文件不经过任何第三方</strong>。可以随时关掉网络,功能照样能用。
+        上传多少文件、文件多大,都不限制。
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .pm-wrap { max-width: 880px; }
+
+  .pm-hero { margin: 0.5rem 0 1.5rem 0; }
+  .pm-hero h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 0.4em 0; }
+  .pm-tagline {
+    color: var(--color-ink-600);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    margin: 0;
+    max-width: 64ch;
+  }
+  .pm-tagline strong { color: var(--color-ink-900); }
+
+  /* 步骤条 */
+  .pm-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.75rem 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .pm-steps li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.85rem;
+    color: var(--color-ink-700);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  .pm-step-num {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 720px) {
+    .pm-steps { grid-template-columns: 1fr; }
+  }
+
+  /* 工具主体 */
+  .pm-tool { padding: 1.5rem 1.5rem 1.75rem 1.5rem; }
+
+  /* 拖入区 */
+  .pm-dropzone {
+    position: relative;
+    border: 2px dashed var(--color-ink-300);
+    border-radius: var(--radius-lg);
+    background: var(--color-ink-50);
+    padding: 2.5rem 1.25rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .pm-dropzone:hover,
+  .pm-dropzone:focus-visible {
+    border-color: var(--color-primary-500);
+    background: var(--color-primary-50);
+    outline: none;
+  }
+  .pm-dropzone.is-dragover {
+    border-color: var(--color-primary-600);
+    background: var(--color-primary-50);
+    border-style: solid;
+  }
+  .pm-file-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .pm-dropzone-icon { font-size: 2.5rem; line-height: 1; margin-bottom: 0.5em; }
+  .pm-dropzone-title {
+    margin: 0 0 0.3em 0;
+    color: var(--color-ink-700);
+    font-size: 1rem;
+  }
+  .pm-dropzone-link {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+  }
+  .pm-dropzone-hint {
+    margin: 0;
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+  }
+
+  /* 文件列表 */
+  .pm-filelist-wrap { margin-top: 1.5rem; }
+  .pm-filelist-head { margin-bottom: 0.75rem; }
+  .pm-filelist-head h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.2em 0;
+    color: var(--color-ink-900);
+  }
+  .pm-filelist-hint {
+    margin: 0;
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+  }
+  .pm-filelist {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .pm-fileitem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.9rem;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+    cursor: grab;
+  }
+  .pm-fileitem:active { cursor: grabbing; }
+  .pm-fileitem.is-dragging {
+    opacity: 0.4;
+    border-style: dashed;
+  }
+  .pm-fileitem.is-drop-target {
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+  }
+  .pm-fileitem-handle {
+    flex: 0 0 auto;
+    color: var(--color-ink-400);
+    font-size: 1.1rem;
+    line-height: 1;
+    user-select: none;
+    cursor: grab;
+  }
+  .pm-fileitem-icon {
+    flex: 0 0 auto;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+  .pm-fileitem-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15em;
+  }
+  .pm-fileitem-name {
+    color: var(--color-ink-900);
+    font-size: 0.95rem;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .pm-fileitem-meta {
+    color: var(--color-ink-500);
+    font-size: 0.8rem;
+  }
+  .pm-fileitem-remove {
+    flex: 0 0 auto;
+    background: transparent;
+    border: 1px solid var(--color-ink-200);
+    color: var(--color-ink-600);
+    border-radius: var(--radius);
+    padding: 0.3em 0.7em;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .pm-fileitem-remove:hover {
+    border-color: var(--color-risk-high-border);
+    color: var(--color-risk-high-text);
+    background: var(--color-risk-high-bg);
+  }
+  .pm-fileitem-remove:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* 汇总 */
+  .pm-summary {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    margin: 0.5rem 0 1rem 0;
+  }
+  .pm-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.2em 0;
+  }
+  .pm-summary-row + .pm-summary-row {
+    border-top: 1px dashed var(--color-ink-200);
+    margin-top: 0.2em;
+    padding-top: 0.45em;
+  }
+  .pm-summary-label {
+    color: var(--color-ink-600);
+    font-size: 0.9rem;
+  }
+  .pm-summary-value {
+    color: var(--color-ink-900);
+    font-weight: 600;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .pm-summary-result .pm-summary-value {
+    color: var(--color-accent-700);
+  }
+
+  /* 操作按钮 */
+  .pm-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+
+  /* 下载区 */
+  .pm-download {
+    margin-top: 1.25rem;
+    padding: 1rem 1.1rem;
+    background: var(--color-accent-50);
+    border: 1px solid var(--color-accent-100);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .pm-download-msg {
+    margin: 0;
+    color: var(--color-accent-700);
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  /* 错误 */
+  .pm-error {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-risk-high-bg);
+    border: 1px solid var(--color-risk-high-border);
+    border-radius: var(--radius);
+    color: var(--color-risk-high-text);
+    font-size: 0.92rem;
+  }
+
+  /* 底部说明 */
+  .pm-why {
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .pm-why h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.6em 0;
+    color: var(--color-ink-900);
+  }
+  .pm-why p {
+    color: var(--color-ink-700);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .pm-why code {
+    font-size: 0.88em;
+    background: var(--color-ink-100);
+    padding: 0.05em 0.3em;
+    border-radius: var(--radius-sm);
+  }
+  .pm-why strong { color: var(--color-ink-900); }
+</style>
+
+<script>
+  import { PDFDocument } from 'pdf-lib';
+
+  // ============== 工具函数 ==============
+  function formatSize(bytes: number): string {
+    if (!Number.isFinite(bytes) || bytes < 0) return '0 B';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+  }
+
+  function shortName(name: string, max = 50): string {
+    if (name.length <= max) return name;
+    const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
+    const stem = name.slice(0, name.length - ext.length);
+    const keep = Math.max(8, max - ext.length - 3);
+    return `${stem.slice(0, keep)}...${ext}`;
+  }
+
+  // ============== 状态 ==============
+  type FileEntry = { id: number; file: File };
+  let nextId = 1;
+  const files: FileEntry[] = [];
+  let dragId: number | null = null;
+
+  // ============== DOM 引用 ==============
+  const dropzone = document.querySelector<HTMLDivElement>('[data-pm-dropzone]')!;
+  const fileInput = document.querySelector<HTMLInputElement>('[data-pm-file-input]')!;
+  const filelistWrap = document.querySelector<HTMLElement>('[data-pm-filelist-wrap]')!;
+  const filelist = document.querySelector<HTMLOListElement>('[data-pm-filelist]')!;
+  const countEl = document.querySelector<HTMLElement>('[data-pm-count]')!;
+  const totalSizeEl = document.querySelector<HTMLElement>('[data-pm-total-size]')!;
+  const resultRow = document.querySelector<HTMLElement>('[data-pm-result-row]')!;
+  const mergedSizeEl = document.querySelector<HTMLElement>('[data-pm-merged-size]')!;
+  const resetBtn = document.querySelector<HTMLButtonElement>('[data-pm-reset]')!;
+  const mergeBtn = document.querySelector<HTMLButtonElement>('[data-pm-merge]')!;
+  const mergeLabel = document.querySelector<HTMLElement>('[data-pm-merge-label]')!;
+  const downloadBox = document.querySelector<HTMLElement>('[data-pm-download]')!;
+  const downloadLink = document.querySelector<HTMLAnchorElement>('[data-pm-download-link]')!;
+  const errorEl = document.querySelector<HTMLElement>('[data-pm-error]')!;
+
+  // ============== 渲染 ==============
+  function render(): void {
+    if (files.length === 0) {
+      filelistWrap.hidden = true;
+      filelist.innerHTML = '';
+      resultRow.hidden = true;
+      downloadBox.hidden = true;
+      mergeBtn.disabled = true;
+      errorEl.hidden = true;
+      return;
+    }
+    filelistWrap.hidden = false;
+    mergeBtn.disabled = false;
+    filelist.innerHTML = '';
+    let total = 0;
+    files.forEach((entry, idx) => {
+      total += entry.file.size;
+      const li = document.createElement('li');
+      li.className = 'pm-fileitem';
+      li.draggable = true;
+      li.dataset.id = String(entry.id);
+      li.innerHTML =
+        `<span class="pm-fileitem-handle" aria-hidden="true">⠿</span>` +
+        `<span class="pm-fileitem-icon" aria-hidden="true">📄</span>` +
+        `<span class="pm-fileitem-body">` +
+          `<span class="pm-fileitem-name" title="${escapeAttr(entry.file.name)}">${escapeHtml(shortName(entry.file.name))}</span>` +
+          `<span class="pm-fileitem-meta">第 ${idx + 1} 个 · ${formatSize(entry.file.size)}</span>` +
+        `</span>` +
+        `<button type="button" class="pm-fileitem-remove" data-pm-remove="${entry.id}" aria-label="移除 ${escapeAttr(entry.file.name)}">移除</button>`;
+
+      // 拖动事件
+      li.addEventListener('dragstart', (e) => {
+        dragId = entry.id;
+        li.classList.add('is-dragging');
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+          // 必须 setData 才能在 Firefox 触发 dragover
+          e.dataTransfer.setData('text/plain', String(entry.id));
+        }
+      });
+      li.addEventListener('dragend', () => {
+        dragId = null;
+        li.classList.remove('is-dragging');
+        filelist.querySelectorAll('.is-drop-target').forEach((el) => el.classList.remove('is-drop-target'));
+      });
+      li.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+        if (dragId !== null && dragId !== entry.id) {
+          li.classList.add('is-drop-target');
+        }
+      });
+      li.addEventListener('dragleave', () => {
+        li.classList.remove('is-drop-target');
+      });
+      li.addEventListener('drop', (e) => {
+        e.preventDefault();
+        li.classList.remove('is-drop-target');
+        if (dragId === null || dragId === entry.id) return;
+        moveTo(dragId, entry.id);
+      });
+
+      filelist.appendChild(li);
+    });
+
+    countEl.textContent = String(files.length);
+    totalSizeEl.textContent = formatSize(total);
+  }
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+  function escapeAttr(s: string): string {
+    return escapeHtml(s);
+  }
+
+  // ============== 文件管理 ==============
+  function addFiles(picked: FileList | File[]): void {
+    const list = Array.from(picked);
+    for (const f of list) {
+      // 验证:必须 PDF
+      const isPdf =
+        f.type === 'application/pdf' ||
+        f.name.toLowerCase().endsWith('.pdf');
+      if (!isPdf) {
+        showError(`"${f.name}" 不是 PDF 文件,已跳过`);
+        continue;
+      }
+      files.push({ id: nextId++, file: f });
+    }
+    errorEl.hidden = true;
+    resultRow.hidden = true;
+    downloadBox.hidden = true;
+    render();
+  }
+
+  function removeFile(id: number): void {
+    const idx = files.findIndex((x) => x.id === id);
+    if (idx >= 0) files.splice(idx, 1);
+    resultRow.hidden = true;
+    downloadBox.hidden = true;
+    render();
+  }
+
+  function moveTo(srcId: number, targetId: number): void {
+    const srcIdx = files.findIndex((x) => x.id === srcId);
+    const targetIdx = files.findIndex((x) => x.id === targetId);
+    if (srcIdx < 0 || targetIdx < 0 || srcIdx === targetIdx) return;
+    const [moved] = files.splice(srcIdx, 1);
+    // 重新计算目标索引(因为 splice 之后位置可能变了)
+    const newTargetIdx = files.findIndex((x) => x.id === targetId);
+    files.splice(newTargetIdx, 0, moved);
+    render();
+  }
+
+  function reset(): void {
+    files.length = 0;
+    nextId = 1;
+    fileInput.value = '';
+    errorEl.hidden = true;
+    resultRow.hidden = true;
+    downloadBox.hidden = true;
+    // 清掉旧的下载 URL
+    if (downloadLink.href && downloadLink.href.startsWith('blob:')) {
+      URL.revokeObjectURL(downloadLink.href);
+    }
+    downloadLink.removeAttribute('href');
+    render();
+  }
+
+  function showError(msg: string): void {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  // ============== 合并 ==============
+  async function doMerge(): Promise<void> {
+    if (files.length < 1) return;
+    mergeBtn.disabled = true;
+    mergeLabel.textContent = '合并中…';
+    errorEl.hidden = true;
+    resultRow.hidden = true;
+    downloadBox.hidden = true;
+    // 清掉旧 URL
+    if (downloadLink.href && downloadLink.href.startsWith('blob:')) {
+      URL.revokeObjectURL(downloadLink.href);
+    }
+    downloadLink.removeAttribute('href');
+
+    try {
+      const merged = await PDFDocument.create();
+      for (const entry of files) {
+        const bytes = await entry.file.arrayBuffer();
+        // pdf-lib 会复制内容,即使 src PDF 被 close 也不影响
+        const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
+        const pageIndices = src.getPageIndices();
+        const copied = await merged.copyPages(src, pageIndices);
+        copied.forEach((p) => merged.addPage(p));
+      }
+      const out = await merged.save();
+      const blob = new Blob([out as BlobPart], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+      downloadLink.href = url;
+      downloadLink.download = `merged-${ts}.pdf`;
+      mergedSizeEl.textContent = formatSize(blob.size);
+      resultRow.hidden = false;
+      downloadBox.hidden = false;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      showError('合并失败:' + msg);
+    } finally {
+      mergeBtn.disabled = false;
+      mergeLabel.textContent = '合并 PDF';
+    }
+  }
+
+  // ============== 事件 ==============
+  // 文件 input 变化
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files && fileInput.files.length > 0) {
+      addFiles(fileInput.files);
+    }
+    // 允许重复选同一批文件
+    fileInput.value = '';
+  });
+
+  // 拖入区 - 拖入高亮
+  ['dragenter', 'dragover'].forEach((evt) => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.add('is-dragover');
+    });
+  });
+  ['dragleave', 'drop'].forEach((evt) => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // 拖到子元素上也会触发 dragleave,需要判断 relatedTarget
+      if (evt === 'dragleave' && e instanceof DragEvent) {
+        const related = e.relatedTarget as Node | null;
+        if (related && dropzone.contains(related)) return;
+      }
+      dropzone.classList.remove('is-dragover');
+    });
+  });
+  // 拖入区 - drop 接收文件
+  dropzone.addEventListener('drop', (e) => {
+    const dt = (e as DragEvent).dataTransfer;
+    if (dt && dt.files && dt.files.length > 0) {
+      addFiles(dt.files);
+    }
+  });
+  // 防止整页拖入时浏览器打开文件
+  ['dragover', 'drop'].forEach((evt) => {
+    window.addEventListener(evt, (e) => {
+      // 只在 dropzone 之外的拖入阻止默认行为
+      if (dropzone.contains(e.target as Node)) return;
+      e.preventDefault();
+    });
+  });
+
+  // 键盘可达性:focus 时按 Enter / Space 触发文件选择
+  dropzone.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileInput.click();
+    }
+  });
+
+  // 移除按钮(用事件委托)
+  filelist.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.matches('[data-pm-remove]')) {
+      const id = Number(target.getAttribute('data-pm-remove'));
+      removeFile(id);
+    }
+  });
+
+  // 重置
+  resetBtn.addEventListener('click', reset);
+
+  // 合并
+  mergeBtn.addEventListener('click', () => {
+    void doMerge();
+  });
+
+  // 初始状态
+  render();
+</script>

@@ -1,0 +1,680 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '工具集', item: siteStr ? `${siteStr}tools/` : undefined },
+    { '@type': 'ListItem', position: 3, name: 'Unix 时间戳转换', item: siteStr ? `${siteStr}tools/timestamp/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="Unix 时间戳转换 — 秒 / 毫秒 / 北京时间 / UTC 一步到位"
+  description="Unix 时间戳双向转换:输入时间戳看北京时间 / UTC / ISO / RFC 格式,或选个时间看秒和毫秒。所有计算都在浏览器里完成。"
+  jsonLd={breadcrumb}
+>
+  <div class="container ts-wrap" data-tool-id="timestamp">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/tools/')}>工具集</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>Unix 时间戳转换</span>
+    </nav>
+
+    <header class="ts-hero">
+      <h1>Unix 时间戳转换 — 秒 / 毫秒 / 北京时间 / UTC 一步到位</h1>
+      <p class="ts-tagline">
+        时间戳和人类时间互转,自动识别<strong>秒</strong>还是<strong>毫秒</strong>,
+        同时显示北京时间 (GMT+8) 和 UTC,以及 ISO 8601 / RFC 2822 标准格式。
+      </p>
+    </header>
+
+    <!-- 3 步说明 -->
+    <ol class="ts-steps" aria-label="使用步骤">
+      <li><span class="ts-step-num">1</span><span>点「现在」一键填入当前时间,或手动输入时间戳 / 选个时间</span></li>
+      <li><span class="ts-step-num">2</span><span>看下面的「北京时间」「UTC」「ISO」等所有格式</span></li>
+      <li><span class="ts-step-num">3</span><span>点「复制」按钮,粘到代码或工单里用</span></li>
+    </ol>
+
+    <!-- 实时当前时间卡(顶部常驻) -->
+    <section class="ts-now card" aria-label="当前时间">
+      <header class="ts-now-head">
+        <h2>现在 (北京时间)</h2>
+        <button type="button" class="btn btn-secondary btn-sm" data-ts-fill-now>
+          ⏱ 用「现在」填到下面
+        </button>
+      </header>
+      <div class="ts-now-grid">
+        <div class="ts-now-cell">
+          <span class="ts-now-label">秒</span>
+          <span class="ts-now-value" data-ts-now-sec>—</span>
+          <button type="button" class="ts-copy" data-ts-copy="ts-now-sec" aria-label="复制秒级时间戳">复制</button>
+        </div>
+        <div class="ts-now-cell">
+          <span class="ts-now-label">毫秒</span>
+          <span class="ts-now-value" data-ts-now-ms>—</span>
+          <button type="button" class="ts-copy" data-ts-copy="ts-now-ms" aria-label="复制毫秒级时间戳">复制</button>
+        </div>
+        <div class="ts-now-cell ts-now-cell-wide">
+          <span class="ts-now-label">人类时间 (本地)</span>
+          <span class="ts-now-value" data-ts-now-human>—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 转换 1:时间戳 → 人类时间 -->
+    <section class="ts-panel card" aria-label="时间戳转人类时间">
+      <header class="ts-panel-head">
+        <h2>① 时间戳 → 人类时间</h2>
+        <p class="ts-panel-hint">支持秒(10 位)和毫秒(13 位),自动识别</p>
+      </header>
+      <div class="ts-form-row">
+        <label class="label" for="ts-stamp-input">Unix 时间戳</label>
+        <div class="ts-input-group">
+          <input
+            type="text"
+            inputmode="numeric"
+            id="ts-stamp-input"
+            class="input"
+            data-ts-stamp-input
+            placeholder="例如 1718800000 或 1718800000000"
+            aria-label="Unix 时间戳输入框"
+          />
+          <select class="select ts-unit" data-ts-stamp-unit aria-label="时间戳单位">
+            <option value="auto">自动</option>
+            <option value="s">秒</option>
+            <option value="ms">毫秒</option>
+          </select>
+        </div>
+      </div>
+      <div class="ts-result" data-ts-stamp-result>
+        <p class="ts-empty">在上面输入时间戳,这里显示北京时间 / UTC / ISO 等格式。</p>
+      </div>
+    </section>
+
+    <!-- 转换 2:人类时间 → 时间戳 -->
+    <section class="ts-panel card" aria-label="人类时间转时间戳">
+      <header class="ts-panel-head">
+        <h2>② 人类时间 → 时间戳</h2>
+        <p class="ts-panel-hint">默认用浏览器本地时区 (一般是 GMT+8),下方可改时区</p>
+      </header>
+      <div class="ts-form-row">
+        <label class="label" for="ts-date-input">日期 + 时间</label>
+        <input
+          type="datetime-local"
+          id="ts-date-input"
+          class="input"
+          step="1"
+          data-ts-date-input
+          aria-label="日期和时间输入框"
+        />
+      </div>
+      <div class="ts-result" data-ts-date-result>
+        <p class="ts-empty">选个时间,这里显示秒和毫秒两种时间戳。</p>
+      </div>
+    </section>
+
+    <!-- 底部说明 -->
+    <section class="ts-why">
+      <h2>为什么用这个工具?</h2>
+      <p>
+        写 API、看日志、查事件、排查跨时区 bug,时间戳是绕不开的。10 位是秒,13 位是毫秒,新同学经常搞混;
+        不同时区的服务器返回的时间也不一样。
+      </p>
+      <p>
+        这个工具<strong>本地浏览器算</strong>,不上传;还把同一时刻用 6 种格式(秒、毫秒、北京时间、UTC、ISO、RFC)摆在一起,
+        一次看完,不用来回切换工具。
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .ts-wrap { max-width: 920px; }
+
+  .ts-hero { margin: 0.5rem 0 1.5rem 0; }
+  .ts-hero h1 { font-size: clamp(1.5rem, 3vw, 2rem); margin: 0 0 0.4em 0; }
+  .ts-tagline {
+    color: var(--color-ink-600);
+    font-size: 1.02rem;
+    line-height: 1.65;
+    margin: 0;
+    max-width: 68ch;
+  }
+  .ts-tagline strong { color: var(--color-ink-900); }
+
+  /* 步骤条 */
+  .ts-steps {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .ts-steps li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.85rem;
+    color: var(--color-ink-700);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  .ts-step-num {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: 50%;
+    background: var(--color-primary-100);
+    color: var(--color-primary-700);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+  @media (max-width: 720px) {
+    .ts-steps { grid-template-columns: 1fr; }
+  }
+
+  /* Now 卡 */
+  .ts-now { padding: 1.1rem 1.25rem 1.25rem 1.25rem; margin-bottom: 1.25rem; }
+  .ts-now-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+  }
+  .ts-now-head h2 {
+    font-size: 1.05rem;
+    margin: 0;
+    color: var(--color-ink-900);
+  }
+  .ts-now-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.4fr;
+    gap: 0.75rem;
+  }
+  @media (max-width: 720px) {
+    .ts-now-grid { grid-template-columns: 1fr; }
+  }
+  .ts-now-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2em;
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.8rem;
+  }
+  .ts-now-label {
+    color: var(--color-ink-500);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .ts-now-value {
+    color: var(--color-ink-900);
+    font-weight: 600;
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
+    word-break: break-all;
+  }
+  .ts-copy {
+    align-self: flex-start;
+    background: transparent;
+    border: 1px solid var(--color-ink-200);
+    color: var(--color-ink-600);
+    border-radius: var(--radius-sm);
+    padding: 0.2em 0.65em;
+    font-size: 0.78rem;
+    cursor: pointer;
+    margin-top: 0.2em;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .ts-copy:hover {
+    border-color: var(--color-primary-500);
+    color: var(--color-primary-700);
+    background: #fff;
+  }
+  .ts-copy:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* 转换面板 */
+  .ts-panel { padding: 1.1rem 1.25rem 1.25rem 1.25rem; margin-bottom: 1.25rem; }
+  .ts-panel-head { margin-bottom: 0.85rem; }
+  .ts-panel-head h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.2em 0;
+    color: var(--color-ink-900);
+  }
+  .ts-panel-hint {
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+  .ts-form-row { margin-bottom: 0.9rem; }
+  .ts-form-row .label { margin-bottom: 0.35em; }
+  .ts-input-group {
+    display: grid;
+    grid-template-columns: 1fr 110px;
+    gap: 0.5rem;
+  }
+  @media (max-width: 480px) {
+    .ts-input-group { grid-template-columns: 1fr; }
+  }
+  .ts-unit { font-size: 0.92rem; }
+
+  /* 结果区 */
+  .ts-result {
+    background: var(--color-bg-soft);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .ts-result:empty,
+  .ts-result .ts-empty {
+    color: var(--color-ink-400);
+    font-size: 0.9rem;
+    margin: 0;
+    text-align: center;
+  }
+  .ts-row {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.45em 0;
+    border-top: 1px dashed var(--color-ink-200);
+  }
+  .ts-result .ts-row:first-child { border-top: none; padding-top: 0; }
+  .ts-row-label {
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  .ts-row-value {
+    color: var(--color-ink-900);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    word-break: break-all;
+    font-variant-numeric: tabular-nums;
+  }
+  .ts-row-value.ts-row-highlight {
+    color: var(--color-accent-700);
+    font-weight: 600;
+  }
+  .ts-row-copy {
+    background: transparent;
+    border: 1px solid var(--color-ink-200);
+    color: var(--color-ink-600);
+    border-radius: var(--radius-sm);
+    padding: 0.2em 0.7em;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .ts-row-copy:hover {
+    border-color: var(--color-primary-500);
+    color: var(--color-primary-700);
+    background: #fff;
+  }
+  .ts-row-copy:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+  @media (max-width: 480px) {
+    .ts-row { grid-template-columns: 1fr; gap: 0.2em; }
+    .ts-row-copy { justify-self: flex-start; }
+  }
+
+  .ts-error {
+    color: var(--color-risk-high-text);
+    background: var(--color-risk-high-bg);
+    border: 1px solid var(--color-risk-high-border);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  /* 底部说明 */
+  .ts-why {
+    margin-top: 2.5rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .ts-why h2 {
+    font-size: 1.2rem;
+    margin: 0 0 0.6em 0;
+    color: var(--color-ink-900);
+  }
+  .ts-why p {
+    color: var(--color-ink-700);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 68ch;
+  }
+  .ts-why strong { color: var(--color-ink-900); }
+</style>
+
+<script>
+  // ============== 工具 ==============
+  function pad(n: number, len = 2): string {
+    return String(n).padStart(len, '0');
+  }
+
+  /** "2025-06-15 14:30:45" (本地时区) */
+  function fmtLocal(d: Date): string {
+    return (
+      d.getFullYear() + '-' +
+      pad(d.getMonth() + 1) + '-' +
+      pad(d.getDate()) + ' ' +
+      pad(d.getHours()) + ':' +
+      pad(d.getMinutes()) + ':' +
+      pad(d.getSeconds())
+    );
+  }
+
+  /** "2025-06-15 06:30:45 UTC" */
+  function fmtUTC(d: Date): string {
+    return (
+      d.getUTCFullYear() + '-' +
+      pad(d.getUTCMonth() + 1) + '-' +
+      pad(d.getUTCDate()) + ' ' +
+      pad(d.getUTCHours()) + ':' +
+      pad(d.getUTCMinutes()) + ':' +
+      pad(d.getUTCSeconds()) + ' UTC'
+    );
+  }
+
+  /** "2025-06-15T06:30:45.000Z" */
+  function fmtISO(d: Date): string {
+    return d.toISOString();
+  }
+
+  /** "Sun, 15 Jun 2025 06:30:45 GMT" */
+  function fmtRFC(d: Date): string {
+    return d.toUTCString();
+  }
+
+  /** "星期日" / "Sunday" - 给中文 UI 用 */
+  const DAY_ZH = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+  const DAY_EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function fmtDay(d: Date): string {
+    return DAY_ZH[d.getDay()] + ' / ' + DAY_EN[d.getDay()];
+  }
+
+  /**
+   * 把 "2025-06-15T14:30:45" (datetime-local 字符串) 解析为本地时间 Date。
+   * 这里"本地"是浏览器时区,不是固定的 GMT+8。
+   */
+  function parseDateLocal(s: string): Date | null {
+    if (!s) return null;
+    // 兼容带秒和不带秒
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+    if (!m) return null;
+    const y = Number(m[1]);
+    const mo = Number(m[2]) - 1;
+    const d = Number(m[3]);
+    const h = Number(m[4]);
+    const mi = Number(m[5]);
+    const se = m[6] ? Number(m[6]) : 0;
+    const dt = new Date(y, mo, d, h, mi, se, 0);
+    if (Number.isNaN(dt.getTime())) return null;
+    return dt;
+  }
+
+  function isValid(d: Date | null): d is Date {
+    return d !== null && !Number.isNaN(d.getTime());
+  }
+
+  /** 自动判断 10 位 = 秒,13 位 = 毫秒 */
+  function parseStamp(s: string, unit: 'auto' | 's' | 'ms'): number | null {
+    const t = s.trim();
+    if (!/^-?\d+(\.\d+)?$/.test(t)) return null;
+    const n = Number(t);
+    if (!Number.isFinite(n)) return null;
+    if (unit === 's') return Math.floor(n);
+    if (unit === 'ms') return Math.floor(n);
+    // auto:数字长度判断
+    // 整数部分位数(取整,排除小数)
+    const intPart = Math.trunc(Math.abs(n)).toString();
+    if (intPart.length >= 12) return Math.floor(n); // ms
+    // 默认当作秒(10 位或 11 位带小数)
+    return Math.floor(n * 1000);
+  }
+
+  // ============== DOM ==============
+  const nowSecEl = document.querySelector<HTMLElement>('[data-ts-now-sec]')!;
+  const nowMsEl = document.querySelector<HTMLElement>('[data-ts-now-ms]')!;
+  const nowHumanEl = document.querySelector<HTMLElement>('[data-ts-now-human]')!;
+  const fillNowBtn = document.querySelector<HTMLButtonElement>('[data-ts-fill-now]')!;
+  const copyButtons = document.querySelectorAll<HTMLButtonElement>('[data-ts-copy]');
+
+  const stampInput = document.querySelector<HTMLInputElement>('[data-ts-stamp-input]')!;
+  const stampUnit = document.querySelector<HTMLSelectElement>('[data-ts-stamp-unit]')!;
+  const stampResult = document.querySelector<HTMLElement>('[data-ts-stamp-result]')!;
+
+  const dateInput = document.querySelector<HTMLInputElement>('[data-ts-date-input]')!;
+  const dateResult = document.querySelector<HTMLElement>('[data-ts-date-result]')!;
+
+  // ============== 渲染结果 ==============
+  function buildRows(d: Date): { label: string; value: string; copy?: string; highlight?: boolean }[] {
+    const sec = Math.floor(d.getTime() / 1000);
+    const ms = d.getTime();
+    return [
+      { label: '北京时间', value: fmtLocal(d), copy: fmtLocal(d), highlight: true },
+      { label: 'UTC', value: fmtUTC(d), copy: fmtUTC(d) },
+      { label: '秒', value: String(sec), copy: String(sec) },
+      { label: '毫秒', value: String(ms), copy: String(ms) },
+      { label: 'ISO 8601', value: fmtISO(d), copy: fmtISO(d) },
+      { label: 'RFC 2822', value: fmtRFC(d), copy: fmtRFC(d) },
+      { label: '星期', value: fmtDay(d), copy: fmtDay(d) },
+    ];
+  }
+
+  function renderResult(container: HTMLElement, d: Date | null, errMsg?: string): void {
+    if (errMsg) {
+      container.innerHTML = `<p class="ts-error">${escapeHtml(errMsg)}</p>`;
+      return;
+    }
+    if (!isValid(d)) {
+      container.innerHTML = '<p class="ts-empty">—</p>';
+      return;
+    }
+    const rows = buildRows(d);
+    const html = rows.map((r) => {
+      const cls = r.highlight ? ' ts-row-highlight' : '';
+      return (
+        '<div class="ts-row">' +
+          '<span class="ts-row-label">' + escapeHtml(r.label) + '</span>' +
+          '<span class="ts-row-value' + cls + '">' + escapeHtml(r.value) + '</span>' +
+          (r.copy ? '<button type="button" class="ts-row-copy" data-ts-copy-value="' + escapeAttr(r.copy) + '">复制</button>' : '<span></span>') +
+        '</div>'
+      );
+    }).join('');
+    container.innerHTML = html;
+  }
+
+  function escapeHtml(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+  function escapeAttr(s: string): string { return escapeHtml(s); }
+
+  // ============== 事件 ==============
+  // 时间戳 → 人类时间
+  function processStamp(): void {
+    const raw = stampInput.value;
+    if (!raw.trim()) {
+      stampResult.innerHTML = '<p class="ts-empty">在上面输入时间戳,这里显示北京时间 / UTC / ISO 等格式。</p>';
+      return;
+    }
+    const ms = parseStamp(raw, stampUnit.value as 'auto' | 's' | 'ms');
+    if (ms === null) {
+      renderResult(stampResult, null, '时间戳格式不对,应该是纯数字');
+      return;
+    }
+    const d = new Date(ms);
+    if (!isValid(d)) {
+      renderResult(stampResult, null, '时间戳超出了 JS Date 范围');
+      return;
+    }
+    renderResult(stampResult, d);
+  }
+
+  stampInput.addEventListener('input', processStamp);
+  stampUnit.addEventListener('change', processStamp);
+
+  // 人类时间 → 时间戳
+  function processDate(): void {
+    const raw = dateInput.value;
+    if (!raw) {
+      dateResult.innerHTML = '<p class="ts-empty">选个时间,这里显示秒和毫秒两种时间戳。</p>';
+      return;
+    }
+    const d = parseDateLocal(raw);
+    if (!d) {
+      renderResult(dateResult, null, '日期格式不对');
+      return;
+    }
+    const sec = Math.floor(d.getTime() / 1000);
+    const ms = d.getTime();
+    const html =
+      '<div class="ts-row">' +
+        '<span class="ts-row-label">秒</span>' +
+        '<span class="ts-row-value ts-row-highlight">' + sec + '</span>' +
+        '<button type="button" class="ts-row-copy" data-ts-copy-value="' + sec + '">复制</button>' +
+      '</div>' +
+      '<div class="ts-row">' +
+        '<span class="ts-row-label">毫秒</span>' +
+        '<span class="ts-row-value">' + ms + '</span>' +
+        '<button type="button" class="ts-row-copy" data-ts-copy-value="' + ms + '">复制</button>' +
+      '</div>' +
+      '<div class="ts-row">' +
+        '<span class="ts-row-label">本地时间</span>' +
+        '<span class="ts-row-value">' + escapeHtml(fmtLocal(d)) + '</span>' +
+        '<button type="button" class="ts-row-copy" data-ts-copy-value="' + escapeAttr(fmtLocal(d)) + '">复制</button>' +
+      '</div>' +
+      '<div class="ts-row">' +
+        '<span class="ts-row-label">UTC</span>' +
+        '<span class="ts-row-value">' + escapeHtml(fmtUTC(d)) + '</span>' +
+        '<button type="button" class="ts-row-copy" data-ts-copy-value="' + escapeAttr(fmtUTC(d)) + '">复制</button>' +
+      '</div>' +
+      '<div class="ts-row">' +
+        '<span class="ts-row-label">ISO 8601</span>' +
+        '<span class="ts-row-value">' + escapeHtml(fmtISO(d)) + '</span>' +
+        '<button type="button" class="ts-row-copy" data-ts-copy-value="' + escapeAttr(fmtISO(d)) + '">复制</button>' +
+      '</div>' +
+      '<div class="ts-row">' +
+        '<span class="ts-row-label">星期</span>' +
+        '<span class="ts-row-value">' + escapeHtml(fmtDay(d)) + '</span>' +
+        '<span></span>' +
+      '</div>';
+    dateResult.innerHTML = html;
+  }
+  dateInput.addEventListener('input', processDate);
+
+  // "用现在填到下面"
+  fillNowBtn.addEventListener('click', () => {
+    const now = new Date();
+    // 填到时间戳框
+    stampInput.value = String(Math.floor(now.getTime() / 1000));
+    stampUnit.value = 's';
+    processStamp();
+    // 填到日期框(datetime-local 格式:YYYY-MM-DDTHH:MM:SS,本地时区)
+    const yyyy = now.getFullYear();
+    const mm = pad(now.getMonth() + 1);
+    const dd = pad(now.getDate());
+    const hh = pad(now.getHours());
+    const mi = pad(now.getMinutes());
+    const ss = pad(now.getSeconds());
+    dateInput.value = `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
+    processDate();
+    // 滚到下面
+    const firstPanel = document.querySelector('.ts-panel');
+    if (firstPanel) {
+      const top = firstPanel.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+  });
+
+  // 复制事件委托(用 data-ts-copy-value)
+  document.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (t.matches('[data-ts-copy-value]')) {
+      const val = t.getAttribute('data-ts-copy-value') || '';
+      void copyText(val, t);
+    }
+  });
+
+  // 顶部 Now 区域的复制按钮
+  copyButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetKey = btn.getAttribute('data-ts-copy');
+      if (!targetKey) return;
+      const targetEl = document.querySelector<HTMLElement>('[data-' + targetKey + ']');
+      const text = targetEl ? targetEl.textContent || '' : '';
+      void copyText(text, btn);
+    });
+  });
+
+  async function copyText(text: string, btn: HTMLElement): Promise<void> {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      flashCopied(btn);
+    } catch {
+      // 兜底
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); flashCopied(btn); } catch { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+  }
+  function flashCopied(btn: HTMLElement): void {
+    const orig = btn.textContent;
+    btn.textContent = '已复制 ✓';
+    window.setTimeout(() => {
+      btn.textContent = orig;
+    }, 1200);
+  }
+
+  // ============== Now 卡(每秒更新) ==============
+  function tickNow(): void {
+    const now = new Date();
+    nowSecEl.textContent = String(Math.floor(now.getTime() / 1000));
+    nowMsEl.textContent = String(now.getTime());
+    nowHumanEl.textContent = fmtLocal(now) + ' · ' + DAY_ZH[now.getDay()];
+  }
+  tickNow();
+  window.setInterval(tickNow, 1000);
+</script>

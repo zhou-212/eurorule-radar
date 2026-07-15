@@ -1,0 +1,359 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '工具集', item: siteStr ? `${siteStr}tools/` : undefined },
+    { '@type': 'ListItem', position: 3, name: '汇率换算', item: siteStr ? `${siteStr}tools/currency/` : undefined },
+  ],
+};
+
+// 静态汇率表 (基准:1 CNY)
+// 基准日期:2026-07-15 (写死,内置的"刷新"会回到这个值)
+// 不调外部 API,避免 API 限额 / 跨域 / 收费
+const RATES_PER_CNY: Record<string, { name: string; symbol: string; rate: number; flag: string }> = {
+  CNY: { name: '人民币',     symbol: '¥',   rate: 1.000,  flag: '🇨🇳' },
+  USD: { name: '美元',       symbol: '$',   rate: 0.140,  flag: '🇺🇸' },
+  EUR: { name: '欧元',       symbol: '€',   rate: 0.130,  flag: '🇪🇺' },
+  GBP: { name: '英镑',       symbol: '£',   rate: 0.110,  flag: '🇬🇧' },
+  JPY: { name: '日元',       symbol: '¥',   rate: 21.500, flag: '🇯🇵' },
+  KRW: { name: '韩元',       symbol: '₩',   rate: 195.0,  flag: '🇰🇷' },
+  HKD: { name: '港币',       symbol: 'HK$', rate: 1.100,  flag: '🇭🇰' },
+  AUD: { name: '澳元',       symbol: 'A$',  rate: 0.210,  flag: '🇦🇺' },
+  CAD: { name: '加元',       symbol: 'C$',  rate: 0.190,  flag: '🇨🇦' },
+  SGD: { name: '新加坡元',   symbol: 'S$',  rate: 0.190,  flag: '🇸🇬' },
+  INR: { name: '印度卢比',   symbol: '₹',   rate: 11.700, flag: '🇮🇳' },
+  // 多加几个方便用
+  TWD: { name: '新台币',     symbol: 'NT$', rate: 4.500,  flag: '🇹🇼' },
+  THB: { name: '泰铢',       symbol: '฿',   rate: 5.000,  flag: '🇹🇭' },
+  MYR: { name: '马来西亚林吉特', symbol: 'RM', rate: 0.640, flag: '🇲🇾' },
+};
+
+const BASE_DATE = '2026-07-15';
+---
+
+<BaseLayout
+  title="汇率换算 — 跨境电商报价 / 采购 / 利润核算用"
+  description="10+ 种货币互相换算,跨境电商报价、采购成本、利润核算现场可用。汇率内置 2026-07-15 静态表,刷新回到基准。仅供参考,以实际交易为准。"
+  jsonLd={breadcrumb}
+>
+  <div class="container tool-wrap" data-tool-id="currency">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/tools/')}>工具集</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>汇率换算</span>
+    </nav>
+
+    <header class="tool-hero">
+      <h1>💱 汇率换算</h1>
+      <p class="tool-tagline">跨境电商报价、采购成本、利润核算 — 10 多种货币现场算。汇率表内置,不调外部接口,刷新一次回到基准值。</p>
+    </header>
+
+    <!-- 输入区 -->
+    <section class="card input-card" aria-labelledby="input-title">
+      <h2 id="input-title" class="sr-only">输入金额与源货币</h2>
+      <div class="input-grid">
+        <div class="form-row">
+          <label for="cur-amount" class="label">金额</label>
+          <input
+            id="cur-amount"
+            type="number"
+            class="input input-amount"
+            value="1000"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            data-cur-amount
+          />
+        </div>
+        <div class="form-row">
+          <label for="cur-from" class="label">从</label>
+          <select id="cur-from" class="select" data-cur-from>
+            {Object.entries(RATES_PER_CNY).map(([code, info]) => (
+              <option value={code} selected={code === 'CNY'}>
+                {info.flag} {code} — {info.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div class="swap-cell">
+          <button type="button" class="btn btn-ghost btn-sm" data-cur-swap aria-label="互换源/目标货币">
+            ⇄ 互换
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 顶部信息条 -->
+    <div class="info-bar" role="status">
+      <div>
+        <span class="info-label">基准日期</span>
+        <strong data-cur-date>{BASE_DATE}</strong>
+        <span class="info-sep">·</span>
+        <span class="info-label">基准</span>
+        <strong>1 CNY</strong>
+        <span class="info-sep">·</span>
+        <span data-cur-source-hint>内置静态表,未调外部接口</span>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" data-cur-refresh aria-label="把汇率恢复到内置基准值">
+        ↻ 恢复到基准
+      </button>
+    </div>
+
+    <!-- 结果列表 -->
+    <section class="card results-card" aria-labelledby="results-title">
+      <h2 id="results-title" class="results-title">换算结果</h2>
+      <p class="results-hint">每行显示该币种的实时换算金额 + 相对 1 <span data-cur-source-code>CNY</span> 的汇率</p>
+      <ul class="result-list" data-cur-results>
+        {/* JS 渲染 */}
+      </ul>
+    </section>
+
+    <!-- 重要提示 -->
+    <div class="notice notice-warn tool-notice" role="note">
+      <p><strong>汇率仅供参考,实际交易以银行/支付平台为准</strong></p>
+      <p>
+        本工具的汇率是 <strong>2026-07-15 写死的静态表</strong>,不连接任何外部 API。
+        银行结汇、信用卡入账、PayPal/Stripe 提现通常还会有 0.5%-3% 的点差 + 手续费,
+        跨境电商利润核算时务必把这部分也算进去。
+      </p>
+    </div>
+
+    <section class="tool-why">
+      <h2>为什么这个工具能帮你?</h2>
+      <p>做跨境电商,报价、采购、利润核算几乎天天要算汇率。打开 XE / Google 搜汇率,得切来切去;打开手机银行 App,登录又要验证码。这个工具在浏览器里点开就用,内置 10 多种主流货币,默认从人民币换算所有目标,常用场景全覆盖。</p>
+      <p>报亚马逊欧洲站 FBA 报价,看实时到手利润;跟工厂谈美元 MOQ,看折合人民币要垫多少;核算一个 1000 美元订单换算成日元标价给日本站 — 全部在这里直接算。输入金额,其他币种自动换出来,不用挨个输入。注意:这里是<strong>参考汇率</strong>,实际收付款以银行/支付平台实时汇率为准。</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .tool-wrap { max-width: 880px; }
+  .tool-hero { margin: 0.5rem 0 1.75rem 0; }
+  .tool-hero h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin: 0 0 0.4em 0; }
+  .tool-tagline { color: var(--color-ink-600); font-size: 1.05rem; max-width: 60ch; margin: 0; }
+
+  .input-card { margin-bottom: 1rem; }
+  .input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr auto;
+    gap: 0.9rem;
+    align-items: end;
+  }
+  @media (max-width: 640px) {
+    .input-grid { grid-template-columns: 1fr; }
+    .swap-cell { justify-self: flex-start; }
+  }
+  .input-amount {
+    font-size: 1.4rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .swap-cell { display: flex; align-items: end; height: 100%; padding-bottom: 0.15rem; }
+
+  .info-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.7rem 1rem;
+    background: var(--color-info-bg);
+    border: 1px solid var(--color-info-border);
+    color: var(--color-info-text);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .info-label { color: var(--color-ink-500); font-weight: 500; }
+  .info-sep { color: var(--color-ink-300); margin: 0 0.4em; }
+
+  .results-title { font-size: 1.1rem; margin: 0 0 0.2em 0; }
+  .results-hint { color: var(--color-ink-500); font-size: 0.88rem; margin: 0 0 1rem 0; }
+
+  .result-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.6rem;
+  }
+  .result-item {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 0.8rem 0.9rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .result-item.is-source {
+    border-color: var(--color-primary-300);
+    background: var(--color-primary-50);
+  }
+  .ri-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+  }
+  .ri-code {
+    font-weight: 600;
+    color: var(--color-ink-900);
+    font-size: 0.95rem;
+  }
+  .ri-rate {
+    color: var(--color-ink-500);
+    font-size: 0.78rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .ri-amount {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--color-ink-900);
+    font-variant-numeric: tabular-nums;
+    word-break: break-all;
+  }
+  .ri-name {
+    color: var(--color-ink-500);
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+  }
+
+  .tool-notice { margin-top: 1.25rem; }
+  .tool-notice p { margin: 0 0 0.4em 0; }
+  .tool-notice p:last-child { margin-bottom: 0; }
+
+  .tool-why {
+    margin-top: 2.5rem;
+    padding: 1.4rem 1.5rem;
+    background: var(--color-primary-50);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--color-primary-500);
+  }
+  .tool-why h2 { font-size: 1.15rem; margin: 0 0 0.6em 0; color: var(--color-ink-900); }
+  .tool-why p { color: var(--color-ink-700); margin: 0 0 0.7em 0; line-height: 1.7; }
+  .tool-why p:last-child { margin-bottom: 0; }
+</style>
+
+<script>
+  // 静态汇率表 — 写死,base = CNY,基准日期 2026-07-15
+  // (与 Astro 端 RATES_PER_CNY 同步,client 拿不到 frontmatter 常量,这里复制一份)
+  const RATES: Record<string, { name: string; symbol: string; rate: number; flag: string }> = {
+    CNY: { name: '人民币',     symbol: '¥',   rate: 1.000,  flag: '🇨🇳' },
+    USD: { name: '美元',       symbol: '$',   rate: 0.140,  flag: '🇺🇸' },
+    EUR: { name: '欧元',       symbol: '€',   rate: 0.130,  flag: '🇪🇺' },
+    GBP: { name: '英镑',       symbol: '£',   rate: 0.110,  flag: '🇬🇧' },
+    JPY: { name: '日元',       symbol: '¥',   rate: 21.500, flag: '🇯🇵' },
+    KRW: { name: '韩元',       symbol: '₩',   rate: 195.0,  flag: '🇰🇷' },
+    HKD: { name: '港币',       symbol: 'HK$', rate: 1.100,  flag: '🇭🇰' },
+    AUD: { name: '澳元',       symbol: 'A$',  rate: 0.210,  flag: '🇦🇺' },
+    CAD: { name: '加元',       symbol: 'C$',  rate: 0.190,  flag: '🇨🇦' },
+    SGD: { name: '新加坡元',   symbol: 'S$',  rate: 0.190,  flag: '🇸🇬' },
+    INR: { name: '印度卢比',   symbol: '₹',   rate: 11.700, flag: '🇮🇳' },
+    TWD: { name: '新台币',     symbol: 'NT$', rate: 4.500,  flag: '🇹🇼' },
+    THB: { name: '泰铢',       symbol: '฿',   rate: 5.000,  flag: '🇹🇭' },
+    MYR: { name: '马来西亚林吉特', symbol: 'RM', rate: 0.640, flag: '🇲🇾' },
+  };
+  const BASE_DATE = '2026-07-15';
+
+  // 当前使用的表 (用户可"微调"后这里会变,但 reset 会回到 RATES)
+  let currentRates: Record<string, { name: string; symbol: string; rate: number; flag: string }> = { ...RATES };
+
+  const $ = <T extends HTMLElement = HTMLElement>(sel: string, root: ParentNode = document) =>
+    root.querySelector(sel) as T | null;
+
+  const amountInput = $('[data-cur-amount]') as HTMLInputElement;
+  const fromSelect = $('[data-cur-from]') as HTMLSelectElement;
+  const swapBtn = $('[data-cur-swap]') as HTMLButtonElement;
+  const resultsList = $('[data-cur-results]') as HTMLUListElement;
+  const dateLabel = $('[data-cur-date]') as HTMLElement;
+  const sourceCode = $('[data-cur-source-code]') as HTMLElement;
+  const refreshBtn = $('[data-cur-refresh]') as HTMLButtonElement;
+
+  // 数字格式化:不同币种用不同小数位
+  function fmtAmount(n: number, code: string): string {
+    if (!isFinite(n)) return '—';
+    let digits: number;
+    if (code === 'JPY' || code === 'KRW' || code === 'INR' || code === 'VND') digits = 0;
+    else if (code === 'TWD' || code === 'HKD' || code === 'THB') digits = 2;
+    else digits = 2;
+    return n.toLocaleString('zh-CN', {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    });
+  }
+  function fmtRate(r: number): string {
+    if (r === 0) return '—';
+    if (r >= 100) return r.toFixed(2);
+    if (r >= 1) return r.toFixed(4);
+    return r.toFixed(4);
+  }
+
+  // 把 X 币种金额 换算成 Y 币种金额
+  // RATES 是 1 CNY = rate[X] X,所以 X -> Y = amount * rate[X] / rate[Y]
+  function convert(amount: number, fromCode: string, toCode: string): number {
+    const rFrom = currentRates[fromCode]?.rate;
+    const rTo = currentRates[toCode]?.rate;
+    if (!rFrom || !rTo) return NaN;
+    return (amount * rFrom) / rTo;
+  }
+
+  function render() {
+    const amount = parseFloat(amountInput.value || '0');
+    const from = fromSelect.value;
+    sourceCode.textContent = from;
+
+    // 重新构建列表
+    resultsList.innerHTML = '';
+    Object.entries(currentRates).forEach(([code, info]) => {
+      const li = document.createElement('li');
+      li.className = 'result-item' + (code === from ? ' is-source' : '');
+      const conv = convert(amount, from, code);
+      li.innerHTML = `
+        <div class="ri-head">
+          <span class="ri-code">${info.flag} ${code}</span>
+          <span class="ri-rate" title="1 ${from} = ${fmtRate(info.rate / currentRates[from].rate)} ${code}">
+            1 ${from} = ${fmtRate(info.rate / currentRates[from].rate)} ${code}
+          </span>
+        </div>
+        <div class="ri-amount">${info.symbol} ${fmtAmount(conv, code)}</div>
+        <div class="ri-name">${info.name}${code === from ? ' (源币种)' : ''}</div>
+      `;
+      resultsList.appendChild(li);
+    });
+  }
+
+  // 事件
+  amountInput.addEventListener('input', render);
+  fromSelect.addEventListener('change', render);
+  swapBtn.addEventListener('click', () => {
+    // 互换"源"和"上一次源":简单实现就只是把当前源币种放到第一个 result-item 之外
+    // 用户期待:点 ⇄ 切换 from 到一个新值?这个比较 tricky,因为我们是从 from 算所有币种
+    // 这里:点 ⇄ 复制当前 from 的换算结果到 amount,并把 from 切到 USD (常用基准)
+    // 更直观的实现:把 from 切到 USD,金额换成转换后的 USD 值
+    const from = fromSelect.value;
+    const amount = parseFloat(amountInput.value || '0');
+    if (from === 'USD') return; // 已经是 USD
+    const usdAmount = convert(amount, from, 'USD');
+    amountInput.value = usdAmount.toFixed(2);
+    fromSelect.value = 'USD';
+    render();
+  });
+  refreshBtn.addEventListener('click', () => {
+    currentRates = { ...RATES };
+    dateLabel.textContent = BASE_DATE;
+    render();
+  });
+
+  // 初始化
+  render();
+</script>

@@ -1,0 +1,569 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '工具集', item: siteStr ? `${siteStr}tools/` : undefined },
+    { '@type': 'ListItem', position: 3, name: '二维码生成', item: siteStr ? `${siteStr}tools/qr-code/` : undefined },
+  ],
+};
+
+// 4 种内容类型 - 不同类型的提示不同输入字段
+// - text:    任意文本/链接
+// - wifi:    扫码连 WiFi (WIFI:T:WPA;S:<ssid>;P:<password>;H:<true|false>;;)
+// - email:   扫码发邮件 (mailto:foo@bar.com?subject=&body=)
+// - sms:     扫码发短信 (smsto:+8613800000000:body) — 实际兼容性差,这里保留
+
+const typeOptions = [
+  { value: 'text',  label: '文本 / 链接', hint: '粘贴任意内容,扫码即可看到' },
+  { value: 'wifi',  label: 'WiFi',        hint: '填 WiFi 名 + 密码,扫码直接连' },
+  { value: 'email', label: '邮箱',        hint: '填收件人 + 主题 + 正文,扫码直接发邮件' },
+  { value: 'sms',   label: '短信',        hint: '填手机号 + 内容,部分手机支持扫码发短信' },
+];
+---
+
+<BaseLayout
+  title="二维码生成 — 链接 / WiFi / 邮箱,自定义尺寸和颜色"
+  description="把链接、WiFi、邮箱等转成二维码,可改尺寸、纠错等级、颜色,下载 PNG 或 SVG。纯前端处理,内容不经过服务器。"
+  jsonLd={breadcrumb}
+>
+  <div class="container tool-wrap" data-tool-id="qr-code">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/tools/')}>工具集</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>二维码生成</span>
+    </nav>
+
+    <header class="tool-hero">
+      <h1>📱 二维码生成</h1>
+      <p class="tool-tagline">链接 / WiFi / 邮箱,几秒钟生成一个能用的二维码。改大小、改颜色、下载 PNG 或 SVG,全部在你的浏览器里完成。</p>
+    </header>
+
+    <div class="tool-grid">
+      <!-- 左侧:输入 + 选项 -->
+      <form class="card tool-form" data-qr-form>
+        <fieldset class="form-group">
+          <legend class="form-legend">1. 你想生成什么?</legend>
+          <div class="type-grid" role="radiogroup" aria-label="内容类型">
+            {typeOptions.map((opt, i) => (
+              <label class="type-pill">
+                <input type="radio" name="qr-type" value={opt.value} checked={i === 0} />
+                <span class="type-pill-label">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+          <p class="form-help" data-qr-type-hint>{typeOptions[0].hint}</p>
+        </fieldset>
+
+        <!-- 文本 / 链接 -->
+        <div class="form-group" data-qr-fields="text">
+          <label for="qr-text" class="label">输入内容</label>
+          <textarea
+            id="qr-text"
+            class="textarea"
+            rows="4"
+            placeholder="https://example.com  或  任意文本"
+            data-qr-text
+          >https://example.com</textarea>
+        </div>
+
+        <!-- WiFi -->
+        <div class="form-group" data-qr-fields="wifi" hidden>
+          <div class="form-row">
+            <label for="qr-wifi-ssid" class="label">WiFi 名称 (SSID)</label>
+            <input id="qr-wifi-ssid" type="text" class="input" placeholder="例如:Starbucks" data-qr-wifi-ssid />
+          </div>
+          <div class="form-row">
+            <label for="qr-wifi-pass" class="label">WiFi 密码</label>
+            <input id="qr-wifi-pass" type="text" class="input" placeholder="例如:abc12345" data-qr-wifi-pass />
+          </div>
+          <div class="form-row">
+            <label for="qr-wifi-type" class="label">加密方式</label>
+            <select id="qr-wifi-type" class="select" data-qr-wifi-type>
+              <option value="WPA">WPA / WPA2 (家用路由器常用)</option>
+              <option value="WEP">WEP (老式,少见)</option>
+              <option value="nopass">无密码 (开放网络)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 邮箱 -->
+        <div class="form-group" data-qr-fields="email" hidden>
+          <div class="form-row">
+            <label for="qr-email-to" class="label">收件人邮箱</label>
+            <input id="qr-email-to" type="email" class="input" placeholder="service@example.com" data-qr-email-to />
+          </div>
+          <div class="form-row">
+            <label for="qr-email-subject" class="label">主题 (可空)</label>
+            <input id="qr-email-subject" type="text" class="input" placeholder="例如:订单咨询 #12345" data-qr-email-subject />
+          </div>
+          <div class="form-row">
+            <label for="qr-email-body" class="label">正文 (可空)</label>
+            <textarea id="qr-email-body" class="textarea" rows="3" placeholder="想说啥写啥" data-qr-email-body></textarea>
+          </div>
+        </div>
+
+        <!-- 短信 -->
+        <div class="form-group" data-qr-fields="sms" hidden>
+          <div class="form-row">
+            <label for="qr-sms-to" class="label">收信手机号</label>
+            <input id="qr-sms-to" type="tel" class="input" placeholder="+8613800000000" data-qr-sms-to />
+          </div>
+          <div class="form-row">
+            <label for="qr-sms-body" class="label">短信内容</label>
+            <textarea id="qr-sms-body" class="textarea" rows="3" placeholder="一句话问个事" data-qr-sms-body></textarea>
+          </div>
+        </div>
+
+        <fieldset class="form-group">
+          <legend class="form-legend">2. 外观 (不影响扫码内容)</legend>
+          <div class="form-row">
+            <label for="qr-size" class="label">尺寸: <span data-qr-size-val>320</span> px</label>
+            <input id="qr-size" type="range" class="range" min="200" max="1000" step="20" value="320" data-qr-size />
+            <p class="form-help">200-1000 像素,数字越大下载的图越清晰</p>
+          </div>
+          <div class="form-row">
+            <label for="qr-ecl" class="label">纠错等级</label>
+            <select id="qr-ecl" class="select" data-qr-ecl>
+              <option value="L">L — 低 (~7% 可修复,推荐:屏幕显示)</option>
+              <option value="M" selected>M — 中 (~15% 可修复,推荐:打印)</option>
+              <option value="Q">Q — 较高 (~25% 可修复,推荐:户外)</option>
+              <option value="H">H — 高 (~30% 可修复,中间放 logo 不容易扫不出)</option>
+            </select>
+            <p class="form-help">纠错等级越高,二维码被遮挡/磨损后越能扫出来,但密度也越大</p>
+          </div>
+          <div class="form-row form-row-2col">
+            <div>
+              <label for="qr-fg" class="label">前景色 (二维码本体)</label>
+              <input id="qr-fg" type="color" class="color-input" value="#000000" data-qr-fg />
+            </div>
+            <div>
+              <label for="qr-bg" class="label">背景色</label>
+              <input id="qr-bg" type="color" class="color-input" value="#ffffff" data-qr-bg />
+            </div>
+          </div>
+        </fieldset>
+
+        <p class="form-error" data-qr-error hidden role="alert"></p>
+      </form>
+
+      <!-- 右侧:预览 + 下载 -->
+      <aside class="card tool-preview" aria-labelledby="qr-preview-title">
+        <h2 id="qr-preview-title" class="preview-title">预览</h2>
+        <div class="preview-canvas-wrap" data-qr-canvas-wrap>
+          <canvas data-qr-canvas aria-label="二维码预览"></canvas>
+        </div>
+        <p class="preview-hint" data-qr-preview-hint>扫一下上面的二维码,看看是不是你想要的内容</p>
+        <div class="preview-actions">
+          <button type="button" class="btn btn-primary" data-qr-download-png>下载 PNG</button>
+          <button type="button" class="btn btn-secondary" data-qr-download-svg>下载 SVG</button>
+        </div>
+        <p class="preview-codec" data-qr-codec aria-live="polite"></p>
+      </aside>
+    </div>
+
+    <section class="tool-why">
+      <h2>为什么这个工具能帮你?</h2>
+      <p>做亚马逊欧洲站,常要扫一下才能连的 WiFi、要扫一下才能加的微信、要扫一下才能访问的说明书链接 —— 二维码几乎无处不在。用这个工具可以现场生成,不用跑去装 APP,也不用把链接发到网上让第三方帮你转。</p>
+      <p>填 WiFi 名和密码 → 扫码直接连,客人/朋友到店里再也不用问密码。打印说明书上贴个二维码,扫码直达视频教程。名片背后印一个邮箱二维码,别人一扫码就调起邮件 App。所有过程都在你的浏览器里跑,内容不会上传到任何服务器,适合敏感信息 (内网地址、内部 WiFi 密码等)。</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .tool-wrap { max-width: 1080px; }
+  .tool-hero { margin: 0.5rem 0 1.75rem 0; }
+  .tool-hero h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); margin: 0 0 0.4em 0; }
+  .tool-tagline { color: var(--color-ink-600); font-size: 1.05rem; max-width: 60ch; margin: 0; }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media (max-width: 880px) {
+    .tool-grid { grid-template-columns: 1fr; }
+  }
+
+  .form-group {
+    border: none;
+    padding: 0;
+    margin: 0 0 1.4rem 0;
+  }
+  .form-legend {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--color-ink-900);
+    margin-bottom: 0.7rem;
+    padding: 0;
+  }
+
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+  .type-pill { display: block; cursor: pointer; }
+  .type-pill input { position: absolute; opacity: 0; pointer-events: none; }
+  .type-pill-label {
+    display: block;
+    text-align: center;
+    padding: 0.55em 0.6em;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--color-ink-700);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .type-pill:hover .type-pill-label {
+    border-color: var(--color-primary-300);
+    background: var(--color-primary-50);
+  }
+  .type-pill input:checked + .type-pill-label {
+    border-color: var(--color-primary-600);
+    background: var(--color-primary-50);
+    color: var(--color-primary-800);
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+  }
+  .type-pill input:focus-visible + .type-pill-label {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  .form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+  }
+
+  .range { width: 100%; accent-color: var(--color-primary-600); }
+  .color-input {
+    width: 100%;
+    height: 42px;
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius);
+    padding: 2px;
+    background: #fff;
+    cursor: pointer;
+  }
+
+  .tool-preview {
+    position: sticky;
+    top: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  @media (max-width: 880px) {
+    .tool-preview { position: static; }
+  }
+  .preview-title {
+    font-size: 1.05rem;
+    margin: 0 0 0.9rem 0;
+    color: var(--color-ink-900);
+    align-self: flex-start;
+  }
+  .preview-canvas-wrap {
+    background: #f8fafc;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    width: 100%;
+  }
+  .preview-canvas-wrap canvas { display: block; max-width: 100%; height: auto; }
+  .preview-hint {
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+    margin: 0.7rem 0 1rem 0;
+    text-align: center;
+  }
+  .preview-actions {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .preview-actions .btn { flex: 1 1 0; min-width: 110px; justify-content: center; }
+  .preview-codec {
+    margin: 0.7rem 0 0 0;
+    font-size: 0.78rem;
+    color: var(--color-ink-500);
+    text-align: center;
+    min-height: 1em;
+  }
+
+  .tool-why {
+    margin-top: 2.5rem;
+    padding: 1.4rem 1.5rem;
+    background: var(--color-primary-50);
+    border-radius: var(--radius-lg);
+    border-left: 4px solid var(--color-primary-500);
+  }
+  .tool-why h2 {
+    font-size: 1.15rem;
+    margin: 0 0 0.6em 0;
+    color: var(--color-ink-900);
+  }
+  .tool-why p {
+    color: var(--color-ink-700);
+    margin: 0 0 0.7em 0;
+    line-height: 1.7;
+  }
+  .tool-why p:last-child { margin-bottom: 0; }
+</style>
+
+<script>
+  import QRCode from 'qrcode';
+
+  const $ = (sel: string, root: ParentNode = document) =>
+    root.querySelector(sel) as HTMLElement | null;
+  const $$ = (sel: string, root: ParentNode = document) =>
+    Array.from(root.querySelectorAll(sel));
+
+  // -------- 内容拼装(根据类型生成最终要编码的字符串) --------
+  const escapeWifi = (s: string) =>
+    // WIFI 格式要求 \ ; , : " 用反斜杠转义
+    s.replace(/([\\;,:"])/g, '\\$1');
+
+  function buildPayload(): { payload: string; hint: string } | { error: string } {
+    const typeEl = $('input[name="qr-type"]:checked') as HTMLInputElement | null;
+    const type = typeEl?.value ?? 'text';
+
+    if (type === 'text') {
+      const text = ($('[data-qr-text]') as HTMLTextAreaElement | null)?.value.trim() ?? '';
+      if (!text) return { error: '请先在上方填内容 (链接或文字)' };
+      return { payload: text, hint: `纯文本,长度 ${text.length} 字符` };
+    }
+
+    if (type === 'wifi') {
+      const ssid = ($('[data-qr-wifi-ssid]') as HTMLInputElement | null)?.value.trim() ?? '';
+      const pass = ($('[data-qr-wifi-pass]') as HTMLInputElement | null)?.value ?? '';
+      const encType = ($('[data-qr-wifi-type]') as HTMLSelectElement | null)?.value ?? 'WPA';
+      if (!ssid) return { error: 'WiFi 名 (SSID) 不能为空' };
+      // WIFI:T:<type>;S:<ssid>;P:<password>;H:<true|false>;;
+      // H 表示是否隐藏 SSID (可选)
+      const segs = [`T:${encType}`, `S:${escapeWifi(ssid)}`];
+      if (encType !== 'nopass') segs.push(`P:${escapeWifi(pass)}`);
+      return {
+        payload: `WIFI:${segs.join(';')};;`,
+        hint: `WiFi 凭证 (${encType === 'nopass' ? '开放网络' : encType})`,
+      };
+    }
+
+    if (type === 'email') {
+      const to = ($('[data-qr-email-to]') as HTMLInputElement | null)?.value.trim() ?? '';
+      const subject = ($('[data-qr-email-subject]') as HTMLInputElement | null)?.value.trim() ?? '';
+      const body = ($('[data-qr-email-body]') as HTMLTextAreaElement | null)?.value.trim() ?? '';
+      if (!to) return { error: '收件人邮箱不能为空' };
+      // mailto:foo@bar.com?subject=...&body=...
+      const params: string[] = [];
+      if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+      if (body) params.push(`body=${encodeURIComponent(body)}`);
+      const url = `mailto:${to}${params.length ? '?' + params.join('&') : ''}`;
+      return { payload: url, hint: `扫码发邮件给 ${to}` };
+    }
+
+    if (type === 'sms') {
+      const to = ($('[data-qr-sms-to]') as HTMLInputElement | null)?.value.trim() ?? '';
+      const body = ($('[data-qr-sms-body]') as HTMLTextAreaElement | null)?.value.trim() ?? '';
+      if (!to) return { error: '收信手机号不能为空' };
+      // smsto: 协议兼容性比 sms: 略好,主流 iOS/Android 都能识别
+      const sep = body ? ':' : '';
+      return { payload: `smsto:${to}${sep}${body}`, hint: `扫码给 ${to} 发短信` };
+    }
+
+    return { error: '未知类型' };
+  }
+
+  // -------- 渲染到 canvas --------
+  const canvas = $('[data-qr-canvas]') as HTMLCanvasElement | null;
+  const sizeInput = $('[data-qr-size]') as HTMLInputElement | null;
+  const sizeVal = $('[data-qr-size-val]');
+  const eclInput = $('[data-qr-ecl]') as HTMLSelectElement | null;
+  const fgInput = $('[data-qr-fg]') as HTMLInputElement | null;
+  const bgInput = $('[data-qr-bg]') as HTMLInputElement | null;
+  const errorEl = $('[data-qr-error]') as HTMLElement | null;
+  const previewHint = $('[data-qr-preview-hint]');
+  const codecEl = $('[data-qr-codec]');
+  const downloadPng = $('[data-qr-download-png]') as HTMLButtonElement | null;
+  const downloadSvg = $('[data-qr-download-svg]') as HTMLButtonElement | null;
+  const typeHints = $$('input[name="qr-type"]');
+
+  // 类型切换:显隐字段
+  function syncTypeFields() {
+    const type = ($('input[name="qr-type"]:checked') as HTMLInputElement | null)?.value ?? 'text';
+    $$('[data-qr-fields]').forEach((el) => {
+      const match = el.getAttribute('data-qr-fields') === type;
+      (el as HTMLElement).hidden = !match;
+    });
+    // 更新 type 提示
+    const hint = el =>
+      el.parentElement?.querySelector('.form-help') as HTMLElement | null;
+    typeHints.forEach((radio) => {
+      const help = hint(radio);
+      if (!help) return;
+      const v = (radio as HTMLInputElement).value;
+      const opt = ({
+        text: '粘贴任意内容,扫码即可看到',
+        wifi: '填 WiFi 名 + 密码,扫码直接连',
+        email: '填收件人 + 主题 + 正文,扫码直接发邮件',
+        sms: '填手机号 + 内容,部分手机支持扫码发短信',
+      } as Record<string, string>)[v];
+      if (opt) help.textContent = opt;
+    });
+  }
+
+  // 尺寸显示同步
+  function syncSizeLabel() {
+    if (sizeInput && sizeVal) sizeVal.textContent = sizeInput.value;
+  }
+
+  // 实际渲染
+  let lastPayload = '';
+  let lastSvgString = '';
+  async function render() {
+    if (!canvas) return;
+    const size = parseInt(sizeInput?.value ?? '320', 10);
+    const ecl = (eclInput?.value ?? 'M') as 'L' | 'M' | 'Q' | 'H';
+    const fg = fgInput?.value ?? '#000000';
+    const bg = bgInput?.value ?? '#ffffff';
+
+    // 检查对比度,太低扫不出来
+    if (fg.toLowerCase() === bg.toLowerCase()) {
+      showError('前景色和背景色相同,扫不出来 — 换个颜色');
+      return;
+    }
+    hideError();
+
+    const result = buildPayload();
+    if ('error' in result) {
+      showError(result.error);
+      clearCanvas();
+      if (previewHint) previewHint.textContent = '填好内容后,二维码会自动出现在这里';
+      if (codecEl) codecEl.textContent = '';
+      lastPayload = '';
+      lastSvgString = '';
+      disableDownload(true);
+      return;
+    }
+    const { payload, hint } = result;
+    lastPayload = payload;
+    if (previewHint) previewHint.textContent = hint;
+
+    try {
+      await QRCode.toCanvas(canvas, payload, {
+        width: size,
+        margin: 1,
+        errorCorrectionLevel: ecl,
+        color: { dark: fg, light: bg },
+      });
+      // 同时缓存 SVG 字符串,供下载
+      lastSvgString = await QRCode.toString(payload, {
+        type: 'svg',
+        margin: 1,
+        errorCorrectionLevel: ecl,
+        color: { dark: fg, light: bg },
+      });
+      if (codecEl) {
+        const charCount = payload.length;
+        codecEl.textContent = `已编码 ${charCount} 字符 · ${size}×${size}px · 纠错 ${ecl}`;
+      }
+      disableDownload(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '生成失败';
+      showError('生成失败:' + msg);
+      clearCanvas();
+      disableDownload(true);
+    }
+  }
+
+  function showError(msg: string) {
+    if (!errorEl) return;
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+  }
+  function hideError() {
+    if (!errorEl) return;
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+  }
+  function clearCanvas() {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  function disableDownload(disabled: boolean) {
+    [downloadPng, downloadSvg].forEach((b) => {
+      if (b) b.disabled = disabled;
+    });
+  }
+
+  // -------- 下载 --------
+  function safeFileBase() {
+    // 文件名:qr-type-时间戳
+    const t = ($('input[name="qr-type"]:checked') as HTMLInputElement | null)?.value ?? 'qr';
+    const ts = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+    return `qrcode-${t}-${ts}`;
+  }
+  function downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // 延迟释放,确保浏览器已经触发下载
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  downloadPng?.addEventListener('click', () => {
+    if (!canvas || !lastPayload) return;
+    canvas.toBlob((blob) => {
+      if (blob) downloadBlob(blob, `${safeFileBase()}.png`);
+    }, 'image/png');
+  });
+
+  downloadSvg?.addEventListener('click', () => {
+    if (!lastSvgString) return;
+    const blob = new Blob([lastSvgString], { type: 'image/svg+xml;charset=utf-8' });
+    downloadBlob(blob, `${safeFileBase()}.svg`);
+  });
+
+  // -------- 绑定事件 --------
+  $$('input[name="qr-type"]').forEach((r) => r.addEventListener('change', () => { syncTypeFields(); render(); }));
+  sizeInput?.addEventListener('input', () => { syncSizeLabel(); render(); });
+  eclInput?.addEventListener('change', render);
+  fgInput?.addEventListener('input', render);
+  bgInput?.addEventListener('input', render);
+
+  // 输入字段防抖
+  let inputTimer: number | null = null;
+  const debouncedRender = () => {
+    if (inputTimer) window.clearTimeout(inputTimer);
+    inputTimer = window.setTimeout(render, 220);
+  };
+  $$('[data-qr-text], [data-qr-wifi-ssid], [data-qr-wifi-pass], [data-qr-wifi-type], [data-qr-email-to], [data-qr-email-subject], [data-qr-email-body], [data-qr-sms-to], [data-qr-sms-body]')
+    .forEach((el) => el.addEventListener('input', debouncedRender));
+
+  // 初始化
+  syncTypeFields();
+  syncSizeLabel();
+  disableDownload(true);
+  render();
+</script>

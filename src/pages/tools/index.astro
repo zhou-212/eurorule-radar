@@ -1,5 +1,6 @@
 ---
 import SectionLayout from '../../layouts/SectionLayout.astro';
+import { withBase } from '../../lib/url';
 ---
 <SectionLayout
   sectionSlug="tools"
@@ -7,34 +8,41 @@ import SectionLayout from '../../layouts/SectionLayout.astro';
   description="常用在线小工具:PDF 合并 / 二维码 / 图片压缩 / Markdown 转 HTML / JSON 格式化 / 汇率 / 时间戳。免下载即开即用。"
 >
   <div class="tool-grid">
-    <article class="tool-card tool-card-coming">
-      <h3>🔗 PDF 合并 / 分割</h3>
-      <p>把多个 PDF 合并成一个,或把一个 PDF 拆分成多份。纯前端处理,文件不上传。</p>
-    </article>
-    <article class="tool-card tool-card-coming">
+    <a href={withBase('/tools/pdf-merge/')} class="tool-card tool-card-link card card-hover">
+      <h3>📄 PDF 合并</h3>
+      <p>把多个 PDF 合并成一个,拖动排序。文件不离开你的电脑,纯浏览器处理。</p>
+      <span class="tool-card-cta">打开工具 →</span>
+    </a>
+    <a href={withBase('/tools/qr-code/')} class="tool-card tool-card-link card card-hover">
       <h3>📱 二维码生成</h3>
-      <p>把任意文本/链接转成二维码,支持自定义颜色和大小。可下载 PNG/SVG。</p>
-    </article>
-    <article class="tool-card tool-card-coming">
+      <p>链接 / WiFi / 邮箱转二维码,改大小、颜色、纠错,下载 PNG / SVG。纯前端处理。</p>
+      <span class="tool-card-cta">打开工具 →</span>
+    </a>
+    <a href={withBase('/tools/image-compress/')} class="tool-card tool-card-link card card-hover">
       <h3>🖼️ 图片压缩</h3>
-      <p>本地压缩 JPG/PNG/WebP,保持画质。适合站外配图 + 详情页优化。</p>
-    </article>
-    <article class="tool-card tool-card-coming">
+      <p>本地压缩 JPG/PNG/WebP,质量可调,批量处理,文件不上传。适合站外配图 + 详情页优化。</p>
+      <span class="tool-card-cta">打开工具 →</span>
+    </a>
+    <a href={withBase('/tools/markdown-to-html/')} class="tool-card tool-card-link card card-hover">
       <h3>📝 Markdown 转 HTML</h3>
-      <p>粘贴 Markdown,实时预览 + 导出 HTML。适合写文章/笔记。</p>
-    </article>
-    <article class="tool-card tool-card-coming">
-      <h3>📋 JSON / CSV 格式化</h3>
-      <p>格式化、校验、压缩 JSON 和 CSV。支持折叠/展开/排序。</p>
-    </article>
-    <article class="tool-card tool-card-coming">
+      <p>左边写 Markdown,右边实时预览 + 复制 HTML 源码 / 下载 .html 文件。</p>
+      <span class="tool-card-cta">打开工具 →</span>
+    </a>
+    <a href={withBase('/tools/json-format/')} class="tool-card tool-card-link card card-hover">
+      <h3>🧾 JSON 格式化</h3>
+      <p>格式化、压缩、校验 JSON,还能转 YAML。报错会告诉你第几行第几列。</p>
+      <span class="tool-card-cta">打开工具 →</span>
+    </a>
+    <a href={withBase('/tools/currency/')} class="tool-card tool-card-link card card-hover">
       <h3>💱 汇率换算</h3>
-      <p>实时多币种换算(EUR / USD / CNY / GBP / JPY),支持历史日期。</p>
-    </article>
-    <article class="tool-card tool-card-coming">
-      <h3>⏰ 时间戳转换</h3>
-      <p>Unix 时间戳 ↔ 人类可读时间,多时区支持。</p>
-    </article>
+      <p>10+ 种货币互相换算,内置 2026-07-15 静态表。跨境电商报价 / 采购 / 利润核算现场可用。</p>
+      <span class="tool-card-cta">打开工具 →</span>
+    </a>
+    <a href={withBase('/tools/timestamp/')} class="tool-card tool-card-link card card-hover">
+      <h3>⏰ Unix 时间戳转换</h3>
+      <p>时间戳 ↔ 人类时间,自动识别秒/毫秒,显示北京时间 / UTC / ISO / RFC 格式。</p>
+      <span class="tool-card-cta">打开工具 →</span>
+    </a>
   </div>
 </SectionLayout>
 
@@ -47,9 +55,18 @@ import SectionLayout from '../../layouts/SectionLayout.astro';
   .tool-card {
     background: #fff;
     border: 1px solid var(--color-ink-200, #e4e4e7);
-    border-radius: var(--radius-lg, 12px);
+    border-radius: var(--radius-lg, 10px);
     padding: 1.25rem;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    display: flex;
+    flex-direction: column;
+  }
+  .tool-card.tool-card-link {
+    text-decoration: none;
+    color: inherit;
+  }
+  .tool-card.tool-card-link:hover {
+    color: inherit;
   }
   .tool-card:hover {
     transform: translateY(-2px);
@@ -65,6 +82,18 @@ import SectionLayout from '../../layouts/SectionLayout.astro';
     font-size: 0.92rem;
     line-height: 1.5;
     margin: 0;
+    flex: 1 1 auto;
+  }
+  .tool-card-cta {
+    margin-top: 0.8rem;
+    color: var(--color-primary-700);
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .tool-card.tool-card-link:hover .tool-card-cta {
+    color: var(--color-primary-800);
+    text-decoration: underline;
+    text-underline-offset: 2px;
   }
   .tool-card-coming {
     opacity: 0.85;

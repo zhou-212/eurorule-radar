@@ -136,106 +136,6 @@ export function buildComparesConfig(): CompareConfig[] {
       seoDescription: 'GPSR vs EPR 哪个跟你有关?GPSR 管产品安全(欧代),EPR 管包装回收(GPSR 是"卖前"、EPR 是"卖后"),两件事都强制。本页用速查表 + 4 种卖家画像,1 分钟判断你该做哪个,两个都做要多少钱。',
     },
 
-    /* ============ 2. CE vs UKCA ============ */
-    {
-      slug: 'ce-vs-ukca',
-      leftName: 'CE',
-      rightName: 'UKCA',
-      leftFullName: 'CE 合格标志(欧盟)',
-      rightFullName: 'UKCA 合格标志(英国)',
-      oneLiner: 'CE 在欧盟卖、UKCA 在英国卖,产品同时卖两边 = 两个标志都要。',
-      leftShort: '欧盟 27 国统一合格标志,几乎所有非食品消费品',
-      rightShort: '英国(脱欧后)合格标志,2024-12-31 后 UKCA 占主导',
-      quickTable: [
-        { label: '适用地区', left: '欧盟 27 国 + EEA(冰岛/挪威/列支敦士登)', right: '英国(英格兰、苏格兰、威尔士)' },
-        { label: '是否强制', left: '几乎所有非食品消费品(适用指令列表)', right: '原 CE 标志的英方替代品(2024-12 后)' },
-        { label: '发证机构', left: '欧盟公告机构(Notified Body,如 TÜV、SGS)', right: '英国认可机构(UK Approved Body)' },
-        { label: 'DoC 模板', left: 'EU Declaration of Conformity', right: 'UK Declaration of Conformity' },
-        { label: '欧代要求', left: 'GPSR 强制(欧盟责任人)', right: 'UK Responsible Person(英国责任人)' },
-        { label: '亚马逊要求', left: 'Amazon EU 5 国(DE/FR/IT/ES/NL)统一', right: 'Amazon UK 单独立法' },
-        { label: '费用', left: '公告机构测试 1000-20000 €(按产品)', right: '英方认可机构测试 800-15000 £' },
-      ],
-      leftWhat: 'CE 是欧盟 27 国 + 冰岛/挪威/列支敦士登的"合格标志",贴在产品上表示这个产品符合欧盟所有相关指令(安全、电磁兼容、化学限制等)。基本上所有非食品消费品(电子、玩具、化妆品、医疗器械、机械)卖到欧盟都要有 CE。\n\n要做 CE 一般要:做测试找 Notified Body(比如 TÜV/SGS/Intertek)、出 EU 符合性声明(DoC)、贴 CE 标志、再挂个欧盟欧代。\n\n简单说:CE 是你在欧盟卖货的"准入证"。',
-      rightWhat: 'UKCA 是英国(脱欧后)自己的合格标志,从 2024-12-31 起在英国全面替代 CE。你想在 Amazon UK 卖货,产品上得有 UKCA 标志,得找 UK Approved Body 做测试、出 UK DoC 声明、挂 UK Responsible Person。CE 标志在英国不能再用了。\n\n简单说:EU 用 CE,UK 用 UKCA,两边各做一套,不能通用。',
-      personas: [
-            {
-              name: 'Amazon UK + Amazon EU 5 国都开,卖电子配件',
-              pick: 'both',
-              reason: '你两边都触发,英国一个合格标志 + 欧盟一个合格标志各做各的。电子配件一般要 Notified Body 测电磁兼容(EMC)+ LVD 安全指令,英国那边要找 UK Approved Body 再做一遍测试(报告不互认)。一年下来两个标志 + 两个欧代 + 两个 DoC,合规预算准备 3000-8000 欧元。'
-            },
-            {
-              name: '只在 Amazon EU 5 国卖,不做英国市场',
-              pick: 'left',
-              reason: '只做 CE 就行,不用管 UKCA。注意:亚马逊 EU 5 国是指 DE/FR/IT/ES/NL 五个站点的统一后台,你这五国都用 CE + 欧盟欧代。如果以后想拓英国,UKCA 要单独再做一次,测试报告多数情况要重新测,不能拿 CE 报告直接顶 UKCA。'
-            },
-            {
-              name: '只做 Amazon UK 英国本土店,产品全英国制造',
-              pick: 'right',
-              reason: '只做 UKCA 就行,CE 不需要。但 UKCA 要求必须有 UK Responsible Person(英国当地责任人),欧盟欧代不能替代。UK Approved Body 的测试报告要按英国 BS 标准出,不是欧盟 EN 标准,这两个标准细节上有差别,多数情况要重新测。'
-            },
-            {
-              name: '只做美国 Amazon.com,产品全美国 FBA',
-              pick: 'neither',
-              reason: 'CE 和 UKCA 都是欧盟和英国市场的要求,美国市场有自己的 FCC(电子)、UL(安全)、FDA(食品/医疗/化妆品)等标志,跟 CE/UKCA 不是一回事。你做美国市场,这两个都不用考虑,专心搞定 FCC/UL/FDA 就行。'
-            }
-          ],
-      timeline: [
-            {
-              date: '2020-01-31',
-              what: '英国正式脱欧,UKCA 标志开始筹备,CE 在英国进入过渡期'
-            },
-            {
-              date: '2021-01-01',
-              what: 'UKCA 标志正式发布,英国开始接受 UKCA + CE 双轨制'
-            },
-            {
-              date: '2023-01-01',
-              what: 'UKCA 过渡期延长(原定 2022-01-01 结束),CE 在英国继续可用'
-            },
-            {
-              date: '2024-09-16',
-              what: '亚马逊 UK 推送 UKCA 强制通知,要求 12-31 前完成切换'
-            },
-            {
-              date: '2024-12-31',
-              what: 'UKCA 在英国全面替代 CE,CE 标志在英国不再被认可'
-            },
-            {
-              date: '2025-01-01',
-              what: '亚马逊 UK 开始下架无 UKCA 标志的 listing,英国海关 HMRC 同步严查'
-            }
-          ],
-      fineRisk: {
-            left: 'CE 不做的后果:一是亚马逊 EU 5 国 listing 下架,产品页被要求补传 DoC + Notified Body 证书;二是欧盟海关扣货,产品到港发现没 CE 或 CE 不合规,直接扣押、退回或销毁,损失运费 + 货值;三是欧盟各成员国市监抽查,罚款按产品类目 1000-50000 欧元不等,严重的(医疗器械、玩具)上黑名单,以后整个欧盟清关都难。',
-            right: 'UKCA 不做的后果:一是 Amazon UK listing 下架,2024-12-31 后没有 UKCA 标志的产品页被屏蔽,搜索结果看不到;二是英国 OPSS(产品安全与标准办公室)罚款,单次 1000-10000 英镑,严重的直接起诉;三是英国海关 HMRC 扣货,跟欧盟类似,没 UKCA 标志或 DoC 不合规直接扣押。'
-          },
-      faq: [
-            {
-              q: 'CE 标志的产品能在英国卖吗?',
-              a: '2024-12-31 之前可以,之后不行。脱欧后有过渡期让卖家慢慢切,2024 年底过渡期结束,从 2025-01-01 起英国只认 UKCA,CE 在英国等于没用。如果你现在还有大量 CE 库存,要么赶紧做 UKCA(加贴或重做测试),要么只卖 EU 不卖 UK,二选一。'
-            },
-            {
-              q: 'UKCA 测试机构在哪里找?跟做 CE 的是同一家吗?',
-              a: '不一样。CE 找的是欧盟 Notified Body(欧盟公告机构),编号是 4 位数字,例如 TÜV SÜD(0123)、SGS(0120)。UKCA 找的是 UK Approved Body(英国认可机构),名单在 gov.uk 官网有列。两个名单分开,测试报告基本不互认,要重新测(可能用同一台机器,但报告重出)。'
-            },
-            {
-              q: 'CE 的 DoC 声明能直接转 UKCA DoC 用吗?',
-              a: '不能直接转,要改三个地方:一是把"EU Directive"换成"UK Regulation",二是加上 UK Responsible Person 信息(不是欧盟欧代),三是声明末尾签字人的地址要在英国。DoC 模板可以一样,但内容要按 UK 法规重新写。建议你存两份 DoC,一份 EU DoC、一份 UK DoC,别混着改。'
-            },
-            {
-              q: '欧代(EC-REP)和 UK Responsible Person 是同一个人吗?',
-              a: '可以是同一家公司,但要这家公司同时在欧盟和英国都有实体(比如总部在德国但在英国有分公司)。多数情况你得找两家:一家是欧盟欧代(GPSR 要求),一家是 UK Responsible Person(UKCA 要求)。如果是同一家服务商的英国子公司,看他们能不能同时提供两个角色,有的服务商可以一站搞定。'
-            },
-            {
-              q: 'DoC 是什么?不会写怎么办?',
-              a: 'DoC(Declaration of Conformity)就是符合性声明,你自己签字声明产品符合哪些法规。要写的内容:产品型号、你的公司信息、适用的法规清单(比如 EMC 指令、LVD 指令)、测试报告编号、欧盟欧代或 UK RP 信息、签字人 + 日期。模板在欧盟官网和英国 gov.uk 都能下到,不会写就照着模板填,关键别漏欧代/RP 信息。'
-            }
-          ],
-      primaryRadarIds: ['eu-gpsr-responsible-person', 'guide-ce-marking'],
-      relatedRadarCategories: ['产品安全', '标签与说明书', 'CE', 'UKCA'],
-      relatedChecklistTags: ['CE', '新卖家', 'UK'],
-      seoDescription: 'CE vs UKCA 哪个跟你有关?CE 是欧盟合格标志,UKCA 是英国(脱欧后)的合格标志,产品同时卖两边 = 两个标志都做。本页用速查表 + 4 种卖家画像,1 分钟判断你 CE / UKCA 怎么选。',
-    },
 
     /* ============ 3. VAT vs IOSS ============ */
     {
@@ -1469,5 +1369,57 @@ export function buildComparesConfig(): CompareConfig[] {
       ],
       seoDescription: 'FCC vs CE 区别一句话:CE 是欧盟非食品消费品的合格标志(广覆盖),FCC 是美国电子电气设备的射频/EMC 认证(只管无线和电磁)。产品同时卖欧美两个地区 = 两个都要做。本页用速查表 + 4 种卖家画像,1 分钟判断你该做哪个、双地区卖货怎么同时搞。',
     },
-  ];;
+    /* ============ 14. CE vs UKCA (v2 - 2025-01 全面强制) ============ */
+    {
+      slug: 'ce-vs-ukca',
+      leftName: 'CE',
+      rightName: 'UKCA',
+      leftFullName: 'CE 标志 (欧盟合格标志) — Regulation (EC) 765/2008 + Decision 768/2008',
+      rightFullName: 'UKCA 标志 (英国合格标志) — UK Statutory Instrument 2019 No. 696 + 2024 修订',
+      oneLiner: 'CE 是欧盟市场强制合格标志,UKCA 是 2021-01-01 起英国(GB)市场对应标志;2025-01-01 起 UKCA 在英国全面替代 CE。',
+      leftShort: '欧盟 27 国 + EEA 共 30 国',
+      rightShort: '英国英格兰 / 威尔士 / 苏格兰(GB,不含北爱尔兰)',
+      quickTable: [
+        { label: '适用地区', left: '欧盟 27 国 + EEA(冰岛/挪威/列支敦士登)', right: '英国 GB(不含北爱尔兰)' },
+        { label: '开始要求', left: '1993 年起(各指令有差异)', right: '2021-01-01 起(2025-01-01 全面强制)' },
+        { label: '标志机构', left: '欧盟委员会 + 各成员国指定机构', right: '英国商业贸易部(DBT)' },
+        { label: 'CE 旧库存缓冲', left: '—', right: '2027-12-31 前允许销售 CE 库存(部分品类)' },
+        { label: '证书要求', left: 'DoC 自我声明 / NB 第三方证书(高风险)', right: 'UK DoC + UK Approved Body(高风险)' },
+        { label: '互认', left: '与 UKCA 不互认', right: '与 CE 不互认' },
+        { label: '亚马逊对应', left: 'Amazon EU 站强制', right: 'Amazon UK 站强制' },
+      ],
+      leftWhat: 'CE 标志 (Conformité Européenne) 是欧盟法律强制要求,产品投放欧盟 27 国 + EEA 市场前必须贴附,表示产品符合所有适用的欧盟指令(玩具/电子/机械/医疗等)。CE 不是质量标志,而是行政合规标志,自我声明 + 高风险品类 NB 第三方。亚马逊欧洲 8 国站(德/法/意/西/荷/波/瑞/捷等)对需要 CE 的产品严格校验,无 CE 标志的产品不能上架。',
+      rightWhat: 'UKCA 标志 (United Kingdom Conformity Assessed) 是英国脱欧后 2021-01-01 启动的对应标志,适用于英格兰/威尔士/苏格兰(GB 市场)。北爱尔兰因 Northern Ireland Protocol 仍按欧盟 CE 规则。2025-01-01 起,UKCA 在英国全面替代 CE,亚马逊 UK 站对大多数受控产品要求 UKCA 标志;CE 在英国库存可延至 2027-12-31(部分品类)。',
+      personas: [
+        { name: '纯欧盟卖家', pick: 'left', reason: '只做 Amazon DE/FR/IT/ES 等欧盟站,不需要 UKCA,但若扩展到 Amazon UK 必须额外做 UKCA 标志 + UK DoC(成本 €500-2000)。' },
+        { name: '纯英国卖家', pick: 'right', reason: '只做 Amazon UK,CE 在 GB 不再被接受(库存缓冲 2027-12-31),需 UKCA 标志 + UK DoC。' },
+        { name: '欧盟+英国双线卖家', pick: 'both', reason: '同时在 Amazon EU + UK 销售,必须 CE + UKCA 双标志(2 套 DoC,可能 2 套测试报告,成本翻倍)。' },
+        { name: '工厂 / OEM 卖家', pick: 'both', reason: '生产时建议双标(CE + UKCA),因为大部分中国工厂既要接欧盟订单也要接英国订单,双标可省去后续单加的成本。' },
+      ],
+      timeline: [
+        { date: '1993-01-01', what: 'CE 标志在欧盟范围内开始适用(各指令陆续生效)' },
+        { date: '2020-01-31', what: '英国正式脱欧,过渡期开始' },
+        { date: '2021-01-01', what: 'UKCA 标志正式启用,英国 GB 市场(过渡期,CE 仍可接受)' },
+        { date: '2024-09-01', what: '英国政府公告 UKCA 2025-01-01 全面强制' },
+        { date: '2025-01-01', what: 'UKCA 在英国 GB 全面强制,CE 不再被接受(库存缓冲到 2027-12-31)' },
+        { date: '2027-12-31', what: '英国 GB CE 旧库存销售截止' },
+      ],
+      fineRisk: {
+        left: '违反 CE 标志法规,欧盟各成员国可罚 5 万 - 100 万 €;亚马逊 EU 站对无 CE 标志产品下架,海关扣货。',
+        right: '违反 UKCA,英国 DBT 可罚 1000 - 5000 £;Amazon UK 站对无 UKCA 标志产品下架,海关扣货。',
+      },
+      faq: [
+        { q: 'UKCA 和 CE 标志长得像吗?', a: '形状不同。CE 是字母 C + E;UKCA 是正多边形 + UKCA 字母(看起来像带 + 的几何图形)。可以同时贴在产品上(双标)。' },
+        { q: 'CE 报告能直接用于 UKCA 吗?', a: '不能。报告是 UKCA 申请必需,通常需要在 UK Approved Body 重做(部分接受 CB 报告转换)。' },
+        { q: '北爱尔兰卖 UKCA 还是 CE?', a: '北爱尔兰因 Windsor Framework,按欧盟规则,使用 CE 标志。UKCA 不适用北爱尔兰。' },
+        { q: 'UKCA 标志必须印在产品本体吗?', a: '是。优先印在产品本体;若产品太小放不下,可附在包装/说明书(需说明)。' },
+        { q: '工厂已经有 CE,加 UKCA 要多久?', a: '通常 4-8 周(测试 + 报告转换 + UK DoC + 标志设计);纯工厂环节,不影响供应链。' },
+      ],
+      primaryRadarIds: ['eu-ce-marking', 'ukca-2025-transition'],
+      relatedRadarCategories: ['产品安全', '标签与说明书', '平台合规'],
+      relatedChecklistTags: ['新手', '标签', '认证', '贴标'],
+      seoDescription: 'CE vs UKCA 完整对比:适用地区 / 标志机构 / DoC 要求 / 互认 / 时间线 / 罚款风险。亚马逊欧盟站和英国站同时销售的卖家必看。',
+    },
+
+];
 }
