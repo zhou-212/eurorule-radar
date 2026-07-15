@@ -1,0 +1,61 @@
+---
+import SectionLayout from '../../layouts/SectionLayout.astro';
+---
+<SectionLayout
+  sectionSlug="help"
+  title="帮"
+  description="跨境卖家 Q&A,垂直问答社区。先做欧规 + 法规通两个垂直,看效果。"
+>
+  <div class="help-intro">
+    <p>
+      <strong>Q&A 社区</strong>(Phase 4 启动):卖家之间的真实问答,垂直覆盖跨境合规。
+    </p>
+    <h2>设计目标</h2>
+    <ul>
+      <li>✅ <strong>提问 / 回答</strong>:Markdown 编辑器 + 代码块 + 图片</li>
+      <li>✅ <strong>投票</strong>:答案按投票数排序,优质答案置顶</li>
+      <li>✅ <strong>标签</strong>:按主题(欧规 / 美规 / 跨境物流 / 税务)分类</li>
+      <li>✅ <strong>积分</strong>:贡献优质答案获得积分(可选)</li>
+    </ul>
+
+    <h2>技术选型(待定)</h2>
+    <ul>
+      <li><strong>轻量</strong>:Giscus(GitHub Discussions 后端,免费)</li>
+      <li><strong>自建</strong>:Astro DB + Deno KV(成本高,功能强)</li>
+      <li><strong>折中</strong>:Markdown 文件 + localStorage 投票(本地优先)</li>
+    </ul>
+
+    <p class="help-cta">
+      <a href="mailto:i@weiread.com?subject=我想加入帮(Q%26A)内测">想提前加入内测?</a>
+    </p>
+  </div>
+</SectionLayout>
+
+<style>
+  .help-intro {
+    max-width: 65ch;
+    color: var(--color-ink-700, #3f3f46);
+    line-height: 1.7;
+  }
+  .help-intro h2 {
+    font-size: 1.05rem;
+    color: var(--color-ink-900, #18181b);
+    margin: 1.5rem 0 0.5rem 0;
+  }
+  .help-intro ul {
+    padding-left: 1.2rem;
+  }
+  .help-cta {
+    margin-top: 1.5rem;
+    background: #fff;
+    border: 1px dashed var(--section-accent, #ea580c);
+    border-radius: var(--radius-md, 8px);
+    padding: 1rem 1.25rem;
+  }
+  .help-cta a {
+    color: var(--section-accent, #ea580c);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+  }
+</style>

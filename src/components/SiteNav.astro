@@ -1,0 +1,156 @@
+---
+/**
+ * SiteNav.astro — weiread 站级分区切换器
+ * ------------------------------------------------------------
+ * 顶部 6 tab 切换器,显示在 BaseLayout 的 <Header> 上方。
+ * - 接收 currentSlug(从 URL 推断或 props 传入)
+ * - 显示所有 SECTIONS,live 状态可点,wip/planned 显示"即将"
+ * - 高亮当前 section
+ * - 站首页(无 currentSlug)时不显示
+ */
+import { SECTIONS, getActiveSection } from '../lib/sections';
+
+interface Props {
+  currentSlug?: string;
+  pathname?: string;
+}
+
+const { currentSlug, pathname } = Astro.props;
+const active = currentSlug
+  ? SECTIONS.find((s) => s.slug === currentSlug)
+  : pathname
+    ? getActiveSection(pathname)
+    : undefined;
+---
+
+<nav class="site-nav" aria-label="weiread 主分区" data-current={active?.slug ?? 'home'}>
+  <div class="site-nav-inner">
+    <a href="/" class="site-brand">
+      <span class="site-brand-mark">W</span>
+      <span class="site-brand-text">weiread</span>
+    </a>
+    <ul class="site-nav-tabs" role="tablist">
+      {SECTIONS.map((s) => {
+        const isActive = active?.slug === s.slug;
+        const isComing = s.status !== 'live';
+        return (
+          <li class={`site-nav-tab ${isActive ? 'is-active' : ''} ${isComing ? 'is-coming' : ''}`} role="presentation">
+            <a
+              href={isComing ? '#' : s.href}
+              class="site-nav-link"
+              role="tab"
+              aria-selected={isActive ? 'true' : 'false'}
+              aria-current={isActive ? 'page' : undefined}
+              data-slug={s.slug}
+              data-status={s.status}
+            >
+              <span class="site-nav-icon" aria-hidden="true">{s.icon}</span>
+              <span class="site-nav-title">{s.shortTitle}</span>
+              {isComing && <span class="site-nav-badge" aria-label="即将上线">即将</span>}
+            </a>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+</nav>
+
+<style>
+  .site-nav {
+    background: #fff;
+    border-bottom: 1px solid var(--color-ink-200, #e4e4e7);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .site-nav-inner {
+    max-width: 1242px;
+    margin: 0 auto;
+    padding: 0.5rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--color-ink-900, #18181b);
+    font-weight: 800;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+  .site-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #1e40af, #7c3aed);
+    color: #fff;
+    border-radius: 7px;
+    font-size: 0.95rem;
+    font-weight: 900;
+  }
+  .site-brand-text {
+    letter-spacing: -0.01em;
+  }
+  .site-nav-tabs {
+    display: flex;
+    gap: 0.25rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+  }
+  .site-nav-tab {
+    display: flex;
+  }
+  .site-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: 999px;
+    text-decoration: none;
+    color: var(--color-ink-700, #3f3f46);
+    font-size: 0.92rem;
+    transition: background 0.15s, color 0.15s;
+    cursor: pointer;
+  }
+  .site-nav-link:hover {
+    background: var(--color-ink-100, #f4f4f5);
+    color: var(--color-ink-900, #18181b);
+  }
+  .site-nav-tab.is-active .site-nav-link {
+    background: var(--color-primary-50, #eff6ff);
+    color: var(--color-primary-700, #1d4ed8);
+    font-weight: 600;
+  }
+  .site-nav-tab.is-coming .site-nav-link {
+    color: var(--color-ink-500, #71717a);
+    cursor: not-allowed;
+  }
+  .site-nav-tab.is-coming .site-nav-link:hover {
+    background: var(--color-ink-50, #fafafa);
+  }
+  .site-nav-icon {
+    font-size: 1rem;
+  }
+  .site-nav-badge {
+    font-size: 0.62rem;
+    background: var(--color-ink-100, #f4f4f5);
+    color: var(--color-ink-500, #71717a);
+    padding: 0.1em 0.45em;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  @media (max-width: 640px) {
+    .site-nav-inner { gap: 0.75rem; padding: 0.5rem 0.85rem; }
+    .site-nav-link { padding: 0.4rem 0.65rem; font-size: 0.85rem; }
+    .site-brand-text { display: none; }
+  }
+</style>

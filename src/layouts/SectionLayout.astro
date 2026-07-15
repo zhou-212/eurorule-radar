@@ -1,0 +1,107 @@
+---
+/**
+ * SectionLayout.astro — 分区布局
+ * -----------------------------------------------------------------
+ * 继承 BaseLayout,加分区简介区 + section 主题色。
+ * 每个分区首页(`/eu/` `/tools/` 等)都用这个 layout。
+ *
+ * 不用于分区内的详情页(详情页直接用 BaseLayout,Header 自己处理 nav)。
+ */
+import BaseLayout from './BaseLayout.astro';
+import { getSection, type SectionConfig } from '../lib/sections';
+
+interface Props {
+  sectionSlug: string;
+  title: string;
+  description?: string;
+}
+
+const { sectionSlug, title, description } = Astro.props;
+const section = getSection(sectionSlug);
+
+if (!section) {
+  throw new Error(`SectionLayout: section "${sectionSlug}" not found in SECTIONS`);
+}
+---
+
+<BaseLayout
+  title={`${section.title} · weiread`}
+  description={description || section.tagline}
+  currentSlug={sectionSlug}
+>
+  <div class="section-hero" style={`--section-accent: ${section.accent}`}>
+    <div class="container">
+      <nav class="breadcrumb" aria-label="面包屑">
+        <a href="/">首页</a>
+        <span class="breadcrumb-sep">/</span>
+        <span>{section.title}</span>
+      </nav>
+      <div class="section-hero-content">
+        <div class="section-hero-icon" aria-hidden="true">{section.icon}</div>
+        <div class="section-hero-text">
+          <h1 class="section-hero-title">{section.title}</h1>
+          <p class="section-hero-tagline">{section.tagline}</p>
+        </div>
+      </div>
+      {section.status !== 'live' && (
+        <div class="section-hero-notice" role="status">
+          <strong>筹备中</strong> — 此分区预计 {section.priority === 1 ? '2026 年 Q3-Q4' : section.priority === 2 ? '2026 年 Q4' : '2027 年'} 上线。
+          先去 <a href="/eu/">欧规雷达</a> 体验现有功能。
+        </div>
+      )}
+      <slot name="hero-extra" />
+    </div>
+  </div>
+  <div class="container section-body">
+    <slot />
+  </div>
+</BaseLayout>
+
+<style>
+  .section-hero {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--section-accent) 8%, #fff) 0%, #fff 100%);
+    border-bottom: 1px solid var(--color-ink-200, #e4e4e7);
+    padding: 1.5rem 0 2rem 0;
+    margin-bottom: 2rem;
+  }
+  .section-hero-content {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .section-hero-icon {
+    font-size: 3.2rem;
+    line-height: 1;
+  }
+  .section-hero-text { flex: 1; }
+  .section-hero-title {
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 0.25em 0;
+    color: var(--color-ink-900, #18181b);
+    letter-spacing: -0.01em;
+  }
+  .section-hero-tagline {
+    color: var(--color-ink-600, #52525b);
+    font-size: 1.05rem;
+    margin: 0;
+    line-height: 1.5;
+  }
+  .section-hero-notice {
+    background: #fff;
+    border: 1px dashed var(--section-accent);
+    border-left: 4px solid var(--section-accent);
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius-md, 8px);
+    margin-top: 1.25rem;
+    color: var(--color-ink-700, #3f3f46);
+    font-size: 0.95rem;
+  }
+  .section-hero-notice a {
+    color: var(--section-accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .section-body { padding: 0 0 3rem 0; }
+</style>

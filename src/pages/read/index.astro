@@ -1,0 +1,55 @@
+---
+import SectionLayout from '../../layouts/SectionLayout.astro';
+---
+<SectionLayout
+  sectionSlug="read"
+  title="读"
+  description="长文同步知乎,跨境 + 效率 + 工具评测。深度的内容沉淀,不像短贴那样转瞬即逝。"
+>
+  <div class="read-intro">
+    <p>
+      同步知乎 @liucode 的长文系列。覆盖:
+    </p>
+    <ul>
+      <li><strong>跨境电商</strong> - 选品 / 物流 / 平台 / 税务</li>
+      <li><strong>个人效率</strong> - 工具 / 工作流 / 习惯</li>
+      <li><strong>软件评测</strong> - 选型 / 横评 / 实测</li>
+    </ul>
+    <p class="read-cta">
+      第一批内容 3 篇(欧规雷达系列)已发布:
+    </p>
+    <ul class="read-articles">
+      <li>📦 2026 包装合规全景(7 部法规 + 5 维对比)</li>
+      <li>⏰ PPWR 2026-08 倒计时(5 步行动框架)</li>
+      <li>🎯 5 步选欧代(80% 新手踩坑)</li>
+    </ul>
+  </div>
+</SectionLayout>
+
+<style>
+  .read-intro {
+    max-width: 65ch;
+    color: var(--color-ink-700, #3f3f46);
+    line-height: 1.7;
+  }
+  .read-intro ul {
+    padding-left: 1.2rem;
+    margin: 0.5rem 0 1rem 0;
+  }
+  .read-intro li {
+    margin: 0.4em 0;
+  }
+  .read-cta {
+    margin-top: 1.5rem;
+  }
+  .read-articles {
+    background: #fff;
+    border: 1px solid var(--color-ink-200, #e4e4e7);
+    border-radius: var(--radius-md, 8px);
+    padding: 1rem 1.25rem;
+    list-style: none;
+  }
+  .read-articles li {
+    padding: 0.4em 0;
+  }
+</style>
