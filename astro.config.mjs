@@ -74,4 +74,23 @@ export default defineConfig({
       assetsInlineLimit: 0,
     },
   },
+  // =============================================================================
+  // 301 重定向:欧规雷达 2026-07 迁移到 /eu/ 目录
+  //   - 配置只处理顶层 URL(裸路径)
+  //   - 子路径通配由 src/pages/{old}/[...slug].astro 文件处理
+  //   - 静态构建产物包含 meta refresh + 301 头(搜索引擎可识别)
+  //   - 6 个月后(2027-01)再考虑清理 redirect 配置
+  // =============================================================================
+  redirects: {
+    '/radar':       '/eu/radar',
+    '/guide':       '/eu/guide',
+    '/learn':       '/eu/learn',
+    '/compare':     '/eu/compare',
+    '/checklists':  '/eu/checklists',
+    '/downloads':   '/eu/downloads',
+    '/promote':     '/eu/promote',
+    '/glossary':    '/eu/glossary',
+    '/calendar':    '/eu/calendar',
+    '/self-check':  '/eu/self-check',
+  },
 });

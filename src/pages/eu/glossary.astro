@@ -1,6 +1,6 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { withBase, siteAsDir } from '../lib/url';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../lib/url';
 
 const siteStr = siteAsDir(Astro.site);
 
@@ -29,7 +29,7 @@ const terms = [
     relation: '你在亚马逊欧洲站卖任何非食品类商品, 都要在 listing 上写"欧盟责任人"的姓名 + 联系方式. 没写就下架.',
     when: '2024-12-13 已生效',
     fine: '最高 1000 万欧 或 5% 全球营收',
-    href: '/radar/eu-gpsr-responsible-person/',
+    href: '/eu/radar/eu-gpsr-responsible-person/',
     searchTags: '欧代 责任人 responsible person 安全 general product safety regulation',
   },
   {
@@ -40,7 +40,7 @@ const terms = [
     relation: '几乎所有非食品类商品 (电子/玩具/机械/医疗器械) 都要打. 没打, 亚马逊会下架, 海关会扣货.',
     when: '一直强制, 不是新规',
     fine: '最高 50 万欧',
-    href: '/radar/guide-ce-marking/',
+    href: '/eu/radar/guide-ce-marking/',
     searchTags: '合格 标志 认证 玩具 电子 机械 医疗 conformité européenne china export',
   },
   {
@@ -51,7 +51,7 @@ const terms = [
     relation: '在德国 / 法国 / 西班牙卖任何带包装的商品, 都要注册 EPR 编号, 亚马逊强制要求. 不注册就下架.',
     when: '一直在执行',
     fine: '各国不同, 最高 20 万欧 (德国)',
-    href: '/radar/de-lucid-packaging/',
+    href: '/eu/radar/de-lucid-packaging/',
     searchTags: '包装 回收 德国 lucid 法国 citeo 意大利 conai extended producer responsibility weee',
   },
   {
@@ -62,7 +62,7 @@ const terms = [
     relation: '你是中国卖家, 卖到欧洲, 货值 ≤ €150 要注册 IOSS, > €150 走标准 VAT. 没注册 IOSS, 客户清关时被收两次税.',
     when: '一直强制',
     fine: '各国不同, 补税 + 滞纳金',
-    href: '/radar/eu-ioss-vat/',
+    href: '/eu/radar/eu-ioss-vat/',
     searchTags: '税 增值税 value added tax 远程销售 fba 申报 德国vat 法国vat',
   },
   {
@@ -73,7 +73,7 @@ const terms = [
     relation: '卖冰箱 / 洗衣机 / 电视 / 显示器 / 灯 / 吸尘器等电气电子, 都要在 EPREL 注册产品能效数据, 亚马逊强制.',
     when: '2019 起分阶段',
     fine: '各国不同',
-    href: '/radar/eu-eprel-energy-label/',
+    href: '/eu/radar/eu-eprel-energy-label/',
     searchTags: '能效 标签 电气 电子 家电 冰箱 洗衣机 电视 european product registry energy labelling',
   },
   {
@@ -84,7 +84,7 @@ const terms = [
     relation: '你从中国发小包到欧盟消费者, 注册 IOSS 后, 客户结账时已含 VAT, 清关无障碍. 没注册, 客户清关时被收税 + 处理费.',
     when: '2021-07-01 已生效',
     fine: '没注册 → 不能享受简化申报',
-    href: '/radar/eu-ioss-vat/',
+    href: '/eu/radar/eu-ioss-vat/',
     searchTags: '小包 跨境 150 欧元 进口 一站式 import one-stop shop 自发货',
   },
   {
@@ -95,7 +95,7 @@ const terms = [
     relation: '2026-08-12 后, 你的产品包装要: ① 物质限制 (不能含某些重金属) ② 最小化 ③ 标签 (可回收标志) ④ 可回收/再生原料. 亚马逊 / TEMU / 速卖通都已通知.',
     when: '2026-08-12 全面实施',
     fine: '各国不同',
-    href: '/radar/eu-ppwr-2025-40/',
+    href: '/eu/radar/eu-ppwr-2025-40/',
     searchTags: '包装 回收 可回收 标签 物质 限制 packaging waste regulation 2026',
   },
   {
@@ -106,7 +106,7 @@ const terms = [
     relation: '卖牛肉 / 可可 / 咖啡 / 棕榈油 / 橡胶 / 大豆 / 木及衍生品 (e.g. 木家具, 纸, 橡胶玩具), 要上传"尽职调查声明 (DDS) + 地块地理坐标". 亚马逊已通知.',
     when: '2025-12-30 大企业全面适用',
     fine: '最高 4% 全球营收',
-    href: '/radar/guide-eudr-basics/',
+    href: '/eu/radar/guide-eudr-basics/',
     searchTags: '森林 砍伐 毁林 牛 可可 咖啡 棕榈油 橡胶 大豆 木材 尽职调查 dds eu deforestation',
   },
 ];
@@ -238,7 +238,7 @@ const termsForClient = terms.map((t) => ({
       <p>3 步测试, 5 分钟, 看看你的品类 + 时间 + 预算, 撑不撑得起合规这条线。</p>
       <div class="glossary-cta-actions">
         <a href={withBase('/self-check/')} class="btn btn-primary">🎯 开始测试</a>
-        <a href={withBase('/radar/guide-8-terms/')} class="btn btn-ghost">📖 看完整版名词解释</a>
+        <a href={withBase('/eu/radar/guide-8-terms/')} class="btn btn-ghost">📖 看完整版名词解释</a>
       </div>
     </section>
   </div>

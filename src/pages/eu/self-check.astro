@@ -1,7 +1,7 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import EmailSubscribe from '../components/EmailSubscribe.astro';
-import { withBase, siteAsDir } from '../lib/url';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EmailSubscribe from '../../components/EmailSubscribe.astro';
+import { withBase, siteAsDir } from '../../lib/url';
 
 const siteStr = siteAsDir(Astro.site);
 
@@ -22,17 +22,17 @@ const paths: Record<string, { title: string; items: { title: string; href: strin
     items: [
       {
         title: '90 天合规起步路线图',
-        href: withBase('/radar/guide-seller-90days/'),
+        href: withBase('/eu/radar/guide-seller-90days/'),
         desc: '每周 1-2 件事,从 0 走到基本合规,不被法规压垮',
       },
       {
         title: '8 大合规名词一次搞懂',
-        href: withBase('/radar/guide-8-terms/'),
+        href: withBase('/eu/radar/guide-8-terms/'),
         desc: 'GPSR / CE / EPR / VAT 是啥,3 分钟心里有底',
       },
       {
         title: '亚马逊 GPSR 邮件怎么回',
-        href: withBase('/radar/guide-amazon-gpsr-email/'),
+        href: withBase('/eu/radar/guide-amazon-gpsr-email/'),
         desc: '收到"请补欧盟责任人"邮件的回复模板',
       },
     ],
@@ -42,12 +42,12 @@ const paths: Record<string, { title: string; items: { title: string; href: strin
     items: [
       {
         title: '近期更新',
-        href: withBase('/radar/'),
+        href: withBase('/eu/radar/'),
         desc: '过去 30 天新出的规则变化,先看这些',
       },
       {
         title: '产品上架前资料检查清单',
-        href: withBase('/checklists/pre-listing-documents/'),
+        href: withBase('/eu/checklists/pre-listing-documents/'),
         desc: '新 ASIN 上架前一次性补齐合规资料',
       },
       {
@@ -62,17 +62,17 @@ const paths: Record<string, { title: string; items: { title: string; href: strin
     items: [
       {
         title: '德 / 法 / 意 我先开哪个',
-        href: withBase('/radar/guide-pick-first-country/'),
+        href: withBase('/eu/radar/guide-pick-first-country/'),
         desc: '三个国家的流量、合规、物流成本一次说清',
       },
       {
         title: '产品上架前资料检查',
-        href: withBase('/checklists/pre-listing-documents/'),
+        href: withBase('/eu/checklists/pre-listing-documents/'),
         desc: '扩 SKU / 扩平台前的资料总表',
       },
       {
         title: '欧盟 IOSS 跨境远程销售',
-        href: withBase('/radar/eu-ioss-vat/'),
+        href: withBase('/eu/radar/eu-ioss-vat/'),
         desc: '货值 ≤ €150 的小包怎么报关和交税',
       },
     ],
@@ -82,17 +82,17 @@ const paths: Record<string, { title: string; items: { title: string; href: strin
     items: [
       {
         title: '8 大合规名词',
-        href: withBase('/radar/guide-8-terms/'),
+        href: withBase('/eu/radar/guide-8-terms/'),
         desc: '先搞懂核心名词,再判断要不要做',
       },
       {
         title: '亚马逊欧洲站新卖家基础资料',
-        href: withBase('/checklists/new-seller-basics/'),
+        href: withBase('/eu/checklists/new-seller-basics/'),
         desc: '看看开店到底要准备什么',
       },
       {
         title: '90 天路线图',
-        href: withBase('/radar/guide-seller-90days/'),
+        href: withBase('/eu/radar/guide-seller-90days/'),
         desc: '看看到底要花多少时间和钱',
       },
     ],
@@ -283,7 +283,7 @@ const paths: Record<string, { title: string; items: { title: string; href: strin
 
       <div class="sc-actions-row">
         <button type="button" class="btn btn-ghost" data-sc-retake>重新测试</button>
-        <a href={withBase('/radar/')} class="btn btn-secondary">先去规则雷达逛逛</a>
+        <a href={withBase('/eu/radar/')} class="btn btn-secondary">先去规则雷达逛逛</a>
       </div>
 
       <div class="sc-subscribe">

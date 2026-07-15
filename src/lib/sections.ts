@@ -75,7 +75,7 @@ export const SECTIONS: SectionConfig[] = [
     slug: 'learn',
     title: '学',
     shortTitle: '学',
-    href: '/learn/',
+    href: '/eu/learn/',
     tagline: '跨主题学习路径,从 0 到 60 分钟',
     status: 'planned',
     priority: 2,

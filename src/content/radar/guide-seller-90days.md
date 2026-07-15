@@ -53,18 +53,18 @@ example: false
 
 把答案填进一个 Excel 表,一列是 SKU,后面 5-6 列是合规需求。这张表你以后每加一个新产品都用得上。
 
-> 关联:[欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person)—— 先扫一眼,确认你的产品不在豁免清单里。
+> 关联:[欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person)—— 先扫一眼,确认你的产品不在豁免清单里。
 
 ### 第 2-3 周:搞定"四件套"基础资料
 
 不管你卖什么,以下 4 件事**第 3 周之前必须做完**:
 
 1. **欧盟责任人(Responsible Person)**:签一个欧代协议(几万到十几万人民币/年),拿到对方在欧盟的注册地址和邮箱。亚马逊后台"EU Responsible Person"字段填上,等审核。
-2. **CE 标识 + DOC 符合性声明**:产品本体 / 包装 / 说明书任选位置打 CE 标志(高度 ≥ 5mm,详见 [CE 标识怎么打](/radar/guide-ce-marking));DOC 是一份自我声明文件,写清楚你做了哪些测试、符合哪些指令。
+2. **CE 标识 + DOC 符合性声明**:产品本体 / 包装 / 说明书任选位置打 CE 标志(高度 ≥ 5mm,详见 [CE 标识怎么打](/eu/radar/guide-ce-marking));DOC 是一份自我声明文件,写清楚你做了哪些测试、符合哪些指令。
 3. **德国 LUCID 包装注册**:在 [verpackungsregister.org](https://verpackungsregister.org) 注册,拿到 LUCID 号,填到亚马逊后台。
 4. **VAT 税号**:如果你在德国 / 法国 / 意大利有库存,或者销售额超过当地远程销售起征点(目前 1 万欧元),必须申请 VAT。最快的办法是找当地税务代理。
 
-> 关联:[德国 LUCID 包装法](/radar/de-lucid-packaging)、[亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms)、[新卖家开店基础资料检查清单](/checklists/new-seller-basics)
+> 关联:[德国 LUCID 包装法](/eu/radar/de-lucid-packaging)、[亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms)、[新卖家开店基础资料检查清单](/eu/checklists/new-seller-basics)
 
 ### 第 4-6 周:法国 + 意大利 EPR + 法国 Triman
 
@@ -74,7 +74,7 @@ example: false
 - **意大利**:到 [CONAI](https://www.conai.org) 注册包装 EPR,流程类似。
 - **WEEE(电气电子)**:卖带电产品(充电器、电动牙刷、智能手表…)还要单独注册电气 EPR。
 
-**Triman 容易踩坑**:它是法国特有的回收标志(一个垃圾桶 + 叉号),不带电池的普通产品要打 Triman,**带电池的电子产品要打 Triman + 垃圾桶**(打错了罚款)。详见 [法国 EPR Triman 标识](/radar/france-epr-triman)。
+**Triman 容易踩坑**:它是法国特有的回收标志(一个垃圾桶 + 叉号),不带电池的普通产品要打 Triman,**带电池的电子产品要打 Triman + 垃圾桶**(打错了罚款)。详见 [法国 EPR Triman 标识](/eu/radar/france-epr-triman)。
 
 > 这一阶段可以稍微慢一点,但 6 周内要看到所有 EPR 注册号,不能拖。
 
@@ -90,7 +90,7 @@ example: false
 
 **为什么重要**:亚马逊、德国市场监管机构、法国 DGCCRF 任何一个来查,你 48 小时内要拿出来。提前归档,免得到时翻邮箱翻到崩溃。
 
-> 关联:[收到平台合规通知后的 48 小时应对清单](/checklists/compliance-notice-48h)
+> 关联:[收到平台合规通知后的 48 小时应对清单](/eu/checklists/compliance-notice-48h)
 
 ### 第 11-13 周:加新站点前,先复核一遍
 
@@ -99,7 +99,7 @@ example: false
 - 老老实实打开亚马逊后台"Account Health" → "Compliance"
 - 每个新站点的"EU Responsible Person"字段都补全
 - 包装 EPR 在新国家补注册(部分国家已并入德国 LUCID)
-- 看一遍 [PPWR 包装新规 2026-08-12 全面适用](/radar/eu-ppwr-2025-40)—— 这是下一个大动作,提前准备
+- 看一遍 [PPWR 包装新规 2026-08-12 全面适用](/eu/radar/eu-ppwr-2025-40)—— 这是下一个大动作,提前准备
 
 第 13 周,给团队做一次"合规复盘",更新那张 SKU 合规表。
 
@@ -115,20 +115,20 @@ A:可以省一点。不带电 → 不需要 WEEE 电气 EPR,不需要 RED 无线
 A:欧代市场已经透明化,几千到 1 万多人民币/年能搞定;但**不要图便宜买来路不明的"野欧代"**(可能是空壳公司,亚马逊审核会被打回)。检测报告找 SGS / TÜV / Intertek,价格虚高但报告含金量高,欧洲海关和亚马逊都认。
 
 **Q4:我能跳过哪个国家先不开?**
-A:可以。亚马逊允许你只开德国站,先把德国做深;法国 / 意大利看你销量再决定。但**开通前要合规做齐**,不然一开通就被卡。详见 [德国 / 法国 / 意大利,我先开哪个](/radar/guide-pick-first-country)。
+A:可以。亚马逊允许你只开德国站,先把德国做深;法国 / 意大利看你销量再决定。但**开通前要合规做齐**,不然一开通就被卡。详见 [德国 / 法国 / 意大利,我先开哪个](/eu/radar/guide-pick-first-country)。
 
 **Q5:90 天之后,每个月要做什么?**
 A:长期维护其实很轻:每月 1 次检查后台"Account Health"邮件;每季度复核一次 LUCID / EPR 号是否还在有效期(多数年费到期前 30 天邮件提醒);每年复检一次 CE / DOC(产品没变就不用重测)。其余时间专心卖货。
 
 ## 救命资源
 
-- [新卖家开店基础资料检查清单](/checklists/new-seller-basics)
-- [产品上架前资料检查清单](/checklists/pre-listing-documents)
-- [收到平台合规通知后的 48 小时应对清单](/checklists/compliance-notice-48h)
-- [欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person)
-- [德国 LUCID 包装法与 EPR 注册](/radar/de-lucid-packaging)
-- [法国 EPR Triman 标识 + 唯一识别符](/radar/france-epr-triman)
-- [PPWR 包装新规 2026-08-12 全面适用](/radar/eu-ppwr-2025-40)
+- [新卖家开店基础资料检查清单](/eu/checklists/new-seller-basics)
+- [产品上架前资料检查清单](/eu/checklists/pre-listing-documents)
+- [收到平台合规通知后的 48 小时应对清单](/eu/checklists/compliance-notice-48h)
+- [欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person)
+- [德国 LUCID 包装法与 EPR 注册](/eu/radar/de-lucid-packaging)
+- [法国 EPR Triman 标识 + 唯一识别符](/eu/radar/france-epr-triman)
+- [PPWR 包装新规 2026-08-12 全面适用](/eu/radar/eu-ppwr-2025-40)
 - Amazon Seller Central — 新卖家入驻引导:[https://sellercentral.amazon.eu/learn](https://sellercentral.amazon.eu/learn)
 
 ## 核对日期

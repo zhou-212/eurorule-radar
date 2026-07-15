@@ -1,0 +1,21 @@
+---
+/**
+ * 旧 /radar/* 路径的 301 redirect 兜底
+ *   - 静态构建会生成 dist/radar/<slug>/index.html 含 meta refresh + 301 头
+ *   - 6 个月后(2027-01)可考虑删除整个文件
+ *   - 已知 /radar/index 已由 config redirects 兜底
+ */
+import { getRadarRules } from '../../lib/radar-source';
+
+export async function getStaticPaths() {
+  // 从 content 集合读所有已上线的 radar slug,生成对应 301 redirect 路径
+  const rules = await getRadarRules();
+  return rules.map((r: any) => ({
+    params: { slug: r.slug || r.id },
+  }));
+}
+
+const slug = Astro.params.slug;
+const newPath = `/eu/radar/${slug}/`;
+return Astro.redirect(newPath, 301);
+---

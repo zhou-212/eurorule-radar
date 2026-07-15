@@ -77,8 +77,8 @@ A:产品本体或铭牌上;若不可行,在包装和随附文件上。
 
 ## 相关规则
 
-- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/radar/eu-gpsr-responsible-person)
+- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/eu/radar/eu-gpsr-responsible-person)
 
 ## 相关清单
 
-- [产品上架前资料检查清单](/checklists/pre-listing-documents)
+- [产品上架前资料检查清单](/eu/checklists/pre-listing-documents)

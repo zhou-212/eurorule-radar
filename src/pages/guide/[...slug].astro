@@ -1,0 +1,14 @@
+---
+/**
+ * 旧 /guide/* 路径的 301 redirect 兜底
+ */
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  // guide 集合:目前没有,直接返回空数组
+  return [];
+}
+
+const slug = Astro.params.slug;
+return Astro.redirect(`/eu/guide/${slug}/`, 301);
+---

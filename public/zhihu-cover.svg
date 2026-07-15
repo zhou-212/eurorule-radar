@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1242 800" width="1242" height="800" font-family="'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fef9f2"/>
+      <stop offset="1" stop-color="#fef2e0"/>
+    </linearGradient>
+    <linearGradient id="redBadge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dc2626"/>
+      <stop offset="1" stop-color="#991b1b"/>
+    </linearGradient>
+    <linearGradient id="blackBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#18181b"/>
+      <stop offset="1" stop-color="#27272a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1242" height="800" fill="url(#bg)"/>
+
+  <!-- Top eyebrow line -->
+  <line x1="80" y1="80" x2="160" y2="80" stroke="#dc2626" stroke-width="4"/>
+  <text x="180" y="86" font-size="18" font-weight="600" fill="#dc2626" letter-spacing="2">EU COMPLIANCE 2024-2026</text>
+
+  <!-- Main title (Chinese, large bold) -->
+  <text x="80" y="180" font-size="86" font-weight="900" fill="#18181b" letter-spacing="-1">亚马逊欧洲站</text>
+  <text x="80" y="270" font-size="86" font-weight="900" fill="#18181b" letter-spacing="-1">2024-2026 <tspan fill="#dc2626">合规全景</tspan></text>
+
+  <!-- Subtitle -->
+  <text x="80" y="325" font-size="26" font-weight="500" fill="#52525b">7 部法规 · 5 维对比 · 30 天落地</text>
+
+  <!-- Big red badge: MAX FINE -->
+  <g transform="translate(80, 380)">
+    <rect width="280" height="120" rx="8" fill="url(#redBadge)"/>
+    <text x="20" y="55" font-size="42" font-weight="900" fill="#fff" letter-spacing="-1">1500 万 €</text>
+    <text x="20" y="95" font-size="20" font-weight="600" fill="#fff" opacity="0.95">最大罚款上限 (CRA)</text>
+  </g>
+
+  <!-- Small badge: 30 days -->
+  <g transform="translate(380, 380)">
+    <rect width="180" height="120" rx="8" fill="#18181b"/>
+    <text x="20" y="55" font-size="42" font-weight="900" fill="#fff">30 天</text>
+    <text x="20" y="95" font-size="20" font-weight="600" fill="#fff" opacity="0.9">完整落地指南</text>
+  </g>
+
+  <!-- Timeline (7 dots) -->
+  <g transform="translate(600, 410)">
+    <line x1="20" y1="40" x2="540" y2="40" stroke="#a1a1aa" stroke-width="2" stroke-dasharray="4 4"/>
+    <g font-size="13" font-weight="700" fill="#18181b" text-anchor="middle">
+      <circle cx="20" cy="40" r="6" fill="#dc2626"/>
+      <text x="20" y="20">2024-12</text>
+      <text x="20" y="68" font-weight="500" fill="#52525b">GPSR</text>
+
+      <circle cx="100" cy="40" r="5" fill="#a1a1aa"/>
+      <text x="100" y="20">2024-12</text>
+      <text x="100" y="68" font-weight="500" fill="#52525b">UKCA</text>
+
+      <circle cx="180" cy="40" r="5" fill="#a1a1aa"/>
+      <text x="180" y="20">2025-08</text>
+      <text x="180" y="68" font-weight="500" fill="#52525b">Batteries</text>
+
+      <circle cx="260" cy="40" r="5" fill="#a1a1aa"/>
+      <text x="260" y="20">2025-12</text>
+      <text x="260" y="68" font-weight="500" fill="#52525b">EUDR</text>
+
+      <circle cx="340" cy="40" r="5" fill="#a1a1aa"/>
+      <text x="340" y="20">2026-08</text>
+      <text x="340" y="68" font-weight="500" fill="#52525b">PPWR</text>
+
+      <circle cx="420" cy="40" r="5" fill="#a1a1aa"/>
+      <text x="420" y="20">2026-12</text>
+      <text x="420" y="68" font-weight="500" fill="#52525b">PLD</text>
+
+      <circle cx="500" cy="40" r="6" fill="#f59e0b"/>
+      <text x="500" y="20">2027-12</text>
+      <text x="500" y="68" font-weight="500" fill="#52525b">CRA</text>
+    </g>
+  </g>
+
+  <!-- Mid rule -->
+  <line x1="80" y1="555" x2="1162" y2="555" stroke="#d4d4d8" stroke-width="1"/>
+
+  <!-- 5 quick facts -->
+  <g transform="translate(80, 590)">
+    <text x="0" y="0" font-size="16" font-weight="700" fill="#18181b">5 维对比 · 8 部法规</text>
+    <text x="0" y="28" font-size="15" fill="#52525b">管什么 / 谁触发 / 时间 / 罚款 / 你要做的核心动作</text>
+  </g>
+  <g transform="translate(450, 590)">
+    <text x="0" y="0" font-size="16" font-weight="700" fill="#18181b">EUR-Lex 原文引用</text>
+    <text x="0" y="28" font-size="15" fill="#52525b">8 部法规 + 亚马逊官方公告 + LUCID/Citeo 公开数据</text>
+  </g>
+  <g transform="translate(820, 590)">
+    <text x="0" y="0" font-size="16" font-weight="700" fill="#18181b">30 天优先级清单</text>
+    <text x="0" y="28" font-size="15" fill="#52525b">紧急必做 → 包装平台 → 详情页 → 进阶合规</text>
+  </g>
+
+  <!-- Bottom black bar -->
+  <rect x="0" y="720" width="1242" height="80" fill="url(#blackBar)"/>
+  <text x="80" y="755" font-size="22" font-weight="800" fill="#fff" letter-spacing="1">7 LAWS + 5 DIMENSIONS + 30 DAYS</text>
+  <text x="80" y="782" font-size="15" font-weight="500" fill="#a1a1aa" letter-spacing="0.5">weiread.com · 全法规原文 + 行动清单 + 5 条学习路径</text>
+  <text x="1162" y="775" font-size="20" font-weight="900" fill="#fff" text-anchor="end">→</text>
+</svg>

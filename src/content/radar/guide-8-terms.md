@@ -36,13 +36,13 @@ example: false
 
 - **这是啥**:2024-12-13 全面生效的欧盟产品安全"总章程",要求所有非食品类消费品在欧盟销售时,**必须有一个"欧盟责任人(Responsible Person)"** —— 这个人 / 公司要在欧盟有真实地址,能替消费者和市场监管机构"兜底"。
 - **谁关心**:所有在 Amazon EU 卖非食品消费品的卖家(电子、玩具、家居、美妆、户外、宠物…);亚马逊后台专门有"EU Responsible Person"字段要填。
-- **什么时候管**:**现在就在管**。没填的 ASIN 已经被限流甚至下架,2024 年底就发生过大面积 listing 消失。详见 [GPSR 法规卡](/radar/eu-gpsr-responsible-person)。
+- **什么时候管**:**现在就在管**。没填的 ASIN 已经被限流甚至下架,2024 年底就发生过大面积 listing 消失。详见 [GPSR 法规卡](/eu/radar/eu-gpsr-responsible-person)。
 
 ### 2. CE(Conformité Européenne,欧合格证)
 
 - **这是啥**:**商品上的合格证**,证明这件产品符合欧盟的健康 / 安全 / 环保要求,可以合法在欧洲卖。**强制性**,几乎所有非食品电子 / 玩具 / 机械 / 医疗器械 / 个人防护装备都必须有。
 - **谁关心**:产品制造商 / 品牌方(贴 CE 标志的"责任人");亚马逊对缺 CE 的产品也会下架。
-- **什么时候管**:**上架前必须有**。CE 标志要打 5mm 高以上,详细怎么打见 [CE 标识怎么打](/radar/guide-ce-marking)。**注意"China Export"陷阱**:长得像 CE 但其实不是,详见那篇卡。
+- **什么时候管**:**上架前必须有**。CE 标志要打 5mm 高以上,详细怎么打见 [CE 标识怎么打](/eu/radar/guide-ce-marking)。**注意"China Export"陷阱**:长得像 CE 但其实不是,详见那篇卡。
 
 ### 3. EPR(Extended Producer Responsibility,生产者延伸责任)
 
@@ -60,7 +60,7 @@ example: false
 
 - **这是啥**:欧盟的"能效标签数据库",卖家要先把产品(空调、冰箱、灯泡、电视、烘干机…)信息登记到 EPREL,**系统生成一张能效标签二维码**,贴在产品包装上展示。
 - **谁关心**:卖带能效标签商品(大家电 / 灯具 / 冰箱 / 显示器 / 电子屏幕 / 轮胎等)的卖家;亚马逊后台也要求上传能效标签图。
-- **什么时候管**:**上架前**。没登记直接卖 → 罚款。详见 [EPREL 数据库更新要求](/radar/eu-eprel-energy-label)。
+- **什么时候管**:**上架前**。没登记直接卖 → 罚款。详见 [EPREL 数据库更新要求](/eu/radar/eu-eprel-energy-label)。
 
 ### 6. IOSS(Import One-Stop Shop,进口一站式申报机制)
 
@@ -72,7 +72,7 @@ example: false
 
 - **这是啥**:**2026-08-12 全面执行**的新包装法,替代原来的 94/62/EC 指令。要求包装物质含量(重金属 + PFAS)、最小化(空置容积 ≤ 50%)、标签(运营主体 + 批次追溯)、可回收等级(A/B/C)等多个维度全部合规。
 - **谁关心**:所有在欧盟卖带包装商品的卖家,包括亚马逊 / TEMU / 速卖通都已发通知。
-- **什么时候管**:**2026-08-12 起强制**。还有不到 14 个月窗口期,详见 [PPWR 法规卡](/radar/eu-ppwr-2025-40)。
+- **什么时候管**:**2026-08-12 起强制**。还有不到 14 个月窗口期,详见 [PPWR 法规卡](/eu/radar/eu-ppwr-2025-40)。
 
 ### 8. EUDR(EU Deforestation Regulation,欧盟反毁林法规)
 
@@ -112,7 +112,7 @@ example: false
 - PPWR(2026-08 前的物质 / 包装 / 标签准备)
 - EUDR(看你产品是否在 8 类里)
 
-> 想看完整 90 天排期,见 [90 天合规起步路线图](/radar/guide-seller-90days)。
+> 想看完整 90 天排期,见 [90 天合规起步路线图](/eu/radar/guide-seller-90days)。
 
 ## 常见问题
 
@@ -133,14 +133,14 @@ A:还有几个中频出现的:CRA(网络弹性法,2027 年生效,电子产品要
 
 ## 救命资源
 
-- [90 天合规起步路线图](/radar/guide-seller-90days)
-- [新卖家开店基础资料检查清单](/checklists/new-seller-basics)
-- [欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person)
-- [德国 LUCID 包装法与 EPR 注册](/radar/de-lucid-packaging)
-- [法国 EPR Triman 标识 + 唯一识别符](/radar/france-epr-triman)
-- [欧盟 EPREL 能效标签数据库](/radar/eu-eprel-energy-label)
-- [PPWR 包装新规 2026-08-12 全面适用](/radar/eu-ppwr-2025-40)
-- [欧盟能效标签 EPREL 数据库的更新要求](/radar/eu-eprel-energy-label)
+- [90 天合规起步路线图](/eu/radar/guide-seller-90days)
+- [新卖家开店基础资料检查清单](/eu/checklists/new-seller-basics)
+- [欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person)
+- [德国 LUCID 包装法与 EPR 注册](/eu/radar/de-lucid-packaging)
+- [法国 EPR Triman 标识 + 唯一识别符](/eu/radar/france-epr-triman)
+- [欧盟 EPREL 能效标签数据库](/eu/radar/eu-eprel-energy-label)
+- [PPWR 包装新规 2026-08-12 全面适用](/eu/radar/eu-ppwr-2025-40)
+- [欧盟能效标签 EPREL 数据库的更新要求](/eu/radar/eu-eprel-energy-label)
 - Amazon Seller Central — 卖家合规总览:[https://sellercentral.amazon.eu/help/hub/reference/external/G200389470](https://sellercentral.amazon.eu/help/hub/reference/external/G200389470)
 
 ## 核对日期

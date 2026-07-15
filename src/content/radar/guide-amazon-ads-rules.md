@@ -265,9 +265,9 @@ example: false
 
 ### 站内法规卡(广告相关)
 
-- [亚马逊广告 5 分钟入门:Sponsored Products 三个核心词搞懂就能开跑](/radar/guide-amazon-ads) —— 学会投广告之后,立刻学合规
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) —— 看清广告合规在整个合规体系里的位置
-- [亚马逊欧洲站 90 天合规起步路线图](/radar/guide-seller-90days) —— 知道广告合规在 90 天里什么时候做
+- [亚马逊广告 5 分钟入门:Sponsored Products 三个核心词搞懂就能开跑](/eu/radar/guide-amazon-ads) —— 学会投广告之后,立刻学合规
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) —— 看清广告合规在整个合规体系里的位置
+- [亚马逊欧洲站 90 天合规起步路线图](/eu/radar/guide-seller-90days) —— 知道广告合规在 90 天里什么时候做
 
 ### 站外工具(文案合规检测)
 

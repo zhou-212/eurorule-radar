@@ -396,9 +396,9 @@ example: false
 
 ### 站内法规卡(包装 + 合规相关)
 
-- [亚马逊欧洲站 90 天合规起步路线图](/radar/guide-seller-90days) —— 包装合规在第 2-3 周必做
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) —— 看 LUCID / EPR / GPSR 在整个合规体系里的位置
-- [德国 / 法国 / 意大利,我先开哪个](/radar/guide-pick-first-country) —— 德国先开 = 包装合规最早要做
+- [亚马逊欧洲站 90 天合规起步路线图](/eu/radar/guide-seller-90days) —— 包装合规在第 2-3 周必做
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) —— 看 LUCID / EPR / GPSR 在整个合规体系里的位置
+- [德国 / 法国 / 意大利,我先开哪个](/eu/radar/guide-pick-first-country) —— 德国先开 = 包装合规最早要做
 
 ### 站外工具(注册 + 检测)
 

@@ -180,7 +180,7 @@ example: false
 - 月销稳定 200+ 件 → 开 Pan-EU,让亚马逊自动分配库存
 - **别一上来就开 Pan-EU**——你还没卖动,亚马逊帮你分到 5 国仓 = 5 国仓储费
 
-> 关联:[德国 / 法国 / 意大利,我先开哪个](/radar/guide-pick-first-country) —— FBA 仓布局跟着"先开哪个国家"走。
+> 关联:[德国 / 法国 / 意大利,我先开哪个](/eu/radar/guide-pick-first-country) —— FBA 仓布局跟着"先开哪个国家"走。
 
 ### 坑 4:危险品 / 电池产品硬塞 FBA
 
@@ -211,9 +211,9 @@ example: false
 
 ### 站内法规卡(物流 + 合规相关)
 
-- [亚马逊欧洲站 90 天合规起步路线图](/radar/guide-seller-90days) —— 告诉你 **FBA 注册是第 1 周的事**——先把入仓准备做好
-- [德国 / 法国 / 意大利,我先开哪个](/radar/guide-pick-first-country) —— 决定你的 FBA 仓先发到哪个国家
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) —— **EPR 包装注册号是 FBA 入仓的前置条件**,没注册号,仓都进不去
+- [亚马逊欧洲站 90 天合规起步路线图](/eu/radar/guide-seller-90days) —— 告诉你 **FBA 注册是第 1 周的事**——先把入仓准备做好
+- [德国 / 法国 / 意大利,我先开哪个](/eu/radar/guide-pick-first-country) —— 决定你的 FBA 仓先发到哪个国家
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) —— **EPR 包装注册号是 FBA 入仓的前置条件**,没注册号,仓都进不去
 
 ### 站外工具(物流成本计算)
 

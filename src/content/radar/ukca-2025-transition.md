@@ -240,12 +240,12 @@ UKCA 标志是**独特的几何图形**(英国国旗意象 + UKCA 字母),跟 CE
 
 ## 相关规则
 
-- [欧盟 CE 标识到底怎么打:新手避坑指南 + China Export 标志 5 万欧罚款警告](/radar/guide-ce-marking)
-- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/radar/eu-gpsr-responsible-person)
-- [欧盟 DoC 合规声明怎么写:9 项必备内容 + 4 个常见错(模板直接抄)](/radar/guide-compliance-declaration)
+- [欧盟 CE 标识到底怎么打:新手避坑指南 + China Export 标志 5 万欧罚款警告](/eu/radar/guide-ce-marking)
+- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/eu/radar/eu-gpsr-responsible-person)
+- [欧盟 DoC 合规声明怎么写:9 项必备内容 + 4 个常见错(模板直接抄)](/eu/radar/guide-compliance-declaration)
 
 ## 相关清单
 
-- [产品上架前资料检查清单](/checklists/pre-listing-documents)
-- [新卖家开店基础资料检查清单](/checklists/new-seller-basics)
-- [收到平台合规通知后的 48 小时应对清单](/checklists/compliance-notice-48h)
+- [产品上架前资料检查清单](/eu/checklists/pre-listing-documents)
+- [新卖家开店基础资料检查清单](/eu/checklists/new-seller-basics)
+- [收到平台合规通知后的 48 小时应对清单](/eu/checklists/compliance-notice-48h)

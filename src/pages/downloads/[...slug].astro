@@ -1,0 +1,16 @@
+---
+/**
+ * 旧 /downloads/* 路径的 301 redirect 兜底
+ *   - /downloads 只有一个 index 页,没有子页面
+ *   - 这个 catch-all 兜底用户访问 /downloads/<任意>/ 的情况
+ */
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  // /downloads 暂时只有 index 页,没有子页面
+  return [];
+}
+
+const slug = Astro.params.slug;
+return Astro.redirect(`/eu/downloads/${slug}/`, 301);
+---

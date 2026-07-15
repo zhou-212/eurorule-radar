@@ -1,10 +1,10 @@
 ---
 import { getCollection, render } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getRiskClass, getStatusClass, getContentKindClass, SITE_DEFAULTS } from '../../lib/radar';
-import { formatDate, daysFromNow } from '../../lib/date';
-import RadarCard from '../../components/RadarCard.astro';
-import { withBase, siteAsDir } from '../../lib/url';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getRiskClass, getStatusClass, getContentKindClass, SITE_DEFAULTS } from '../../../lib/radar';
+import { formatDate, daysFromNow } from '../../../lib/date';
+import RadarCard from '../../../components/RadarCard.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
 
 export async function getStaticPaths() {
   const all = await getCollection('radar', ({ data }) => !data.draft);
@@ -216,7 +216,7 @@ const articleJsonLd = {
     <nav class="breadcrumb" aria-label="面包屑">
       <a href={withBase('/')}>首页</a>
       <span class="breadcrumb-sep">/</span>
-      <a href={withBase('/radar/')}>规则雷达</a>
+      <a href={withBase('/eu/radar/')}>规则雷达</a>
       <span class="breadcrumb-sep">/</span>
       <span>{d.title}</span>
     </nav>
@@ -389,15 +389,15 @@ const articleJsonLd = {
     <section class="related">
       <h2>相关清单</h2>
       <ul class="related-list">
-        <li><a href={withBase('/checklists/new-seller-basics/')}>亚马逊欧洲站新卖家基础资料检查清单</a></li>
-        <li><a href={withBase('/checklists/pre-listing-documents/')}>产品上架前资料检查清单</a></li>
-        <li><a href={withBase('/checklists/compliance-notice-48h/')}>收到平台合规通知后的 48 小时应对清单</a></li>
+        <li><a href={withBase('/eu/checklists/new-seller-basics/')}>亚马逊欧洲站新卖家基础资料检查清单</a></li>
+        <li><a href={withBase('/eu/checklists/pre-listing-documents/')}>产品上架前资料检查清单</a></li>
+        <li><a href={withBase('/eu/checklists/compliance-notice-48h/')}>收到平台合规通知后的 48 小时应对清单</a></li>
       </ul>
     </section>
 
     <div class="notice notice-info related">
       <strong>操作建议:</strong>完成本规则的"你现在要做什么"清单后,到
-      <a href={withBase('/checklists/compliance-notice-48h/')}>《48 小时应对清单》</a>
+      <a href={withBase('/eu/checklists/compliance-notice-48h/')}>《48 小时应对清单》</a>
       登记你的执行进度,有助于团队协作和复盘。
     </div>
 
@@ -425,7 +425,7 @@ const articleJsonLd = {
           想确认这条规则跟你有没有关系?去做
           <a href={withBase('/self-check/')}>适不适合自检</a> ·
           头 30 天不知道从哪开始?看
-          <a href={withBase('/checklists/first-30-days-survival/')}>新手救命清单</a>
+          <a href={withBase('/eu/checklists/first-30-days-survival/')}>新手救命清单</a>
         </p>
       </div>
 
@@ -451,7 +451,7 @@ const articleJsonLd = {
             </a>
           </li>
           <li>
-            <a href={withBase('/checklists/first-30-days-survival/')}>
+            <a href={withBase('/eu/checklists/first-30-days-survival/')}>
               <span class="beginner-next-emoji" aria-hidden="true">🆘</span>
               <span class="beginner-next-text">
                 <strong>头 30 天救命清单</strong>
@@ -504,12 +504,12 @@ const articleJsonLd = {
           )}
           <tr>
             <td>规则中心</td>
-            <td><a href={withBase('/radar/')}>所有规则雷达</a></td>
+            <td><a href={withBase('/eu/radar/')}>所有规则雷达</a></td>
             <td><code>站内</code></td>
           </tr>
           <tr>
             <td>清单中心</td>
-            <td><a href={withBase('/checklists/')}>执行清单</a></td>
+            <td><a href={withBase('/eu/checklists/')}>执行清单</a></td>
             <td><code>站内</code></td>
           </tr>
         </tbody>

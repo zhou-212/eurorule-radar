@@ -1,9 +1,9 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import CalendarEvent from '../components/CalendarEvent.astro';
-import calendarData from '../content/calendar/events.json';
-import { daysFromNow, bucketByUrgency, urgencyLabels } from '../lib/date';
-import { withBase, siteAsDir } from '../lib/url';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import CalendarEvent from '../../components/CalendarEvent.astro';
+import calendarData from '../../content/calendar/events.json';
+import { daysFromNow, bucketByUrgency, urgencyLabels } from '../../lib/date';
+import { withBase, siteAsDir } from '../../lib/url';
 
 // =============================================================================
 // 日历内容策略
@@ -62,7 +62,7 @@ const breadcrumb = {
       未来 90 天的合规节点、平台复核窗口和重要截止日期。本日历
       <strong>只展示已核实、有官方原始来源的真实节点</strong>;未核实的日期不会上线,以避免误导。
       运营正在分批核实真实节点;暂未发布的近期截止日请直接
-      <a href={withBase('/radar/')}>查看规则卡片</a>或<strong>定期回访本站</strong>。
+      <a href={withBase('/eu/radar/')}>查看规则卡片</a>或<strong>定期回访本站</strong>。
     </p>
 
     {realEvents.length > 0 && (

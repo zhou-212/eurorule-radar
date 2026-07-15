@@ -1,9 +1,9 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import RadarCard from '../../components/RadarCard.astro';
-import { getRadarRules, getContentKindKey, type ContentKind } from '../../lib/radar-source';
-import { SITE_DEFAULTS } from '../../lib/radar';
-import { withBase, siteAsDir } from '../../lib/url';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import RadarCard from '../../../components/RadarCard.astro';
+import { getRadarRules, getContentKindKey, type ContentKind } from '../../../lib/radar-source';
+import { SITE_DEFAULTS } from '../../../lib/radar';
+import { withBase, siteAsDir } from '../../../lib/url';
 
 // 数据源切换:getCollection('radar') → getRadarRules()(优先 API,失败 fallback 静态)
 let radars: Awaited<ReturnType<typeof getRadarRules>> = [];

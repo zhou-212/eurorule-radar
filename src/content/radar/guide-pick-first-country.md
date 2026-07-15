@@ -81,7 +81,7 @@ Triman 容易出错的地方:
 
 **所以**:如果你不熟悉 Triman,先开德国 / 意大利,**法国站开通前 1 个月再仔细学 Triman 规则**,能省一笔学费。
 
-> 详见 [法国 EPR Triman 标识 + 唯一识别符](/radar/france-epr-triman)
+> 详见 [法国 EPR Triman 标识 + 唯一识别符](/eu/radar/france-epr-triman)
 
 ### 3. 意大利 = 合规相对轻,但流量小,适合"练手"
 
@@ -136,15 +136,15 @@ A:正常流程 4-8 周(找德国本地税务代理,如 TAXFOCUSS、Scholz & Part
 A:**反过来,更贵**。一个国家 VAT 注册费约 800-1500 欧元;三国一起,很多代理给"打包价"2000-3500 欧元(平均节省 10-20%)。但**时间更长**(3 国都要跑流程,可能 8-12 周)。建议**先做德国,做出销量后再加另两国**(反正补申请一样)。
 
 **Q6:Triman 标志可以"先不做,等亚马逊提醒再做"吗?**
-A:**不行**。法国亚马逊后台**不主动提醒** Triman 缺失,但**法国市场监管机构(DGCCRF)会主动抽查**。一旦发现 listing 有法国销售 + 缺 Triman,直接罚款(2024 年案例:单个 SKU €5,000-€15,000)。详见 [法国 EPR Triman](/radar/france-epr-triman)。
+A:**不行**。法国亚马逊后台**不主动提醒** Triman 缺失,但**法国市场监管机构(DGCCRF)会主动抽查**。一旦发现 listing 有法国销售 + 缺 Triman,直接罚款(2024 年案例:单个 SKU €5,000-€15,000)。详见 [法国 EPR Triman](/eu/radar/france-epr-triman)。
 
 ## 救命资源
 
-- [德国 LUCID 包装法与 EPR 注册](/radar/de-lucid-packaging)
-- [法国 EPR Triman 标识 + 唯一识别符](/radar/france-epr-triman)
-- [90 天合规起步路线图](/radar/guide-seller-90days)
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms)
-- [新卖家开店基础资料检查清单](/checklists/new-seller-basics)
+- [德国 LUCID 包装法与 EPR 注册](/eu/radar/de-lucid-packaging)
+- [法国 EPR Triman 标识 + 唯一识别符](/eu/radar/france-epr-triman)
+- [90 天合规起步路线图](/eu/radar/guide-seller-90days)
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms)
+- [新卖家开店基础资料检查清单](/eu/checklists/new-seller-basics)
 - Amazon EU 新卖家入驻流程:[https://sell.amazon.com/europe](https://sell.amazon.com/europe)
 - verpackungsregister.org(LUCID 注册):[https://verpackungsregister.org](https://verpackungsregister.org)
 

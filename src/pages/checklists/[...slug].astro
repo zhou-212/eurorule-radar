@@ -1,0 +1,13 @@
+---
+/**
+ * 旧 /checklists/* 路径的 301 redirect 兜底
+ */
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const lists = await getCollection('checklists');
+  return lists.map((l) => ({ params: { slug: l.slug } }));
+}
+
+const slug = Astro.params.slug;
+return Astro.redirect(`/eu/checklists/${slug}/`, 301);

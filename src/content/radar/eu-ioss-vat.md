@@ -85,8 +85,8 @@ A:月度向中介或欧盟成员国税务局申报 VAT,季度结算。
 
 ## 相关规则
 
-- [德国包装法 LUCID 与 EPR 注册:亚马逊德国站卖家必填](/radar/de-lucid-packaging)
+- [德国包装法 LUCID 与 EPR 注册:亚马逊德国站卖家必填](/eu/radar/de-lucid-packaging)
 
 ## 相关清单
 
-- [亚马逊欧洲站新卖家基础资料检查清单](/checklists/new-seller-basics)
+- [亚马逊欧洲站新卖家基础资料检查清单](/eu/checklists/new-seller-basics)

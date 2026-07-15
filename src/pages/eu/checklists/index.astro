@@ -1,8 +1,8 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import ChecklistCard from '../../components/ChecklistCard.astro';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ChecklistCard from '../../../components/ChecklistCard.astro';
 import { getCollection } from 'astro:content';
-import { withBase, siteAsDir } from '../../lib/url';
+import { withBase, siteAsDir } from '../../../lib/url';
 
 const checklists = (await getCollection('checklists'))
   .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate);

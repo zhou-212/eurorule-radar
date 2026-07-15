@@ -218,10 +218,10 @@ A:**要看 OEM 工厂给的资料**:
 
 ## 救命资源
 
-- [欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person) — GPSR 和 CE 标志配合
-- [欧盟 CRA 网络弹性法 2024-2847](/radar/eu-cra-2024-2847) — 联网设备的 CE 额外要求
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) — 入门必备
-- [产品上架前资料检查清单](/checklists/pre-listing-documents)
+- [欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person) — GPSR 和 CE 标志配合
+- [欧盟 CRA 网络弹性法 2024-2847](/eu/radar/eu-cra-2024-2847) — 联网设备的 CE 额外要求
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) — 入门必备
+- [产品上架前资料检查清单](/eu/checklists/pre-listing-documents)
 - European Commission CE Marking 官方介绍:[https://single-market-economy.ec.europa.eu/single-market/ce-marking_en](https://single-market-economy.ec.europa.eu/single-market/ce-marking_en)
 - EUR-Lex Decision 768/2008/EC(CE 标志规范):[https://eur-lex.europa.eu/eli/dec/2008/768/oj](https://eur-lex.europa.eu/eli/dec/2008/768/oj)
 - EUR-Lex Regulation (EC) 765/2008(CE 标志执行):[https://eur-lex.europa.eu/eli/reg/2008/765/oj](https://eur-lex.europa.eu/eli/reg/2008/765/oj)

@@ -7,9 +7,9 @@
  * 不是公开 landing(SEO 不友好但用户自己用方便)
  * ------------------------------------------------------------
  */
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { withBase, siteAsDir } from '../../lib/url';
-import { buildPromoteBundle, type Platform } from '../../lib/promote-config';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+import { buildPromoteBundle, type Platform } from '../../../lib/promote-config';
 
 const siteStr = siteAsDir(Astro.site);
 const bundle = buildPromoteBundle();

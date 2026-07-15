@@ -11,7 +11,7 @@ interface Props {
 
 const { entry, showDate = 'updated' } = Astro.props;
 const d = entry.data;
-const href = withBase(`/radar/${entry.id.replace(/\.(md|mdx)$/, '')}/`);
+const href = withBase(`/eu/radar/${entry.id.replace(/\.(md|mdx)$/, '')}/`);
 const date = showDate === 'effective' ? d.effectiveDate : showDate === 'deadline' ? d.deadlineDate : d.verifiedDate;
 const dateLabel = showDate === 'effective' ? '生效' : showDate === 'deadline' ? '截止' : '核对';
 ---

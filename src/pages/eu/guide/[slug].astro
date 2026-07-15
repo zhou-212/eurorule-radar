@@ -24,14 +24,14 @@
  * ------------------------------------------------------------
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import RadarCard from '../../components/RadarCard.astro';
-import ChecklistCard from '../../components/ChecklistCard.astro';
-import EmailSubscribe from '../../components/EmailSubscribe.astro';
-import { withBase, siteAsDir } from '../../lib/url';
-import { SITE_DEFAULTS } from '../../lib/radar';
-import { formatDate } from '../../lib/date';
-import { buildGuidesConfig, type GuideConfig } from '../../lib/guide-config';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import RadarCard from '../../../components/RadarCard.astro';
+import ChecklistCard from '../../../components/ChecklistCard.astro';
+import EmailSubscribe from '../../../components/EmailSubscribe.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+import { SITE_DEFAULTS } from '../../../lib/radar';
+import { formatDate } from '../../../lib/date';
+import { buildGuidesConfig, type GuideConfig } from '../../../lib/guide-config';
 
 /* ============================================================
    getStaticPaths:为每个 slug 聚合内容
@@ -154,7 +154,7 @@ const articleJsonLd = {
     <nav class="breadcrumb" aria-label="面包屑">
       <a href={withBase('/')}>首页</a>
       <span class="breadcrumb-sep">/</span>
-      <a href={withBase('/guide/')}>入门指南</a>
+      <a href={withBase('/eu/guide/')}>入门指南</a>
       <span class="breadcrumb-sep">/</span>
       <span>{config.shortName}</span>
     </nav>
@@ -179,7 +179,7 @@ const articleJsonLd = {
         </div>
         <p class="guide-link-row">
           👉 看完整法规细节 →
-          <a href={withBase(`/radar/${primary.id.replace(/\.(md|mdx)$/, '')}/`)}>
+          <a href={withBase(`/eu/radar/${primary.id.replace(/\.(md|mdx)$/, '')}/`)}>
             {primary.data.title}
           </a>
         </p>
@@ -208,7 +208,7 @@ const articleJsonLd = {
             const id = r.id.replace(/\.(md|mdx)$/, '');
             return (
               <li>
-                <a href={withBase(`/radar/${id}/`)}>{r.data.title}</a>
+                <a href={withBase(`/eu/radar/${id}/`)}>{r.data.title}</a>
                 <span class="guide-link-meta"> · {r.data.summary.slice(0, 60)}…</span>
               </li>
             );

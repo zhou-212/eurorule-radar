@@ -7,9 +7,9 @@
  * 用对比矩阵 + 4 种卖家画像 1 屏判断"我属于哪种情况",SEO 价值高。
  * ------------------------------------------------------------
  */
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { withBase, siteAsDir } from '../../lib/url';
-import { buildComparesConfig } from '../../lib/compare-config';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+import { buildComparesConfig } from '../../../lib/compare-config';
 
 const siteStr = siteAsDir(Astro.site);
 
@@ -67,7 +67,7 @@ const breadcrumb = {
       直接做我们的
       <a href={withBase('/self-check/')}>「影响自测」</a>
       (3 步判断要不要做欧洲站),或从
-      <a href={withBase('/guide/start/')}>「新手起步」</a>
+      <a href={withBase('/eu/guide/start/')}>「新手起步」</a>
       开始走 90 天合规路线。
     </div>
   </div>

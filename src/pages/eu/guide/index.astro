@@ -6,8 +6,8 @@
  * 此页面纯新增,不影响 RSS / search.json / 现有 Radar 详情。
  * ------------------------------------------------------------
  */
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { withBase, siteAsDir } from '../../lib/url';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
 
 const siteStr = siteAsDir(Astro.site);
 
@@ -76,7 +76,7 @@ const breadcrumb = {
     <div class="notice notice-info">
       <strong>提示:</strong>每个指南页都汇总了相关 Radar 详情卡 + 新手入门课 + 行动清单,
       加上"如何行动 5 步"+"常见问题 3-5 个 Q&A"。建议从
-      <a href={withBase('/guide/start/')}>「新手起步」</a>
+      <a href={withBase('/eu/guide/start/')}>「新手起步」</a>
       开始,按路线图 90 天走完基本合规。
     </div>
   </div>

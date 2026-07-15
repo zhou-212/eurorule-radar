@@ -6,9 +6,9 @@
  * ------------------------------------------------------------
  */
 import { getCollection } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { withBase, siteAsDir } from '../../lib/url';
-import { buildLearningPaths, type LearnPath } from '../../lib/learning-paths';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+import { buildLearningPaths, type LearnPath } from '../../../lib/learning-paths';
 
 export async function getStaticPaths() {
   const PATHS: LearnPath[] = buildLearningPaths();
@@ -75,7 +75,7 @@ const totalSteps = p.steps.filter((s) => !s.isOptional).length;
     <nav class="breadcrumb" aria-label="面包屑">
       <a href={withBase('/')}>首页</a>
       <span class="breadcrumb-sep">/</span>
-      <a href={withBase('/learn/')}>学习路径</a>
+      <a href={withBase('/eu/learn/')}>学习路径</a>
       <span class="breadcrumb-sep">/</span>
       <span>{p.title}</span>
     </nav>
@@ -153,11 +153,11 @@ const totalSteps = p.steps.filter((s) => !s.isOptional).length;
           <span class="learn-next-tag">影响自测</span>
           <p>3 步判断欧洲站适不适合你做,30 秒出结果。</p>
         </a>
-        <a class="learn-next-tile" href={withBase('/downloads/')}>
+        <a class="learn-next-tile" href={withBase('/eu/downloads/')}>
           <span class="learn-next-tag">合规清单 PDF</span>
           <p>下载一份完整的合规清单,留 email 拿周报更新。</p>
         </a>
-        <a class="learn-next-tile" href={withBase('/compare/')}>
+        <a class="learn-next-tile" href={withBase('/eu/compare/')}>
           <span class="learn-next-tag">对比指南</span>
           <p>10 张对比页,高频搜索问题 1 屏判断。</p>
         </a>

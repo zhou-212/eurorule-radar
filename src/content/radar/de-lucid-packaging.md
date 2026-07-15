@@ -88,10 +88,10 @@ A:不一样。法国有自己的 EPR 注册机构(Citeo、Syderep 等),号码独
 
 ## 相关规则
 
-- [法国 EPR 包装与纺织品回收编号要求(2024 强化版)](/radar/france-epr-triman)
-- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/radar/eu-gpsr-responsible-person)
+- [法国 EPR 包装与纺织品回收编号要求(2024 强化版)](/eu/radar/france-epr-triman)
+- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/eu/radar/eu-gpsr-responsible-person)
 
 ## 相关清单
 
-- [亚马逊欧洲站新卖家基础资料检查清单](/checklists/new-seller-basics)
-- [产品上架前资料检查清单](/checklists/pre-listing-documents)
+- [亚马逊欧洲站新卖家基础资料检查清单](/eu/checklists/new-seller-basics)
+- [产品上架前资料检查清单](/eu/checklists/pre-listing-documents)

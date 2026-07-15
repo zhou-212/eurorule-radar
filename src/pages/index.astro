@@ -1,1121 +1,321 @@
 ---
+/**
+ * 站首页 weiread.com/
+ * ------------------------------------------------------------
+ * 6 分区总览入口。欧规雷达是 live,其他 5 个 planned。
+ * 不堆内容,聚焦"我能从这里去哪里"。
+ */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import RadarCard from '../components/RadarCard.astro';
-import ChecklistCard from '../components/ChecklistCard.astro';
-import CalendarEvent from '../components/CalendarEvent.astro';
-import SubscribeForm from '../components/SubscribeForm.astro';
-import { getCollection } from 'astro:content';
-import calendarData from '../content/calendar/events.json';
-import { SITE_DEFAULTS, getRiskClass } from '../lib/radar';
-import { daysFromNow, formatDate } from '../lib/date';
+import { SECTIONS } from '../lib/sections';
 import { withBase, siteAsDir } from '../lib/url';
 import { getRadarRules, getContentKindKey } from '../lib/radar-source';
 
-// 数据源切换:getCollection('radar') → getRadarRules()
-// getRadarRules 内部:API 成功用 API 数据;任何 error → fallback 到静态 content 集合。
-// 顶层 try/catch 兜底 —— 万一 fallback 自身抛错(理论上不会),也降级到空数组,
-let radars: Awaited<ReturnType<typeof getRadarRules>> = [];
-try {
-  radars = await getRadarRules();
-} catch (err) {
-  // eslint-disable-next-line no-console
-  console.error('[index.astro] getRadarRules failed, rendering empty:', (err as Error).message);
-  radars = [];
-}
-
-// 内容时效原则:
-//   - "近期更新":必须有官方原始来源 + 核对日期 + 具体更新,缺一不可。
-//   - 当前所有规则都是 2026-01 核对的"基础规则",不属于"近期更新"。
-//   - 因此首页只展示"基础规则",绝不为了凑数把基础规则贴"近期更新"标签。
-// 派生逻辑用 `getContentKindKey(r) === 'update'` 风格(英文键,对应后端 API
-// contentKind 字段);`data.contentKind` 仍是中文展示值(给 RadarCard.astro
-// 渲染徽标,锁定文件不能改)。
-const recentUpdates = radars.filter((r) => getContentKindKey(r) === 'update');
-// 顶部紧凑区块:最多 3 张"近期更新"卡片,带"距 effectiveDate 的天数"
-// 没有时不渲染整个 section(留出空状态说明给下方"近期更新(已核对)"区块)
-const recentUpdatesTop3 = recentUpdates.slice(0, 3);
-const basicRules = radars.filter((r) => getContentKindKey(r) === 'basic');
-const basicFeatured = basicRules.filter((r) => r.data.featured).slice(0, 3);
-const basicOthers = basicRules.filter((r) => !r.data.featured).slice(0, 3);
-
-const checklists = (await getCollection('checklists'))
-  .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate)
-  .slice(0, 3);
-
-// 日历:默认只看真实 (非示例) 且未过期 的事件
-const upcomingAll = calendarData
-  .filter((e) => daysFromNow(e.date) >= 0)
-  .sort((a, b) => +new Date(a.date) - +new Date(b.date));
-const realUpcoming = upcomingAll.filter((e) => !e.isExample).slice(0, 4);
-
-// 绝对 URL helper (用于 JSON-LD):SITE 已包含 project path(Astro 自动)
 const siteStr = siteAsDir(Astro.site);
 
-// 首页搜索:/search.json 端点的 BASE-aware 路径(由另一个 agent 提供端点,
-// 这里只消费 URL 字符串,不耦合实现)。空字符串表示 BASE 解析失败(降级到相对路径)。
-const searchJsonUrl = withBase('/search.json');
-// 详情页 BASE-aware 路径前缀(用于客户端构造 /radar/<slug>/)
-const radarBaseHref = withBase('/radar/');
+// 拉欧规最新 3 张"近期更新"卡片(只在站首页展示欧规)
+let recentUpdates: any[] = [];
+try {
+  const radars = await getRadarRules();
+  recentUpdates = radars
+    .filter((r: any) => getContentKindKey(r) === 'update')
+    .slice(0, 3);
+} catch (e) {
+  // ignore
+}
+
+const liveSections = SECTIONS.filter((s) => s.status === 'live');
+const plannedSections = SECTIONS.filter((s) => s.status !== 'live');
 
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@graph': [
-    {
-      '@type': 'WebSite',
-      name: SITE_DEFAULTS.name,
-      alternateName: SITE_DEFAULTS.enName,
-      url: siteStr || undefined,
-      description: SITE_DEFAULTS.description,
-      inLanguage: 'zh-CN',
-      potentialAction: {
-        '@type': 'SearchAction',
-        target: siteStr ? `${siteStr}radar?q={search_term_string}` : undefined,
-        'query-input': 'required name=search_term_string',
-      },
-    },
-    {
-      '@type': 'Organization',
-      name: SITE_DEFAULTS.name,
-      url: siteStr || undefined,
-      logo: siteStr ? `${siteStr}favicon.svg` : undefined,
-    },
-  ],
+  '@type': 'WebSite',
+  name: 'weiread',
+  url: siteStr || undefined,
+  description: '读 + 算 + 查 + 用 — 一个域名,几乎所有日常需要的网络服务。',
+  inLanguage: 'zh-CN',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: siteStr ? `${siteStr}eu/radar/?q={search_term_string}` : undefined,
+    'query-input': 'required name=search_term_string',
+  },
 };
 ---
 
 <BaseLayout
-  title="欧规雷达 · 亚马逊欧洲站规则变化追踪与执行清单"
-  description={SITE_DEFAULTS.description}
+  title="weiread · 读 + 算 + 查 + 用,几乎所有日常需要的网络服务"
+  description="一站式读、写、算、查、用工具平台。欧规雷达 / 法规通 / 工具集 / 读 / 学 / 帮 — 一个域名,几乎所有日常需要。"
   jsonLd={jsonLd}
 >
-  <!-- ============================================
-       老手模式 Hero(默认/现状)
-       - 标题强调"公告变清单",适合已有经验的老卖家
-       - 含搜索框(下拉浮在 hero 之外)
-       ============================================ -->
-  <section class="section hero" data-show-on="expert" aria-labelledby="hero-expert-title">
+  <section class="home-hero">
     <div class="container">
-      <p class="hero-eyebrow">面向中国亚马逊欧洲站中小卖家</p>
-      <h1 id="hero-expert-title" class="hero-title">欧洲站规则更新太快?把公告变成你今天能完成的行动清单。</h1>
-      <p class="hero-sub">追踪亚马逊欧洲站、欧盟法规、成员国官方公告 → 判断是否影响你的店铺、类目和库存 → 输出今天能做的行动 + 截止日期。</p>
-      <div class="hero-cta">
-        <a href={withBase('/radar/')} class="btn btn-primary">免费查看本周规则</a>
-        <a href={withBase('/self-check/')} class="btn btn-secondary">3 题判断你需要关注什么</a>
-      </div>
-      <ul class="hero-points">
-        <li>✓ 中文整理,无术语堆砌</li>
-        <li>✓ 每条规则附原始来源与核对日期</li>
-        <li>✓ 明确区分"已生效"vs"示例内容"</li>
-        <li>✓ 行动清单可勾选、可打印</li>
-      </ul>
-
-      <!-- 首页搜索(消费 /search.json 端点,客户端过滤) — 仅老手模式 -->
-      <div
-        class="radar-search"
-        data-radar-search-root
-        data-search-url={searchJsonUrl}
-        data-radar-base={radarBaseHref}
-      >
-        <label for="radar-search-input" class="sr-only">搜索规则</label>
-        <div class="radar-search-input-wrap">
-          <svg
-            class="radar-search-icon"
-            viewBox="0 0 24 24"
-            width="20"
-            height="20"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2" />
-            <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          </svg>
-          <input
-            type="search"
-            id="radar-search-input"
-            class="input radar-search-input"
-            placeholder="搜索法规、产品名、关键词…"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            inputmode="search"
-            enterkeyhint="search"
-            aria-autocomplete="list"
-            aria-expanded="false"
-            aria-controls="radar-search-results"
-            aria-activedescendant=""
-          />
-        </div>
-        <div
-          id="radar-search-results"
-          class="radar-search-results"
-          role="listbox"
-          aria-label="搜索结果"
-          hidden
-        ></div>
-        <p class="radar-search-help sr-only" id="radar-search-help">
-          输入时显示前 5 条匹配规则;按上下键切换,Enter 打开,Esc 关闭。
-        </p>
+      <p class="home-eyebrow">📖 一个域名,几乎所有日常需要</p>
+      <h1 class="home-title">
+        <span class="home-title-grad">weiread</span>
+      </h1>
+      <p class="home-sub">
+        读 · 算 · 查 · 用 — 从内容到工具,从一个分区到下一个分区,大部分日常需要都在一个域名下解决。
+      </p>
+      <div class="home-cta-row">
+        <a class="btn btn-primary btn-lg" href="/eu/">🇪🇺 进入欧规雷达(已上线)</a>
+        <a class="btn btn-secondary btn-lg" href="#sections">浏览所有分区</a>
       </div>
     </div>
   </section>
 
-  <!-- ============================================
-       新手模式 Hero(完全不同的视觉与文案)
-       - 浅黄→浅绿渐变底,品牌色 token 已自动切换
-       - 2 个大 CTA:测一下 / 看 5 步走
-       ============================================ -->
-  <section class="section hero-beginner" data-show-on="beginner" aria-labelledby="hero-beginner-title">
+  <section id="sections" class="home-sections">
     <div class="container">
-      <p class="hero-beginner-eyebrow">🌱 新手起步 · 第一次卖欧洲站</p>
-      <h1 id="hero-beginner-title" class="hero-beginner-title">我是新手, 怎么开始卖欧洲站?</h1>
-      <p class="hero-beginner-sub">3 步测你适不适合, 5 篇文章带你上路, 8 个名词先搞懂 —— 别急着啃法规, 先把节奏走顺。</p>
-      <div class="hero-beginner-cta">
-        <a href={withBase('/self-check/')} class="btn btn-beginner-primary">🌱 我是新手, 测一下</a>
-        <a href={withBase('/radar/guide-seller-90days/')} class="btn btn-beginner-secondary">📚 看新手起步 5 步走</a>
+      <h2 class="home-h2">所有分区</h2>
+      <p class="home-h2-sub">6 个分区,逐个上线中</p>
+
+      <div class="sections-grid">
+        {liveSections.map((s) => (
+          <a class="section-tile section-tile-live" href={s.href} style={`--tile-accent: ${s.accent}`}>
+            <div class="section-tile-head">
+              <span class="section-tile-icon">{s.icon}</span>
+              <span class="section-tile-badge">已上线</span>
+            </div>
+            <h3 class="section-tile-title">{s.title}</h3>
+            <p class="section-tile-tagline">{s.tagline}</p>
+            <div class="section-tile-stats">
+              <span class="section-tile-stat">28 张规则卡</span>
+              <span class="section-tile-stat">13 张对比</span>
+              <span class="section-tile-stat">6 条学习路径</span>
+            </div>
+            <span class="section-tile-cta">进入 →</span>
+          </a>
+        ))}
+
+        {plannedSections.map((s) => (
+          <div class="section-tile section-tile-coming" style={`--tile-accent: ${s.accent}`}>
+            <div class="section-tile-head">
+              <span class="section-tile-icon">{s.icon}</span>
+              <span class="section-tile-badge">即将</span>
+            </div>
+            <h3 class="section-tile-title">{s.title}</h3>
+            <p class="section-tile-tagline">{s.tagline}</p>
+            <div class="section-tile-stats">
+              <span class="section-tile-stat">规划中</span>
+            </div>
+            <span class="section-tile-cta section-tile-cta-disabled">筹备中</span>
+          </div>
+        ))}
       </div>
-      <ul class="hero-beginner-points">
-        <li>✓ 30 分钟起步, 不需要先懂法规</li>
-        <li>✓ 全程中文 + 大白话, 没用过也看得懂</li>
-        <li>✓ 每步都给"今天能做什么"的具体动作</li>
-        <li>✓ 走完能直接进欧洲站后台操作</li>
-      </ul>
     </div>
   </section>
 
-  <!-- ============================================
-       老手模式专属:近期更新(紧凑卡片,最多 3 张)
-       新手模式:不展示,改推下面的"新手起步 5 步走"
-       ============================================ -->
-  {recentUpdatesTop3.length > 0 && (
-    <section class="section section-tight section-bg" id="recent-top" aria-labelledby="recent-top-title" data-show-on="expert">
+  {recentUpdates.length > 0 && (
+    <section class="home-recent">
       <div class="container">
-        <div class="section-head">
-          <h2 id="recent-top-title">🆕 近期更新</h2>
-          <a href={withBase('/radar/')} class="section-head-link">查看全部 →</a>
+        <div class="home-recent-head">
+          <h2 class="home-h2">🇪🇺 欧规雷达 · 最新更新</h2>
+          <a class="home-recent-more" href={withBase('/eu/radar/')}>查看全部 →</a>
         </div>
-        <div class="grid grid-3">
-          {recentUpdatesTop3.map((r) => {
-            const slug = r.id.replace(/\.(md|mdx)$/, '');
-            const href = withBase(`/radar/${slug}/`);
-            const eff = r.data.effectiveDate;
-            const days = eff ? daysFromNow(eff) : null;
-            const dayText =
-              days === null
-                ? '持续关注'
-                : days > 0
-                  ? `还有 ${days} 天`
-                  : days === 0
-                    ? '今天生效'
-                    : `已生效 ${-days} 天`;
-            return (
-              <a href={href} class="card card-hover recent-mini">
-                <div class="recent-mini-top">
-                  <span class={`risk ${getRiskClass(r.data.riskLevel)}`}>风险:{r.data.riskLevel}</span>
-                  <span class={`recent-mini-days ${days !== null && days <= 14 && days >= 0 ? 'is-urgent' : days !== null && days < 0 ? 'is-past' : ''}`}>{dayText}</span>
-                </div>
-                <h3 class="recent-mini-title">{r.data.title}</h3>
-                {eff && (
-                  <p class="recent-mini-eff">
-                    生效日期:<time datetime={eff.toISOString()}>{formatDate(eff)}</time>
-                  </p>
-                )}
-              </a>
-            );
-          })}
+        <div class="recent-grid">
+          {recentUpdates.map((r: any) => (
+            <a class="recent-card" href={withBase(`/eu/radar/${r.slug || r.id}/`)}>
+              <div class="recent-card-tags">
+                <span class={`risk risk-${r.data.riskLevel === '高' ? 'high' : r.data.riskLevel === '中' ? 'mid' : 'low'}`}>
+                  {r.data.riskLevel}
+                </span>
+                <span class="status-tag">{r.data.status}</span>
+              </div>
+              <h3 class="recent-card-title">{r.data.title}</h3>
+              <p class="recent-card-summary">{r.data.summary}</p>
+              <div class="recent-card-meta">
+                <time>{r.data.verifiedDate}</time>
+                {r.data.deadlineDate && <span class="recent-card-deadline">📅 {r.data.deadlineDate}</span>}
+              </div>
+            </a>
+          ))}
         </div>
       </div>
     </section>
   )}
 
-  <!-- ============================================
-       新手模式专属:🌱 新手起步 5 步走
-       5 张卡片,每张是一个 guide-* 详情页
-       每张有数字徽标 + 标题 + 一句话简介 + 阅读时长
-       ============================================ -->
-  <section class="section section-tight" data-show-on="beginner" aria-labelledby="beginner-5steps-title">
+  <section class="home-about">
     <div class="container">
-      <div class="beginner-block beginner-5steps">
-        <div class="beginner-block-header">
-          <span class="beginner-block-icon" aria-hidden="true">🌱</span>
-          <h2 class="beginner-block-title" id="beginner-5steps-title">新手起步 5 步走</h2>
-        </div>
-        <p class="beginner-block-sub">按顺序读,每周 1-2 篇,大约 3-4 周走完。第一步就决定要不要开始, 不要一口气啃完。</p>
-        <div class="beginner-5steps-grid">
-          <a href={withBase('/radar/guide-seller-90days/')} class="guide-step">
-            <span class="guide-step-num" aria-hidden="true">1</span>
-            <span class="guide-step-body">
-              <span class="guide-step-title">新卖家 90 天路线图</span>
-              <span class="guide-step-desc">从 0 走到"基本能开卖",每周 1-2 件事,告诉你每一步在后台哪个页面点哪个按钮。</span>
-              <span class="guide-step-time">⏱ 约 8 分钟阅读 · 第 1 周</span>
-            </span>
-          </a>
-          <a href={withBase('/radar/guide-8-terms/')} class="guide-step">
-            <span class="guide-step-num" aria-hidden="true">2</span>
-            <span class="guide-step-body">
-              <span class="guide-step-title">8 大合规名词一次搞懂</span>
-              <span class="guide-step-desc">GPSR / CE / EPR / VAT / EPREL / IOSS / PPWR / EUDR, 8 个最常听到的缩写, 大白话讲清楚。</span>
-              <span class="guide-step-time">⏱ 约 3 分钟阅读 · 第 1 周</span>
-            </span>
-          </a>
-          <a href={withBase('/radar/guide-amazon-gpsr-email/')} class="guide-step">
-            <span class="guide-step-num" aria-hidden="true">3</span>
-            <span class="guide-step-body">
-              <span class="guide-step-title">Amazon GPSR 责任人邮箱怎么填</span>
-              <span class="guide-step-desc">GPSR 是 2024 年底生效的硬性要求, 没填就会被下架。这一步是开卖前必做。</span>
-              <span class="guide-step-time">⏱ 约 5 分钟阅读 · 第 2 周</span>
-            </span>
-          </a>
-          <a href={withBase('/radar/guide-pick-first-country/')} class="guide-step">
-            <span class="guide-step-num" aria-hidden="true">4</span>
-            <span class="guide-step-body">
-              <span class="guide-step-title">新手选第一个欧洲站卖哪个国家</span>
-              <span class="guide-step-desc">德国 / 法国 / 意大利 / 西班牙各有门槛, 给新手的建议是"先一个站打透"。</span>
-              <span class="guide-step-time">⏱ 约 4 分钟阅读 · 第 2 周</span>
-            </span>
-          </a>
-          <a href={withBase('/radar/guide-ce-marking/')} class="guide-step">
-            <span class="guide-step-num" aria-hidden="true">5</span>
-            <span class="guide-step-body">
-              <span class="guide-step-title">CE 标志到底要不要贴?怎么贴?</span>
-              <span class="guide-step-desc">不是所有商品都需要 CE, 但需要时贴错位置会被海关扣。一张图讲清楚。</span>
-              <span class="guide-step-time">⏱ 约 6 分钟阅读 · 第 3 周</span>
-            </span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================
-       老手模式专属:近期更新(已核对) / 基础规则
-       新手模式:不展示(信息量过大,新手会劝退)
-       ============================================ -->
-  <section class="section section-tight" id="latest" data-show-on="expert" aria-labelledby="latest-title">
-    <div class="container">
-      <div class="section-head">
-        <h2 id="latest-title">近期更新(已核对)</h2>
-        <a href={withBase('/radar/')} class="section-head-link">查看全部 →</a>
-      </div>
-      {recentUpdates.length === 0 ? (
-        <div class="empty-card">
-          <p>暂未发布已核对的近期更新(2026 年新公告 / 修订 / 执法动态)。</p>
-          <p class="empty-meta">
-            近期更新需要 1) 找到官方原始来源(官方公告 / EUR-Lex 法规原文 / 成员国主管机构),2) 人工核对发布日期、生效日期、适用范围,
-            3) 写"你现在要做什么"清单。
-            不允许把未核实的社群消息、AI 推断包装成"新近更新"。运营正在分批核实;
-            请<strong>定期回访本站</strong>或关注 GitHub 仓库的更新。
-          </p>
-        </div>
-      ) : (
-        <div class="grid grid-3">
-          {recentUpdates.map((r) => <RadarCard entry={r} />)}
-        </div>
-      )}
-
-      <div class="section-head section-head-divider">
-        <h2>已核对的基础规则</h2>
-        <span class="section-head-meta">长期有效的常驻要求,不是"新近变化"</span>
-      </div>
-      <div class="grid grid-3">
-        {basicFeatured.map((r) => <RadarCard entry={r} />)}
-        {basicOthers.map((r) => <RadarCard entry={r} />)}
-      </div>
-      <p class="section-foot">
-        <a href={withBase('/radar/')}>查看全部 {basicRules.length} 条基础规则 →</a>
+      <h2 class="home-h2">关于 weiread</h2>
+      <p>
+        weiread 是一个综合性的"读+算+查+用"一站式平台,目前已上线 <strong>欧规雷达</strong> 分区
+        (欧盟法规变化 + 亚马逊欧洲站合规),更多分区(法规通 / 工具集 / 读 / 学 / 帮)陆续上线中。
       </p>
-    </div>
-  </section>
-
-  <!-- ============================================
-       新手模式专属:📖 8 大名词先搞懂(大区块)
-       直接链到 /radar/guide-8-terms/ —— "我先记 8 个缩写再继续"
-       ============================================ -->
-  <section class="section section-tight" data-show-on="beginner" aria-labelledby="beginner-terms-title">
-    <div class="container">
-      <div class="beginner-block beginner-terms">
-        <div class="beginner-block-header">
-          <span class="beginner-block-icon" aria-hidden="true">📖</span>
-          <h2 class="beginner-block-title" id="beginner-terms-title">8 大名词先搞懂</h2>
-        </div>
-        <p class="beginner-block-sub">走进欧洲站后台前, 先认熟 8 个最常听到的缩写 —— 不然开账号 / 看公告 / 找客服都像听天书。</p>
-        <div class="terms-cta">
-          <div class="terms-cta-body">
-            <p class="terms-cta-title">3 分钟扫盲, 不留知识盲点</p>
-            <p class="terms-cta-desc">GPSR / CE / EPR / VAT / EPREL / IOSS / PPWR / EUDR —— 一张卡讲清楚"是谁关心, 什么时候要管"。</p>
-            <ul class="terms-cta-tags" aria-label="本卡涵盖的名词">
-              <li class="terms-cta-tag">GPSR</li>
-              <li class="terms-cta-tag">CE</li>
-              <li class="terms-cta-tag">EPR</li>
-              <li class="terms-cta-tag">VAT</li>
-              <li class="terms-cta-tag">EPREL</li>
-              <li class="terms-cta-tag">IOSS</li>
-              <li class="terms-cta-tag">PPWR</li>
-              <li class="terms-cta-tag">EUDR</li>
-            </ul>
-          </div>
-          <a href={withBase('/radar/guide-8-terms/')} class="terms-cta-btn">
-            🚀 现在去记 8 个名词
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================
-       老手模式专属:截止日历(预览) + 核心价值 + 行动清单 + 自测 + 订阅
-       全部仅老手模式可见
-       ============================================ -->
-  <section class="section section-tight section-bg" data-show-on="expert" aria-labelledby="calendar-title">
-    <div class="container">
-      <div class="section-head">
-        <h2 id="calendar-title">未来 90 天重点节点</h2>
-        <a href={withBase('/calendar/')} class="section-head-link">完整日历 →</a>
-      </div>
-      {realUpcoming.length === 0 ? (
-        <div class="empty-card">
-          <p>未来 90 天内暂无已核实的真实截止日。日历只展示有官方原始来源的节点;未核实的日期不会上线,以避免误导。</p>
-          <p class="empty-meta">查看 <a href={withBase('/calendar/')}>完整日历</a> 或<strong>定期回访本站</strong>。</p>
-        </div>
-      ) : (
-        <div class="grid grid-2">
-          {realUpcoming.map((e) => <CalendarEvent event={e} />)}
-        </div>
-      )}
-    </div>
-  </section>
-
-  <section class="section" data-show-on="expert" aria-labelledby="value-title">
-    <div class="container">
-      <h2 id="value-title" class="value-title">我们解决什么</h2>
-      <div class="grid grid-3">
-        <div class="card value-card">
-          <h3>追踪变化</h3>
-          <p>从 Amazon Seller Central、EUR-Lex、欧盟成员国机构等权威源持续监控,过滤噪音,只保留与你有关的规则变化。</p>
-        </div>
-        <div class="card value-card">
-          <h3>判断影响</h3>
-          <p>每个规则卡片标出适用范围(站点、卖家类型、类目)、风险等级(高/中/低)与生效状态(已生效/即将生效/持续关注)。</p>
-        </div>
-        <div class="card value-card">
-          <h3>给出行动</h3>
-          <p>每条规则都附带 3-6 项可立即执行的行动项;遇到合规通知有 48 小时应对清单;每条都附原始来源链接供你二次核实。</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-bg" data-show-on="expert" aria-labelledby="checklists-title">
-    <div class="container">
-      <div class="section-head">
-        <h2 id="checklists-title">常用行动清单</h2>
-        <a href={withBase('/checklists/')} class="section-head-link">查看全部 →</a>
-      </div>
-      <div class="grid grid-3">
-        {checklists.map((c) => <ChecklistCard entry={c} />)}
-      </div>
-    </div>
-  </section>
-
-  <section class="section" data-show-on="expert" aria-labelledby="selfcheck-promo-title">
-    <div class="container">
-      <div class="grid grid-2 self-check-promo">
-        <div>
-          <h2 id="selfcheck-promo-title">不确定你该先看哪条规则?</h2>
-          <p>3-5 题,基于你的销售国家、商品类目、合规经验,给出"优先关注主题"和"推荐阅读清单"。</p>
-          <p>结果只作导航建议,<strong>不构成法律或合规结论</strong>。</p>
-          <a href={withBase('/self-check/')} class="btn btn-primary">开始自测</a>
-        </div>
-        <div class="self-check-promo-visual" aria-hidden="true">
-          <div class="sc-illu">
-            <div class="sc-q">1. 你在哪些欧洲站销售?</div>
-            <div class="sc-q">2. 你的商品属于哪个类目?</div>
-            <div class="sc-q">3. 你是否收到过平台合规通知?</div>
-            <div class="sc-arrow">↓ 2 分钟给出结果</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-bg" id="subscribe" data-show-on="expert" aria-labelledby="subscribe-title">
-    <div class="container sub-section">
-      <div class="grid grid-2">
-        <div>
-          <h2 id="subscribe-title">每周一封邮件,把本周规则和截止日期发给你</h2>
-          <p>
-            <strong>订阅功能当前尚未启用。</strong>
-            启用后你将收到:
-          </p>
-          <ul>
-            <li>每周更新的规则雷达摘要</li>
-            <li>未来 30 天的关键截止日期</li>
-            <li>重点 ASIN 类目的合规提示</li>
-            <li>不定期的重大政策变化速读</li>
-          </ul>
-          <p class="form-help">
-            本站不收集你的店铺数据;启用后只发规则和清单,不发送营销邮件。
-            当前不会收集、保存或发送任何邮箱数据,详见
-            <a href={withBase('/privacy/')}>隐私说明</a>。
-          </p>
-        </div>
-        <SubscribeForm />
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================
-       新手模式专属:🌱 还有这些新手课(3 张大卡片)
-       广告 / 选品 / 物流 — 起步后立刻要面对的 3 件事
-       ============================================ -->
-  <section class="section" data-show-on="beginner" aria-labelledby="beginner-more-title">
-    <div class="container">
-      <div class="beginner-block beginner-more">
-        <div class="beginner-block-header">
-          <span class="beginner-block-icon" aria-hidden="true">🌱</span>
-          <h2 class="beginner-block-title" id="beginner-more-title">还有这些新手课</h2>
-        </div>
-        <p class="beginner-block-sub">5 步走完不算完, 起步后立刻要面对的 3 件事 —— 广告怎么开 / 选品怎么选 / 物流怎么发。</p>
-        <div class="beginner-more-grid">
-          <a href={withBase('/radar/guide-amazon-ads/')} class="beginner-more-card">
-            <span class="beginner-more-card-icon" aria-hidden="true">📣</span>
-            <span class="beginner-more-card-title">广告怎么开 — Amazon Ads 新手入门</span>
-            <span class="beginner-more-card-desc">SP / SB / SD 3 种广告的区别, 新店第一周应该投哪种, 预算怎么定, 看完能直接后台开广告。</span>
-            <span class="beginner-more-card-link">看广告指南 →</span>
-          </a>
-          <a href={withBase('/radar/guide-product-pitfalls/')} class="beginner-more-card">
-            <span class="beginner-more-card-icon" aria-hidden="true">🎯</span>
-            <span class="beginner-more-card-title">选品怎么选 — 欧洲站 7 大常见坑</span>
-            <span class="beginner-more-card-desc">带电池、带液体、带木包装、带食品成分、带磁铁…… 一类一类的合规雷区, 选品前先扫一遍。</span>
-            <span class="beginner-more-card-link">看选品指南 →</span>
-          </a>
-          <a href={withBase('/radar/guide-fba-vs-fbm/')} class="beginner-more-card">
-            <span class="beginner-more-card-icon" aria-hidden="true">📦</span>
-            <span class="beginner-more-card-title">物流怎么发 — FBA vs FBM 怎么选</span>
-            <span class="beginner-more-card-desc">欧洲 FBA 仓要提前备货 / 自发货要小心 VAT 和退货 / 多渠道配送怎么走, 看完能选模式。</span>
-            <span class="beginner-more-card-link">看物流指南 →</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================
-       新手模式专属:信任条(底部) — 来源透明 / 免责声明
-       新手也要知道"这站不会乱说",但表达更友好
-       ============================================ -->
-  <section class="section section-tight" data-show-on="beginner" aria-labelledby="beginner-trust-title">
-    <div class="container">
-      <div class="beginner-trust">
-        <h2 class="beginner-trust-title" id="beginner-trust-title">🔒 这站不会乱说</h2>
-        <p><strong>来源:</strong> 所有信息都来自 Amazon Seller Central、欧盟委员会 / EUR-Lex、成员国主管机构原文, 每条都标了核对日期。</p>
-        <p><strong>边界:</strong> 本站是信息整理和入门导航, <strong>不构成法律 / 税务 / 认证意见</strong>。 真要做合规决策, 请找有欧盟 / 成员国资质的律师或认证机构。</p>
-        <p><strong>看完了?</strong> 直接 <a href={withBase('/self-check/')}>3 题测一下</a>, 或 <a href={withBase('/about/')}>了解我们</a>。</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============================================
-       老手模式专属:来源透明 + 免责声明(底部)
-       ============================================ -->
-  <section class="section section-tight" data-show-on="expert" aria-labelledby="transparency-title">
-    <div class="container">
-      <div class="transparency">
-        <h2 id="transparency-title">来源透明与免责声明</h2>
-        <p><strong>来源白名单:</strong>Amazon Seller Central、欧盟委员会 / EUR-Lex、各成员国主管机构、官方认证机构原文。</p>
-        <p><strong>编辑原则:</strong>每条规则附原始来源 + 核对日期;未核实的标注"示例 / 待核实";不杜撰法规结论、链接、日期或处罚后果。</p>
-        <p><strong>边界:</strong>本站是信息整理和辅助判断工具,<strong>不构成法律、税务、认证或专业合规意见</strong>。具体执行请咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。</p>
-      </div>
+      <p class="home-cta-secondary">
+        <a href={withBase('/about/')}>了解更多 →</a>
+      </p>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .hero {
-    background: linear-gradient(180deg, var(--color-primary-50) 0%, #fff 100%);
-    padding: 3.5rem 0 2.5rem 0;
+  .home-hero {
+    background: linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #ea580c 100%);
+    color: #fff;
+    padding: 4rem 0 3.5rem 0;
+    text-align: center;
   }
-  .hero-eyebrow {
-    color: var(--color-primary-700);
-    font-size: 0.85rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin: 0 0 0.6em 0;
+  .home-eyebrow {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin: 0 0 1rem 0;
+    letter-spacing: 0.05em;
   }
-  .hero-title {
-    font-size: clamp(1.7rem, 4vw, 2.4rem);
-    line-height: 1.25;
-    max-width: 22ch;
-    margin: 0 0 0.5em 0;
+  .home-title {
+    font-size: 4.2rem;
+    font-weight: 900;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.03em;
+    line-height: 1;
   }
-  .hero-sub {
-    color: var(--color-ink-600);
-    font-size: 1.05rem;
-    line-height: 1.6;
+  .home-title-grad {
+    background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .home-sub {
+    font-size: 1.15rem;
+    margin: 0 auto 2rem auto;
     max-width: 60ch;
-    margin: 0 0 1.5em 0;
+    opacity: 0.95;
+    line-height: 1.6;
   }
-  .hero-cta {
+  .home-cta-row {
     display: flex;
+    gap: 1rem;
+    justify-content: center;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
   }
-  .hero-points {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1.5rem;
-    font-size: 0.92rem;
-    color: var(--color-ink-700);
+  .btn-lg {
+    padding: 0.85rem 1.6rem;
+    font-size: 1rem;
+    font-weight: 600;
   }
+  .btn-primary { background: #fff; color: #1e40af; border-radius: 8px; text-decoration: none; }
+  .btn-primary:hover { background: #fef3c7; }
+  .btn-secondary { background: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; text-decoration: none; }
+  .btn-secondary:hover { background: rgba(255, 255, 255, 0.25); }
 
-  /* 新手模式专属块(hero-beginner / beginner-block)样式在 global.css,
-     这里只保留老手模式的 .section-head / .value-card / .self-check-promo 等 */
+  .home-sections { padding: 3.5rem 0 2.5rem 0; }
+  .home-h2 { font-size: 1.8rem; font-weight: 800; margin: 0 0 0.25em 0; color: var(--color-ink-900, #18181b); }
+  .home-h2-sub { color: var(--color-ink-600, #52525b); margin: 0 0 2rem 0; }
 
-  .section-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+  .sections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.25rem;
   }
-  .section-head h2 { margin: 0; }
-  .section-head-link {
-    color: var(--color-primary-700);
-    text-decoration: none;
-    font-size: 0.95rem;
-    font-weight: 500;
-  }
-  .section-head-link:hover { text-decoration: underline; }
-  .section-head-divider {
-    margin-top: 2.5rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--color-ink-200);
-  }
-  .section-head-meta {
-    font-size: 0.88rem;
-    color: var(--color-ink-500);
-  }
-  .section-foot {
-    text-align: right;
-    font-size: 0.95rem;
-    margin: 1.5rem 0 0 0;
-  }
-
-  .section-bg { background: var(--color-bg-soft); }
-
-  .recent-details { margin-top: 1.5rem; }
-  .recent-details summary {
-    cursor: pointer;
-    color: var(--color-primary-700);
-    font-size: 0.95rem;
-    font-weight: 500;
-    padding: 0.5em 0;
-  }
-  .recent-grid { margin-top: 1rem; }
-
-  .value-title { margin-bottom: 1.5rem; }
-  .value-card h3 { color: var(--color-primary-800); margin-bottom: 0.5em; }
-  .value-card p { color: var(--color-ink-600); margin: 0; }
-
-  .self-check-promo h2 { margin-bottom: 0.5em; }
-  .self-check-promo-visual { display: flex; align-items: center; }
-  .sc-illu {
-    width: 100%;
-    background: var(--color-primary-50);
-    border: 1px dashed var(--color-primary-200);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem 1.2rem;
-  }
-  .sc-q {
-    background: #fff;
-    border: 1px solid var(--color-ink-200);
-    border-radius: var(--radius);
-    padding: 0.55em 0.85em;
-    margin: 0.5em 0;
-    color: var(--color-ink-700);
-    font-size: 0.92rem;
-  }
-  .sc-arrow {
-    text-align: center;
-    color: var(--color-primary-700);
-    font-weight: 500;
-    margin-top: 0.5em;
-  }
-
-  .sub-section h2 { margin-bottom: 0.5em; }
-  .transparency h2 { font-size: 1.3rem; margin-bottom: 0.5em; }
-  .transparency p { color: var(--color-ink-700); margin: 0.4em 0; font-size: 0.95rem; }
-
-  .empty {
-    color: var(--color-ink-500);
-    font-style: italic;
-    text-align: center;
-    padding: 2rem 0;
-  }
-  .empty-card {
-    background: var(--color-info-bg);
-    border: 1px dashed var(--color-info-border);
-    border-left: 4px solid #3b82f6;
-    border-radius: var(--radius-lg);
-    padding: 1.5rem 1.5rem;
-    color: var(--color-ink-700);
-    max-width: 70ch;
-  }
-  .empty-card p { margin: 0.4em 0; }
-  .empty-card .empty-meta { font-size: 0.9rem; color: var(--color-ink-500); }
-
-  /* 🆕 近期更新 紧凑卡片 */
-  .recent-mini {
+  .section-tile {
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200, #e4e4e7);
+    border-radius: 12px;
+    padding: 1.5rem;
     text-decoration: none;
     color: inherit;
-    transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+    transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    border-left: 4px solid var(--tile-accent, var(--color-primary, #1e40af));
   }
-  .recent-mini:hover {
-    border-color: var(--color-accent-400);
-    color: inherit;
+  .section-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    border-color: var(--tile-accent, var(--color-primary, #1e40af));
   }
-  .recent-mini-top {
+  .section-tile-coming {
+    opacity: 0.85;
+    border-style: dashed;
+  }
+  .section-tile-head {
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    align-items: center;
   }
-  .recent-mini-title {
-    font-size: 1.05rem;
-    line-height: 1.45;
-    margin: 0;
-    color: var(--color-ink-900);
-  }
-  .recent-mini:hover .recent-mini-title {
-    color: var(--color-primary-700);
-  }
-  .recent-mini-eff {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--color-ink-500);
-  }
-  .recent-mini-days {
-    font-size: 0.82rem;
-    font-weight: 500;
+  .section-tile-icon { font-size: 2rem; line-height: 1; }
+  .section-tile-badge {
+    font-size: 0.7rem;
     padding: 0.2em 0.65em;
-    border-radius: var(--radius-sm);
-    background: var(--color-ink-100);
-    color: var(--color-ink-700);
-    border: 1px solid var(--color-ink-200);
-    white-space: nowrap;
-  }
-  .recent-mini-days.is-urgent {
-    background: var(--color-risk-medium-bg);
-    color: var(--color-risk-medium-text);
-    border-color: var(--color-risk-medium-border);
-  }
-  .recent-mini-days.is-past {
-    background: var(--color-risk-high-bg);
-    color: var(--color-risk-high-text);
-    border-color: var(--color-risk-high-border);
-  }
-
-  /* 🆕 首页搜索(在 hero 区,下拉浮在 hero 之外) */
-  .radar-search {
-    position: relative;
-    max-width: 640px;
-    margin: 1.5rem 0 0 0;
-  }
-  .radar-search-input-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  .radar-search-icon {
-    position: absolute;
-    left: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--color-ink-500);
-    pointer-events: none;
-  }
-  .radar-search-input {
-    width: 100%;
-    padding: 0.85em 1em 0.85em 2.85em;
-    font-size: 1rem;
-    background: #fff;
-    border: 1px solid var(--color-ink-300);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-  }
-  .radar-search-input:focus {
-    outline: none;
-    border-color: var(--color-primary-500);
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.18), var(--shadow-sm);
-  }
-  /* 去掉 type=search 浏览器默认的 ✕ 按钮(自定义 UI 风格) */
-  .radar-search-input::-webkit-search-cancel-button {
-    -webkit-appearance: none;
-    appearance: none;
-  }
-  .radar-search-results {
-    position: absolute;
-    top: calc(100% + 6px);
-    left: 0;
-    right: 0;
-    z-index: 30;
-    max-height: 70vh;
-    overflow-y: auto;
-    background: #fff;
-    border: 1px solid var(--color-ink-200);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    padding: 0.4rem 0;
-    margin: 0;
-    list-style: none;
-  }
-  .radar-search-results[hidden] { display: none; }
-  .radar-search-result {
-    display: block;
-    padding: 0.7rem 1rem;
-    color: var(--color-ink-900);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-ink-100);
-    transition: background 0.12s;
-  }
-  .radar-search-result:last-child { border-bottom: none; }
-  .radar-search-result:hover,
-  .radar-search-result.is-active {
-    background: var(--color-primary-50);
-    color: var(--color-primary-900);
-  }
-  .radar-search-result-top {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-bottom: 0.25em;
-  }
-  .radar-search-result-title {
-    font-size: 0.95rem;
+    border-radius: 999px;
+    background: var(--color-ink-100, #f4f4f5);
+    color: var(--color-ink-600, #52525b);
     font-weight: 600;
-    line-height: 1.4;
-    margin: 0;
+  }
+  .section-tile-live .section-tile-badge {
+    background: color-mix(in srgb, var(--tile-accent) 12%, #fff);
+    color: var(--tile-accent, #1e40af);
+  }
+  .section-tile-title { font-size: 1.2rem; font-weight: 700; margin: 0; color: var(--color-ink-900, #18181b); }
+  .section-tile-tagline { font-size: 0.92rem; color: var(--color-ink-600, #52525b); line-height: 1.5; margin: 0; }
+  .section-tile-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+  }
+  .section-tile-stat {
+    font-size: 0.78rem;
+    color: var(--color-ink-500, #71717a);
+    background: var(--color-ink-50, #fafafa);
+    padding: 0.2em 0.6em;
+    border-radius: 6px;
+  }
+  .section-tile-cta {
+    margin-top: 0.5rem;
+    color: var(--tile-accent, #1e40af);
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  .section-tile-cta-disabled { color: var(--color-ink-500, #71717a); }
+
+  .home-recent {
+    padding: 2.5rem 0;
+    background: var(--color-ink-50, #fafafa);
+    border-top: 1px solid var(--color-ink-200, #e4e4e7);
+    border-bottom: 1px solid var(--color-ink-200, #e4e4e7);
+  }
+  .home-recent-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .home-recent-more { color: #1e40af; text-decoration: none; font-weight: 600; }
+  .recent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+  .recent-card {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--color-ink-200, #e4e4e7);
+    border-radius: 10px;
+    padding: 1.1rem 1.25rem;
+    text-decoration: none;
     color: inherit;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    transition: transform 0.15s, box-shadow 0.15s;
   }
-  .radar-search-result-title mark {
-    background: #fef08a;
-    color: inherit;
-    padding: 0 0.1em;
-    border-radius: 2px;
+  .recent-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   }
-  .radar-search-result-summary {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--color-ink-600);
-    line-height: 1.5;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .recent-card-tags { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; flex-wrap: wrap; }
+  .risk { font-size: 0.72rem; padding: 0.15em 0.55em; border-radius: 6px; font-weight: 600; }
+  .risk-high { background: #fee2e2; color: #991b1b; }
+  .risk-mid { background: #fef3c7; color: #92400e; }
+  .risk-low { background: #dcfce7; color: #166534; }
+  .status-tag { font-size: 0.72rem; padding: 0.15em 0.55em; border-radius: 6px; background: var(--color-ink-100, #f4f4f5); color: var(--color-ink-700, #3f3f46); font-weight: 600; }
+  .recent-card-title { font-size: 1rem; font-weight: 700; margin: 0 0 0.4rem 0; line-height: 1.4; color: var(--color-ink-900, #18181b); }
+  .recent-card-summary { font-size: 0.88rem; color: var(--color-ink-600, #52525b); line-height: 1.5; margin: 0 0 0.7rem 0; }
+  .recent-card-meta { display: flex; gap: 0.7rem; font-size: 0.8rem; color: var(--color-ink-500, #71717a); }
+  .recent-card-deadline { color: #dc2626; font-weight: 600; }
+
+  .home-about {
+    padding: 3rem 0;
+    color: var(--color-ink-700, #3f3f46);
   }
-  .radar-search-result-summary mark {
-    background: #fef08a;
-    color: inherit;
-    padding: 0 0.1em;
-    border-radius: 2px;
-  }
-  .radar-search-empty {
-    padding: 0.9rem 1rem;
-    color: var(--color-ink-500);
-    font-size: 0.9rem;
-    text-align: center;
-  }
-  .radar-search-loading {
-    padding: 0.7rem 1rem;
-    color: var(--color-ink-500);
-    font-size: 0.85rem;
-  }
-  .radar-search-error {
-    padding: 0.7rem 1rem;
-    color: var(--color-risk-high-text);
-    font-size: 0.85rem;
-  }
-  @media (max-width: 480px) {
-    .radar-search-input {
-      font-size: 0.95rem;
-      padding: 0.75em 0.9em 0.75em 2.6em;
-    }
-  }
+  .home-about p { line-height: 1.7; max-width: 65ch; margin: 0 0 1rem 0; }
+  .home-cta-secondary a { color: #1e40af; text-decoration: none; font-weight: 600; }
 </style>
-
-<script>
-  /**
-   * 首页搜索(消费 /search.json 端点):
-   *  - 输入 debounce 200ms
-   *  - 客户端按 title + summary + tags 过滤
-   *  - 显示前 5 条结果,关键词 <mark> 高亮
-   *  - 键盘 ↑↓ 导航,Enter 跳转,Esc 关闭
-   *  - 移动端 inputmode="search" / enterkeyhint="search"
-   *  - 数据由 SSR 注入的 data-search-url / data-radar-base 决定(BASE-aware)
-   */
-  type SearchItem = {
-    slug: string;
-    title: string;
-    summary: string;
-    tags?: string[];
-    riskLevel?: '高' | '中' | '低' | string;
-  };
-
-  const root = document.querySelector<HTMLElement>('[data-radar-search-root]');
-  if (root) {
-    const input = root.querySelector<HTMLInputElement>('#radar-search-input');
-    const list = root.querySelector<HTMLElement>('#radar-search-results');
-    const searchUrl = root.dataset.searchUrl || '/search.json';
-    const radarBase = root.dataset.radarBase || '/radar/';
-
-    if (input && list) {
-      let dataPromise: Promise<SearchItem[]> | null = null;
-      let currentMatches: SearchItem[] = [];
-      let currentQuery = '';
-      let activeIndex = -1;
-      let blurTimer: number | null = null;
-
-      // ---------- 工具函数 ----------
-      const escapeHtml = (s: string): string =>
-        s.replace(/[&<>"']/g, (ch) =>
-          ch === '&' ? '&amp;' :
-          ch === '<' ? '&lt;' :
-          ch === '>' ? '&gt;' :
-          ch === '"' ? '&quot;' : '&#39;'
-        );
-
-      const escapeRegex = (s: string): string =>
-        s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-      const highlight = (text: string, q: string): string => {
-        if (!q) return escapeHtml(text);
-        const safe = escapeHtml(text);
-        const re = new RegExp(escapeRegex(escapeHtml(q)), 'gi');
-        return safe.replace(re, (m) => `<mark>${m}</mark>`);
-      };
-
-      const debounce = <F extends (...a: any[]) => void>(fn: F, ms: number) => {
-        let t: number | null = null;
-        return (...args: Parameters<F>) => {
-          if (t !== null) window.clearTimeout(t);
-          t = window.setTimeout(() => fn(...args), ms);
-        };
-      };
-
-      // 风险等级 → 已有的 .risk 修饰类
-      const riskClass = (level: string | undefined): string => {
-        if (level === '高') return 'risk-high';
-        if (level === '中') return 'risk-medium';
-        if (level === '低') return 'risk-low';
-        return 'risk-low';
-      };
-
-      // ---------- 数据加载 ----------
-      const ensureData = (): Promise<SearchItem[]> => {
-        if (dataPromise) return dataPromise;
-        dataPromise = fetch(searchUrl, { credentials: 'same-origin' })
-          .then((r) => {
-            if (!r.ok) throw new Error(`search.json HTTP ${r.status}`);
-            return r.json() as Promise<SearchItem[] | { items?: SearchItem[] }>;
-          })
-          .then((raw) => {
-            // 兼容两种返回:裸数组 / {items: [...]}
-            if (Array.isArray(raw)) return raw;
-            if (raw && Array.isArray((raw as any).items)) return (raw as any).items;
-            return [];
-          })
-          .catch((err) => {
-            // eslint-disable-next-line no-console
-            console.warn('[radar-search] /search.json 加载失败,搜索功能降级:', err);
-            return [];
-          });
-        return dataPromise;
-      };
-
-      // ---------- 渲染 ----------
-      const renderEmpty = () => {
-        list!.innerHTML = '<div class="radar-search-empty">无匹配,试试其他关键词</div>';
-        list!.hidden = false;
-        input.setAttribute('aria-expanded', 'true');
-        activeIndex = -1;
-        input.setAttribute('aria-activedescendant', '');
-      };
-
-      const renderMatches = (matches: SearchItem[], q: string) => {
-        if (matches.length === 0) {
-          renderEmpty();
-          return;
-        }
-        const html = matches
-          .map((m, i) => {
-            const href = radarBase + encodeURIComponent(m.slug) + '/';
-            const risk = escapeHtml(m.riskLevel || '');
-            return (
-              `<a href="${href}" class="radar-search-result" role="option" data-idx="${i}" id="radar-search-result-${i}">` +
-                `<div class="radar-search-result-top">` +
-                  `<span class="risk ${riskClass(m.riskLevel)}">风险:${risk}</span>` +
-                `</div>` +
-                `<p class="radar-search-result-title">${highlight(m.title, q)}</p>` +
-                `<p class="radar-search-result-summary">${highlight(m.summary, q)}</p>` +
-              `</a>`
-            );
-          })
-          .join('');
-        list!.innerHTML = html;
-        list!.hidden = false;
-        input.setAttribute('aria-expanded', 'true');
-      };
-
-      const renderLoading = () => {
-        list!.innerHTML = '<div class="radar-search-loading">正在加载索引…</div>';
-        list!.hidden = false;
-        input.setAttribute('aria-expanded', 'true');
-      };
-
-      const close = () => {
-        list!.hidden = true;
-        input.setAttribute('aria-expanded', 'false');
-        input.setAttribute('aria-activedescendant', '');
-        activeIndex = -1;
-      };
-
-      // ---------- 搜索执行 ----------
-      const runSearch = async (rawQ: string) => {
-        const q = rawQ.trim();
-        currentQuery = q;
-        if (!q) {
-          close();
-          return;
-        }
-        // 第一次输入时展示 loading,等待 /search.json
-        if (!dataPromise) renderLoading();
-        const data = await ensureData();
-        if (currentQuery !== q) return; // 已被新输入覆盖
-        const lower = q.toLowerCase();
-        const matches: SearchItem[] = [];
-        for (const item of data) {
-          if (!item || typeof item !== 'object') continue;
-          const tags = Array.isArray(item.tags) ? item.tags.join(' ') : '';
-          const hay = `${item.title || ''} ${item.summary || ''} ${tags}`.toLowerCase();
-          if (hay.includes(lower)) {
-            matches.push(item);
-            if (matches.length >= 5) break;
-          }
-        }
-        currentMatches = matches;
-        activeIndex = -1;
-        renderMatches(matches, q);
-      };
-
-      const debouncedSearch = debounce((q: string) => {
-        runSearch(q).catch((err) => {
-          // eslint-disable-next-line no-console
-          console.warn('[radar-search] runSearch 异常:', err);
-          if (list) {
-            list.innerHTML = '<div class="radar-search-error">搜索出错,请稍后重试</div>';
-            list.hidden = false;
-          }
-        });
-      }, 200);
-
-      const updateActive = () => {
-        const items = list!.querySelectorAll<HTMLElement>('.radar-search-result');
-        items.forEach((el, i) => {
-          const isActive = i === activeIndex;
-          el.classList.toggle('is-active', isActive);
-          if (isActive) {
-            el.scrollIntoView({ block: 'nearest' });
-            input.setAttribute('aria-activedescendant', el.id);
-          }
-        });
-        if (activeIndex < 0) input.setAttribute('aria-activedescendant', '');
-      };
-
-      // ---------- 事件绑定 ----------
-      input.addEventListener('input', () => debouncedSearch(input.value));
-
-      input.addEventListener('focus', () => {
-        if (blurTimer !== null) {
-          window.clearTimeout(blurTimer);
-          blurTimer = null;
-        }
-        // 有未关闭的旧结果时保留;有当前 query 时再跑一次(确保数据就绪后展示)
-        if (input.value.trim()) {
-          if (currentMatches.length > 0 && !list.hidden) return;
-          runSearch(input.value);
-        }
-      });
-
-      input.addEventListener('blur', () => {
-        // 延迟关闭,允许 click 结果跳转
-        if (blurTimer !== null) window.clearTimeout(blurTimer);
-        blurTimer = window.setTimeout(() => {
-          close();
-        }, 150);
-      });
-
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          if (list.hidden) {
-            if (input.value.trim()) runSearch(input.value);
-            return;
-          }
-          if (currentMatches.length === 0) return;
-          activeIndex = (activeIndex + 1) % currentMatches.length;
-          updateActive();
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          if (list.hidden || currentMatches.length === 0) return;
-          activeIndex = activeIndex <= 0 ? currentMatches.length - 1 : activeIndex - 1;
-          updateActive();
-        } else if (e.key === 'Enter') {
-          if (activeIndex >= 0 && currentMatches[activeIndex]) {
-            e.preventDefault();
-            const m = currentMatches[activeIndex];
-            window.location.href = radarBase + encodeURIComponent(m.slug) + '/';
-          } else if (currentMatches.length > 0) {
-            // 没高亮时按 Enter 默认跳第一条
-            e.preventDefault();
-            const m = currentMatches[0];
-            window.location.href = radarBase + encodeURIComponent(m.slug) + '/';
-          }
-          // 无结果时不拦截(让表单默认行为兜底;当前是 input,无副作用)
-        } else if (e.key === 'Escape') {
-          if (!list.hidden) {
-            e.preventDefault();
-            close();
-          }
-        }
-      });
-
-      // 点击下拉内空白处不关闭(链接 click 自然跳转)
-      list.addEventListener('mousedown', (e) => {
-        // 阻止 input 的 blur 触发关闭
-        e.preventDefault();
-      });
-
-      // 点击页面其它区域关闭
-      document.addEventListener('click', (e) => {
-        const t = e.target as Node;
-        if (!root.contains(t)) close();
-      });
-    }
-  }
-</script>

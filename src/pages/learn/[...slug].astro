@@ -1,0 +1,17 @@
+---
+/**
+ * 旧 /learn/* 路径的 301 redirect 兜底
+ *   - /learn/ 现在是新的"学"分区(占位)
+ *   - 旧 /learn/<slug>/ 是欧规学习路径,需要跳到 /eu/learn/<slug>/
+ *   - 但 /learn/index.astro 已经存在(占位页面),所以 catch-all 不会覆盖裸 /learn/
+ */
+import { buildLearningPaths } from '../../lib/learning-paths';
+
+export async function getStaticPaths() {
+  const paths = buildLearningPaths();
+  return paths.map((p) => ({ params: { slug: p.slug } }));
+}
+
+const slug = Astro.params.slug;
+return Astro.redirect(`/eu/learn/${slug}/`, 301);
+---

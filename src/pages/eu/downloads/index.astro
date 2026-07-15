@@ -7,8 +7,8 @@
  * 核心价值:用 PDF 工具换 email,给"打勾完成度" + 长期回访机制
  * ------------------------------------------------------------
  */
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { withBase, siteAsDir } from '../../lib/url';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
 
 const siteStr = siteAsDir(Astro.site);
 const pdfHref = '/downloads/personal-compliance-checklist.html';
@@ -145,7 +145,7 @@ const faqs = [
       <ul class="dl-alts-list">
         <li>
           <strong>直接读站内:</strong>
-          <a href={withBase('/learn/start-90-days/')}>新手起步(0-90 天)路径</a>
+          <a href={withBase('/eu/learn/start-90-days/')}>新手起步(0-90 天)路径</a>
           5-6 步串完基础合规
         </li>
         <li>
@@ -155,7 +155,7 @@ const faqs = [
         </li>
         <li>
           <strong>查对比:</strong>
-          <a href={withBase('/compare/')}>10 张对比页</a>
+          <a href={withBase('/eu/compare/')}>10 张对比页</a>
           高频搜索问题 1 屏判断
         </li>
       </ul>

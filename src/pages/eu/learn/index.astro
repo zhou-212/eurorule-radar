@@ -1,0 +1,144 @@
+---
+/**
+ * /learn/ — 学习路径总目录
+ * ------------------------------------------------------------
+ * 5 条结构化合规学习路径,基于现有 23 张卡 + 10 个对比 + 10 个 guide + 3 个 checklist 重组
+ * 每条路径 5-6 步,总计 50-90 分钟读完
+ * Progress 跟踪用 localStorage 存 step ids
+ * ------------------------------------------------------------
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+import { buildLearningPaths } from '../../../lib/learning-paths';
+
+const siteStr = siteAsDir(Astro.site);
+const paths = buildLearningPaths();
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '学习路径', item: siteStr ? `${siteStr}learn/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="学习路径"
+  description="5 条结构化合规学习路径,新手起步 / 税务申报 / 产品安全 / 包装环保 / 运营合规。每条 5-6 步,基于站内现有内容,50-90 分钟读完,带进度跟踪。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>学习路径</span>
+    </nav>
+
+    <header class="learn-index-head">
+      <h1>学习路径</h1>
+      <p class="page-intro">
+        把站内 23 张卡片 + 10 个对比 + 10 个入门课 + 3 个清单,
+        按"新手最容易踩的 5 个坑"重新串成 5 条路径。
+        每条 5-6 步,总计 <strong>50-90 分钟</strong> 读完,
+        进度自动存在你浏览器里,下次回来接着走。
+      </p>
+      <div class="learn-cta-row">
+        <a class="btn btn-primary" href={withBase('/self-check/')}>先做影响自测</a>
+        <a class="btn btn-secondary" href={withBase('/eu/downloads/')}>下载个人合规清单 PDF</a>
+      </div>
+    </header>
+
+    <div class="grid grid-2 learn-path-grid">
+      {paths.map((p) => (
+        <a class="learn-tile card card-hover card-link" href={withBase(`/learn/${p.slug}/`)}>
+          <div class="learn-tile-head">
+            <span class="learn-tile-icon" aria-hidden="true">{p.icon}</span>
+            <span class="learn-tile-tag">{p.steps.length} 步 · 约 {p.estTotalMinutes} 分钟</span>
+          </div>
+          <h2 class="learn-tile-title">{p.title}</h2>
+          <p class="learn-tile-subtitle">{p.subtitle}</p>
+          <p class="learn-tile-audience">适合:<strong>{p.audience}</strong></p>
+          <p class="learn-tile-reward">完成后:<strong>{p.finalReward}</strong></p>
+        </a>
+      ))}
+    </div>
+
+    <div class="notice notice-info">
+      <strong>提示:</strong>学习路径进度存在 localStorage 里,
+      不会上传服务器,清浏览器数据会重置。如果你想要"长期可恢复的进度" + 邮件提醒,
+      留 email 订阅 <a href={withBase('/eu/downloads/')}>每周合规更新</a>。
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .learn-index-head { margin: 0.5rem 0 1.5rem 0; }
+  .page-intro {
+    color: var(--color-ink-600);
+    font-size: 1rem;
+    max-width: 60ch;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.7;
+  }
+  .learn-cta-row {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    margin: 0 0 2rem 0;
+  }
+
+  .learn-path-grid { margin: 0 0 2rem 0; }
+  .learn-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .learn-tile:hover { color: inherit; }
+  .learn-tile-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .learn-tile-icon {
+    font-size: 1.8rem;
+    line-height: 1;
+  }
+  .learn-tile-tag {
+    font-size: 0.78rem;
+    color: var(--color-ink-500);
+    background: var(--color-ink-50);
+    padding: 0.15em 0.65em;
+    border-radius: 999px;
+  }
+  .learn-tile-title {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--color-ink-900);
+  }
+  .learn-tile:hover .learn-tile-title {
+    color: var(--color-primary-700);
+  }
+  .learn-tile-subtitle {
+    color: var(--color-ink-700);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .learn-tile-audience,
+  .learn-tile-reward {
+    color: var(--color-ink-600);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .learn-tile-audience strong,
+  .learn-tile-reward strong {
+    color: var(--color-ink-800);
+    font-weight: 500;
+  }
+</style>

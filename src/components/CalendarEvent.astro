@@ -19,7 +19,7 @@ interface Props {
 }
 
 const { event } = Astro.props;
-const linkHref = event.linkedRadarSlug ? withBase(`/radar/${event.linkedRadarSlug}/`) : null;
+const linkHref = event.linkedRadarSlug ? withBase(`/eu/radar/${event.linkedRadarSlug}/`) : null;
 ---
 
 <article class="ce-card card">

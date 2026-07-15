@@ -380,10 +380,10 @@ A:**要 0 申报**。即使 0 销售,也要按时报:
 
 ### 站内财税 + 合规卡
 
-- [欧盟 GPSR + 欧代 通用产品安全法规](/radar/eu-gpsr-responsible-person) — VAT 是财税合规,这是产品安全合规,两套独立
-- [亚马逊欧洲站 90 天合规起步路线图](/radar/guide-seller-90days) — VAT 注册排在第 1-2 周
-- [德国 / 法国 / 意大利,我先开哪个](/radar/guide-pick-first-country) — 决定你**先注册哪个国家的 VAT**
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) — VAT / EPR / GST 关系
+- [欧盟 GPSR + 欧代 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person) — VAT 是财税合规,这是产品安全合规,两套独立
+- [亚马逊欧洲站 90 天合规起步路线图](/eu/radar/guide-seller-90days) — VAT 注册排在第 1-2 周
+- [德国 / 法国 / 意大利,我先开哪个](/eu/radar/guide-pick-first-country) — 决定你**先注册哪个国家的 VAT**
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) — VAT / EPR / GST 关系
 
 ### 站外工具(自查 + 验证)
 

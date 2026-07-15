@@ -1,0 +1,14 @@
+---
+/**
+ * 旧 /compare/* 路径的 301 redirect 兜底
+ */
+import { buildComparesConfig } from '../../lib/compare-config';
+
+export async function getStaticPaths() {
+  const compares = buildComparesConfig();
+  return compares.map((c) => ({ params: { slug: c.slug } }));
+}
+
+const slug = Astro.params.slug;
+return Astro.redirect(`/eu/compare/${slug}/`, 301);
+---

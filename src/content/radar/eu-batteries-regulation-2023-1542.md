@@ -158,12 +158,12 @@ A:**不够**。CE-RED 是无线电设备指令,UN 38.3 是运输测试,EN 62133 
 
 ## 相关规则
 
-- [欧盟 PPWR 包装与包装废弃物法规 已发布:2026-08-12 全面适用,替代原 94/62/EC 指令](/radar/eu-ppwr-2025-40)
-- [德国包装法 LUCID 与 EPR 注册:亚马逊德国站卖家必填](/radar/de-lucid-packaging)
-- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/radar/eu-gpsr-responsible-person)
+- [欧盟 PPWR 包装与包装废弃物法规 已发布:2026-08-12 全面适用,替代原 94/62/EC 指令](/eu/radar/eu-ppwr-2025-40)
+- [德国包装法 LUCID 与 EPR 注册:亚马逊德国站卖家必填](/eu/radar/de-lucid-packaging)
+- [欧盟 GPSR 通用产品安全法规 已生效:亚马逊欧洲站卖家必须完成的责任人信息](/eu/radar/eu-gpsr-responsible-person)
 
 ## 相关清单
 
-- [产品上架前资料检查清单](/checklists/pre-listing-documents)
-- [新卖家开店基础资料检查清单](/checklists/new-seller-basics)
-- [收到平台合规通知后的 48 小时应对清单](/checklists/compliance-notice-48h)
+- [产品上架前资料检查清单](/eu/checklists/pre-listing-documents)
+- [新卖家开店基础资料检查清单](/eu/checklists/new-seller-basics)
+- [收到平台合规通知后的 48 小时应对清单](/eu/checklists/compliance-notice-48h)

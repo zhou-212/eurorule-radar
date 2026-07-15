@@ -40,52 +40,52 @@ example: false
 - [ ] **第 1 件:注册亚马逊欧洲站(英 / 德 / 法 / 意 / 西任选一)**
       做啥:用公司主体(中国 / 香港公司都行)注册 Amazon EU 任一站点,先开通一个就够了。
       为啥:没账号啥都白搭;**优先选德国**,搞定德国后法国意大利 80% 是重复工作。
-      详见:[亚马逊欧洲站新卖家基础资料清单](/checklists/new-seller-basics/)
+      详见:[亚马逊欧洲站新卖家基础资料清单](/eu/checklists/new-seller-basics/)
 
 - [ ] **第 2 件:选一个能发货到欧洲的产品**
       做啥:从你现有的供应链里,挑一个体积小、不含电池、客单价 €15-50 的产品作为"欧洲站首发"。
       为啥:体积小能省 FBA 头程,不含电池避开一大半 CE 麻烦,客单价适中保证有利润做合规。
-      详见:[德 / 法 / 意 我先开哪个](/radar/guide-pick-first-country/)
+      详见:[德 / 法 / 意 我先开哪个](/eu/radar/guide-pick-first-country/)
 
 - [ ] **第 3 件:注册 EU VAT(增值税号)**
       做啥:在有仓储的国家(用 FBA 就在德国仓)申请 VAT 号,绑定到 Amazon 后台。
       为啥:没 VAT 号 = 平台直接代扣代缴,你拿到的货款会被砍掉 19-25%;VAT 也能作为进项税抵扣。
-      详见:[亚马逊欧洲站新卖家基础资料清单](/checklists/new-seller-basics/)
+      详见:[亚马逊欧洲站新卖家基础资料清单](/eu/checklists/new-seller-basics/)
 
 - [ ] **第 4 件:注册德国 LUCID(包装回收)**
       做啥:去 verpackungsregister.org 免费注册,拿到 LUCID 号,跟一个回收系统(绿点 / Interseroh 等)签合同。
       为啥:没 LUCID 号 → 德国 FBA 入仓直接被卡;不做包装回收 → 德国监管罚款 €10 万起。
-      详见:[德国 LUCID 包装法与 EPR 注册](/radar/de-lucid-packaging/)
+      详见:[德国 LUCID 包装法与 EPR 注册](/eu/radar/de-lucid-packaging/)
 
 - [ ] **第 5 件:注册法国 EPR(产品回收)**
       做啥:在 Citeo(包装)+ Ecologic(电气,如果有)等系统注册,拿到唯一识别符(UID),印在包装上。
       为啥:法国 EPR 从 2022 年起强制;没 UID 的产品法国 FBA 仓不接,亚马逊也会定期清理违规 listing。
-      详见:[法国 EPR Triman 标识 + 唯一识别符](/radar/france-epr-triman/)
+      详见:[法国 EPR Triman 标识 + 唯一识别符](/eu/radar/france-epr-triman/)
 
 - [ ] **第 6 件:上 GPSR 责任人信息**
       做啥:在 Amazon 后台和包装上,印上"欧盟责任人(Responsible Person)"的姓名 / 地址 / 邮箱。
       为啥:2024 年 12 月起,没有 GPSR 责任人信息的产品亚马逊直接隐藏或下架;客户问起来也答不上。
-      详见:[欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person/)
+      详见:[欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person/)
 
 - [ ] **第 7 件:准备 4 国语言说明书(英 / 德 / 法 / 意)**
       做啥:产品说明书、警告语、保修条款,准备英、德、法、意 4 个版本(西班牙用英语也能凑合)。
       为啥:成员国海关和平台客服会要求本地语;德语说明书没有 = 德国海关直接扣货。
-      详见:[产品上架前资料检查清单](/checklists/pre-listing-documents/)
+      详见:[产品上架前资料检查清单](/eu/checklists/pre-listing-documents/)
 
 - [ ] **第 8 件:给产品打 CE 标识**
       做啥:在产品本体 / 包装上印 CE 标志,准备好"EU Declaration of Conformity(符合性声明)"文件。
       为啥:CE 是欧盟市场的"准生证",没 CE 标识的工业品 / 玩具 / 电子一律不能合法销售。
-      详见:[CE 标识怎么打:欧盟合格标志速读](/radar/guide-ce-marking/)
+      详见:[CE 标识怎么打:欧盟合格标志速读](/eu/radar/guide-ce-marking/)
 
 - [ ] **第 9 件:注册 EPREL(电气 / 电子产品才需要)**
       做啥:在能效产品上贴 EU 能效标签,然后到 EPREL 数据库(eu-rephub)登记产品参数。
       为啥:不做 EPREL 登记 = 电器类 listing 会被平台下架,德国监管也会在抽查时处罚。
-      详见:[欧盟能效标签 EPREL 数据库](/radar/eu-eprel-energy-label/)
+      详见:[欧盟能效标签 EPREL 数据库](/eu/radar/eu-eprel-energy-label/)
 
 - [ ] **第 10 件:设置 1 个自动备份的合规文件夹**
       做啥:在云盘(Google Drive / OneDrive / 飞书云文档)建一个"EU 合规"文件夹,把 CE / DoC / 测试报告 / VAT 证书 / LUCID 证书 / EPR UID / GPSR 责任人都放进去,开自动同步。
       为啥:平台 / 海关 / 监管机构发合规通知时,要求 48 小时内提交文件,找不到 = 直接下架。
-      详见:[收到平台合规通知后的 48 小时应对清单](/checklists/compliance-notice-48h/)
+      详见:[收到平台合规通知后的 48 小时应对清单](/eu/checklists/compliance-notice-48h/)
 
 ---
 

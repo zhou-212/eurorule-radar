@@ -157,7 +157,7 @@ example: false
 - 包装上要印:**欧代公司名 + 邮政地址 + 联系方式**(具体格式看产品类目)
 - 头程的清关文件 / FBA 入仓时亚马逊抽查包装 → 欧代信息印错了 / 没印 = 扣货 + 拒收
 
-> 关联:[欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person) —— 欧代 + 包装合规必读
+> 关联:[欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person) —— 欧代 + 包装合规必读
 
 ## 常见误区(新手 100% 会踩)
 
@@ -263,10 +263,10 @@ A:可以,叫"分仓"。**Pan-EU 模式**:亚马逊自动在你开启的国家分
 
 ### 站内法规卡(物流 + 合规相关)
 
-- [亚马逊欧洲站 90 天合规起步路线图](/radar/guide-seller-90days) —— 告诉你**头程前的 VAT / EORI 申请是第 1-2 周的事**
-- [德国 / 法国 / 意大利,我先开哪个](/radar/guide-pick-first-country) —— 决定你的头程先发到哪个国家
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) —— **EORI / VAT / 欧代 / EPR / GPSR 一次说清**
-- [欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person) —— 欧代 + 包装合规必读
+- [亚马逊欧洲站 90 天合规起步路线图](/eu/radar/guide-seller-90days) —— 告诉你**头程前的 VAT / EORI 申请是第 1-2 周的事**
+- [德国 / 法国 / 意大利,我先开哪个](/eu/radar/guide-pick-first-country) —— 决定你的头程先发到哪个国家
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) —— **EORI / VAT / 欧代 / EPR / GPSR 一次说清**
+- [欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person) —— 欧代 + 包装合规必读
 
 ### 站外工具(物流成本计算)
 

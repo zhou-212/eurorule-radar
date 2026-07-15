@@ -10,13 +10,13 @@
  * ------------------------------------------------------------
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import RadarCard from '../../components/RadarCard.astro';
-import ChecklistCard from '../../components/ChecklistCard.astro';
-import EmailSubscribe from '../../components/EmailSubscribe.astro';
-import { withBase, siteAsDir } from '../../lib/url';
-import { SITE_DEFAULTS } from '../../lib/radar';
-import { buildComparesConfig, type CompareConfig } from '../../lib/compare-config';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import RadarCard from '../../../components/RadarCard.astro';
+import ChecklistCard from '../../../components/ChecklistCard.astro';
+import EmailSubscribe from '../../../components/EmailSubscribe.astro';
+import { withBase, siteAsDir } from '../../../lib/url';
+import { SITE_DEFAULTS } from '../../../lib/radar';
+import { buildComparesConfig, type CompareConfig } from '../../../lib/compare-config';
 
 export async function getStaticPaths() {
   const COMPARES: CompareConfig[] = buildComparesConfig();
@@ -110,7 +110,7 @@ const articleJsonLd = {
     <nav class="breadcrumb" aria-label="面包屑">
       <a href={withBase('/')}>首页</a>
       <span class="breadcrumb-sep">/</span>
-      <a href={withBase('/compare/')}>对比指南</a>
+      <a href={withBase('/eu/compare/')}>对比指南</a>
       <span class="breadcrumb-sep">/</span>
       <span>{config.leftName} vs {config.rightName}</span>
     </nav>
@@ -121,13 +121,13 @@ const articleJsonLd = {
       <h1>{config.leftName} <span class="compare-vs">vs</span> {config.rightName}</h1>
       <p class="compare-one-liner">{config.oneLiner}</p>
       <div class="compare-two-cards">
-        <a class="compare-card compare-card-left" href={leftRadar ? withBase(`/radar/${leftRadar.id.replace(/\.(md|mdx)$/, '')}/`) : '#'}>
+        <a class="compare-card compare-card-left" href={leftRadar ? withBase(`/eu/radar/${leftRadar.id.replace(/\.(md|mdx)$/, '')}/`) : '#'}>
           <span class="compare-card-tag">{config.leftName}</span>
           <h2 class="compare-card-title">{config.leftFullName}</h2>
           <p class="compare-card-short">{config.leftShort}</p>
         </a>
         <div class="compare-vs-divider" aria-hidden="true">VS</div>
-        <a class="compare-card compare-card-right" href={rightRadar ? withBase(`/radar/${rightRadar.id.replace(/\.(md|mdx)$/, '')}/`) : '#'}>
+        <a class="compare-card compare-card-right" href={rightRadar ? withBase(`/eu/radar/${rightRadar.id.replace(/\.(md|mdx)$/, '')}/`) : '#'}>
           <span class="compare-card-tag">{config.rightName}</span>
           <h2 class="compare-card-title">{config.rightFullName}</h2>
           <p class="compare-card-short">{config.rightShort}</p>
@@ -169,7 +169,7 @@ const articleJsonLd = {
           <p class="compare-what-body">{config.leftWhat}</p>
           {leftRadar && (
             <p class="compare-link-row">
-              👉 看完整 <a href={withBase(`/radar/${leftRadar.id.replace(/\.(md|mdx)$/, '')}/`)}>{leftRadar.data.title}</a>
+              👉 看完整 <a href={withBase(`/eu/radar/${leftRadar.id.replace(/\.(md|mdx)$/, '')}/`)}>{leftRadar.data.title}</a>
             </p>
           )}
         </div>
@@ -178,7 +178,7 @@ const articleJsonLd = {
           <p class="compare-what-body">{config.rightWhat}</p>
           {rightRadar && (
             <p class="compare-link-row">
-              👉 看完整 <a href={withBase(`/radar/${rightRadar.id.replace(/\.(md|mdx)$/, '')}/`)}>{rightRadar.data.title}</a>
+              👉 看完整 <a href={withBase(`/eu/radar/${rightRadar.id.replace(/\.(md|mdx)$/, '')}/`)}>{rightRadar.data.title}</a>
             </p>
           )}
         </div>

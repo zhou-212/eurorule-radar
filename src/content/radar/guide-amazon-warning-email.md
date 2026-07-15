@@ -163,7 +163,7 @@ example: false
 
 - **24 小时内**:亚马逊系统自动确认收到
 - **3-7 天**:人工审核 + 给结论
-- **7 天以上没回**:发催办邮件(参考 [GPSR 催办模板](/radar/guide-amazon-gpsr-email))
+- **7 天以上没回**:发催办邮件(参考 [GPSR 催办模板](/eu/radar/guide-amazon-gpsr-email))
 
 **关键:不要反复问"看到没"**。**亚马逊审核员最烦"刷屏卖家"**,反而把工单排到后面。**提交一次,等 3-7 天,没回再催**。
 
@@ -465,10 +465,10 @@ A:**会**。**亚马逊内部有 "warning strike" 机制**:
 
 ### 站内法规卡(账号健康 + 申诉相关)
 
-- [亚马逊欧洲站 90 天合规起步路线图](/radar/guide-seller-90days) —— 告诉你**前 3 个月如何避免 90% 的警告信**
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) —— **GPSR / 欧代 / EPR 是产品安全类警告的高发点**
-- [欧盟 GPSR 通用产品安全法规](/radar/eu-gpsr-responsible-person) —— 收到 GPSR 警告信的整改方案
-- [亚马逊发 GPSR 邮件怎么回:3 套中英模板](/radar/guide-amazon-gpsr-email) —— 配套的"邮件回复"风格参考
+- [亚马逊欧洲站 90 天合规起步路线图](/eu/radar/guide-seller-90days) —— 告诉你**前 3 个月如何避免 90% 的警告信**
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) —— **GPSR / 欧代 / EPR 是产品安全类警告的高发点**
+- [欧盟 GPSR 通用产品安全法规](/eu/radar/eu-gpsr-responsible-person) —— 收到 GPSR 警告信的整改方案
+- [亚马逊发 GPSR 邮件怎么回:3 套中英模板](/eu/radar/guide-amazon-gpsr-email) —— 配套的"邮件回复"风格参考
 
 ### 站外工具(申诉辅助)
 

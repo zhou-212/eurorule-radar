@@ -397,9 +397,9 @@ example: false
 
 ### 站内法规卡(评论相关)
 
-- [亚马逊欧洲站 90 天合规起步路线图](/radar/guide-seller-90days) —— 知道评论合规在 90 天里什么时候做
-- [亚马逊欧洲站 8 大合规名词一次搞懂](/radar/guide-8-terms) —— 看评论合规在整个合规体系里的位置
-- [FBA vs 自发货(FBM)](/radar/guide-fba-vs-fbm) —— FBA 让亚马逊处理退货,差评率比 FBM 低
+- [亚马逊欧洲站 90 天合规起步路线图](/eu/radar/guide-seller-90days) —— 知道评论合规在 90 天里什么时候做
+- [亚马逊欧洲站 8 大合规名词一次搞懂](/eu/radar/guide-8-terms) —— 看评论合规在整个合规体系里的位置
+- [FBA vs 自发货(FBM)](/eu/radar/guide-fba-vs-fbm) —— FBA 让亚马逊处理退货,差评率比 FBM 低
 
 ### 站外工具(合规评论运营)
 
