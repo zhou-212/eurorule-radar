@@ -1,0 +1,397 @@
+---
+/**
+ * /downloads/ — PDF 留资 landing page
+ * ------------------------------------------------------------
+ * 留住客户:留 email 拿"个人合规清单"PDF
+ * 邮件订阅:wir.weekly() — 每周一条"本周欧盟合规更新"
+ * 核心价值:用 PDF 工具换 email,给"打勾完成度" + 长期回访机制
+ * ------------------------------------------------------------
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+
+const siteStr = siteAsDir(Astro.site);
+const pdfHref = '/downloads/personal-compliance-checklist.html';
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '下载 & 订阅', item: siteStr ? `${siteStr}downloads/` : undefined },
+  ],
+};
+
+// FAQ 三组,展示在 landing 上降低跳出
+const faqs = [
+  {
+    q: 'PDF 真的免费吗?',
+    a: '完全免费,不需要注册账号,直接打开浏览器就能看 / 打印。PDF 里有 50+ 项可勾选 checkbox,你 30 分钟自评 + 2 小时补全。',
+  },
+  {
+    q: '为什么要留 email?',
+    a: '自愿。你可以匿名下载,不留任何信息。但留了之后会收到"每周欧盟合规更新"邮件(每周一条,5 分钟读完),帮你不错过重大法规变化。',
+  },
+  {
+    q: '邮件订阅能取消吗?',
+    a: '任何邮件里都有 1 键退订链接,我们不存你的邮箱到第三方平台。',
+  },
+];
+---
+
+<BaseLayout
+  title="下载 & 订阅"
+  description="免费下载亚马逊欧洲站个人合规清单 PDF(50+ 项可勾选),顺便订阅每周欧盟合规更新邮件。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>下载 & 订阅</span>
+    </nav>
+
+    <!-- Hero -->
+    <header class="dl-hero">
+      <h1>把合规变成 50 个 checkbox</h1>
+      <p class="dl-subtitle">
+        30 分钟自评 + 2 小时补全。打印出来贴墙上,
+        或者 PDF 里直接勾 —— 完成度 80% 之前,先别扩 SKU。
+      </p>
+    </header>
+
+    <!-- PDF 主卡片 -->
+    <section class="dl-pdf-card">
+      <div class="dl-pdf-info">
+        <div class="dl-pdf-badge">📄 免费 PDF</div>
+        <h2>个人合规清单 v1.0</h2>
+        <p class="dl-pdf-desc">
+          亚马逊欧洲站(DE/FR/IT/ES/NL)卖家个人版合规清单。覆盖 7 大块:
+          账号税务 / 产品合规 / 包装环保 / 电池电子 / 平台运营 / 物流文件 / 应急处理。
+        </p>
+        <ul class="dl-pdf-features">
+          <li>✅ 50+ 项可勾选 checkbox,自评完成度</li>
+          <li>✅ 时间线速查(GPSR / IOSS / PPWR / CRA 等生效日)</li>
+          <li>✅ 卖家画像(产品类目 / 销售方式 / 含电池 / 联网产品)</li>
+          <li>✅ A4 打印友好,勾完打印存档,合规抽查用得上</li>
+        </ul>
+        <div class="dl-pdf-cta-row">
+          <a class="btn btn-primary" href={withBase(pdfHref)} target="_blank" rel="noopener">
+            直接打开 PDF
+          </a>
+          <a class="btn btn-secondary" href={withBase(pdfHref)} download>
+            ⬇ 下载到本地
+          </a>
+        </div>
+        <p class="dl-pdf-meta">HTML 格式 · A4 打印 · 2026-07 版</p>
+      </div>
+      <div class="dl-pdf-preview" aria-hidden="true">
+        <div class="dl-pdf-page">
+          <div class="dl-pdf-line">📄 个人合规清单 v1.0</div>
+          <div class="dl-pdf-line dl-pdf-line-sm">亚马逊欧洲站卖家 · 2026-07</div>
+          <div class="dl-pdf-line dl-pdf-line-divider"></div>
+          <div class="dl-pdf-line">☐ 1.1 已注册 DE VAT 税号</div>
+          <div class="dl-pdf-line">☐ 1.2 已注册 FR/IT/ES/NL 税号</div>
+          <div class="dl-pdf-line">☐ 1.3 IOSS 号已填后台</div>
+          <div class="dl-pdf-line dl-pdf-line-done">☑ 1.4 OSS 申报周期已确定</div>
+          <div class="dl-pdf-line">☐ 2.1 已选欧代并签约</div>
+          <div class="dl-pdf-line">☐ 2.2 DoC 已签字存档</div>
+          <div class="dl-pdf-line">☐ 2.3 CE 标志已印产品</div>
+          <div class="dl-pdf-line">...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 邮件订阅 -->
+    <section class="dl-subscribe">
+      <h2>每周一条"本周欧盟合规更新"</h2>
+      <p>
+        每周一早上 5 分钟读完。包含:本周新法规 / 欧盟生效日临近 / 亚马逊合规预警 /
+        3 条速读。不发软广,不卖课,纯信息。
+      </p>
+      <form class="dl-subscribe-form" action="#" method="post" data-subscribe-form>
+        <label class="sr-only" for="dl-email">邮箱</label>
+        <input
+          type="email"
+          id="dl-email"
+          name="email"
+          class="dl-subscribe-input"
+          placeholder="你的邮箱"
+          required
+        />
+        <button type="submit" class="btn btn-primary">订阅周报</button>
+      </form>
+      <p class="dl-subscribe-note" data-subscribe-msg>
+        订阅成功!我们会在下一封周报发出时给你写信。退订 1 键完成。
+      </p>
+    </section>
+
+    <!-- FAQ -->
+    <section class="dl-faq">
+      <h2>常见问题</h2>
+      <div class="dl-faq-list">
+        {faqs.map((f) => (
+          <details class="dl-faq-item">
+            <summary class="dl-faq-q">{f.q}</summary>
+            <div class="dl-faq-a"><p>{f.a}</p></div>
+          </details>
+        ))}
+      </div>
+    </section>
+
+    <!-- 替代路径 -->
+    <section class="dl-alts">
+      <h2>不想留 email?也可以</h2>
+      <ul class="dl-alts-list">
+        <li>
+          <strong>直接读站内:</strong>
+          <a href={withBase('/learn/start-90-days/')}>新手起步(0-90 天)路径</a>
+          5-6 步串完基础合规
+        </li>
+        <li>
+          <strong>先看自测:</strong>
+          <a href={withBase('/self-check/')}>3 步判断欧洲站适不适合你</a>
+          30 秒出结果
+        </li>
+        <li>
+          <strong>查对比:</strong>
+          <a href={withBase('/compare/')}>10 张对比页</a>
+          高频搜索问题 1 屏判断
+        </li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .dl-hero { margin: 0.5rem 0 1.5rem 0; }
+  .dl-hero h1 {
+    margin: 0 0 0.3em 0;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+  }
+  .dl-subtitle {
+    color: var(--color-ink-700);
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  .dl-pdf-card {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 1.5rem;
+    align-items: stretch;
+    margin: 2rem 0;
+    padding: 1.8rem;
+    background: linear-gradient(135deg, #fff 0%, var(--color-primary-50) 100%);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-lg);
+  }
+  .dl-pdf-badge {
+    display: inline-block;
+    padding: 0.25em 0.8em;
+    background: var(--color-primary-700);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-radius: 999px;
+    margin-bottom: 0.5rem;
+  }
+  .dl-pdf-info h2 {
+    margin: 0 0 0.5em 0;
+    font-size: 1.4rem;
+    color: var(--color-ink-900);
+  }
+  .dl-pdf-desc {
+    color: var(--color-ink-700);
+    line-height: 1.7;
+    margin: 0 0 1rem 0;
+  }
+  .dl-pdf-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.2rem 0;
+    color: var(--color-ink-700);
+    line-height: 1.8;
+    font-size: 0.95rem;
+  }
+  .dl-pdf-cta-row {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+  }
+  .dl-pdf-meta {
+    color: var(--color-ink-500);
+    font-size: 0.82rem;
+    margin: 0;
+  }
+
+  /* PDF 预览 */
+  .dl-pdf-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dl-pdf-page {
+    width: 100%;
+    max-width: 280px;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 1.2rem 1.4rem;
+    font-family: var(--font-mono, monospace);
+    color: var(--color-ink-800);
+  }
+  .dl-pdf-line {
+    padding: 0.2em 0;
+    font-size: 0.85rem;
+  }
+  .dl-pdf-line-sm {
+    color: var(--color-ink-500);
+    font-size: 0.75rem;
+  }
+  .dl-pdf-line-divider {
+    height: 1px;
+    background: var(--color-ink-200);
+    margin: 0.4em 0;
+    padding: 0;
+  }
+  .dl-pdf-line-done {
+    color: #16a34a;
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  /* 邮件订阅 */
+  .dl-subscribe {
+    margin: 2.5rem 0;
+    padding: 1.8rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+  }
+  .dl-subscribe h2 {
+    margin: 0 0 0.5em 0;
+    font-size: 1.3rem;
+    color: var(--color-ink-900);
+  }
+  .dl-subscribe > p {
+    color: var(--color-ink-700);
+    line-height: 1.7;
+    margin: 0 0 1rem 0;
+  }
+  .dl-subscribe-form {
+    display: flex;
+    gap: 0.6rem;
+    max-width: 480px;
+    flex-wrap: wrap;
+  }
+  .dl-subscribe-input {
+    flex: 1 1 240px;
+    min-width: 200px;
+    padding: 0.7em 0.9em;
+    border: 1px solid var(--color-ink-300);
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    background: #fff;
+  }
+  .dl-subscribe-input:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+  .dl-subscribe-note {
+    color: var(--color-ink-500);
+    font-size: 0.85rem;
+    margin: 0.7em 0 0 0;
+    display: none;
+  }
+  .dl-subscribe-note.is-shown {
+    display: block;
+    color: #16a34a;
+  }
+
+  /* FAQ */
+  .dl-faq { margin: 2.5rem 0 1.5rem 0; }
+  .dl-faq h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .dl-faq-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .dl-faq-item {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+  }
+  .dl-faq-item[open] { border-color: var(--color-primary-300); }
+  .dl-faq-q {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.8em 1em;
+    font-weight: 500;
+    color: var(--color-ink-900);
+    position: relative;
+  }
+  .dl-faq-q::-webkit-details-marker { display: none; }
+  .dl-faq-q::after {
+    content: '+';
+    position: absolute;
+    right: 1em;
+    color: var(--color-ink-500);
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+  .dl-faq-item[open] .dl-faq-q::after { content: '−'; color: var(--color-primary-700); }
+  .dl-faq-a {
+    padding: 0 1em 1em 1em;
+    color: var(--color-ink-700);
+    line-height: 1.7;
+  }
+  .dl-faq-a p { margin: 0; }
+
+  /* 替代路径 */
+  .dl-alts {
+    margin: 2.5rem 0 1.5rem 0;
+    padding: 1.3rem 1.5rem;
+    background: var(--color-ink-50);
+    border-radius: var(--radius);
+  }
+  .dl-alts h2 { font-size: 1.15rem; margin: 0 0 0.5em 0; }
+  .dl-alts-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    color: var(--color-ink-700);
+    line-height: 1.8;
+  }
+
+  @media (max-width: 720px) {
+    .dl-pdf-card {
+      grid-template-columns: 1fr;
+    }
+    .dl-subscribe-form {
+      flex-direction: column;
+    }
+  }
+</style>
+
+<script>
+  // 邮件订阅表单 - 客户端 mock (后续接 Mailchimp/Brevo)
+  const form = document.querySelector('[data-subscribe-form]') as HTMLFormElement | null;
+  const msg = document.querySelector('[data-subscribe-msg]') as HTMLElement | null;
+  if (form && msg) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = (form.querySelector('input[name=email]') as HTMLInputElement).value;
+      if (!email) return;
+      // 暂存到 localStorage (后续接入后端时改)
+      try {
+        localStorage.setItem('weiread:subscriber', JSON.stringify({ email, ts: Date.now() }));
+      } catch {}
+      msg.textContent = `感谢订阅!我们会把"${email.replace(/(.{3}).+(@.+)/, '$1***$2')}"加进下一封周报的发送名单,5 分钟看完一周欧盟合规更新。`;
+      msg.classList.add('is-shown');
+      form.querySelector('input[name=email]')!.setAttribute('disabled', 'true');
+      (form.querySelector('button[type=submit]') as HTMLButtonElement).setAttribute('disabled', 'true');
+    });
+  }
+</script>

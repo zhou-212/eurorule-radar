@@ -1,0 +1,522 @@
+---
+/**
+ * /learn/{slug} — 单条学习路径详情页
+ * ------------------------------------------------------------
+ * 进度跟踪:localStorage 存已完成 step id,带百分比进度条
+ * ------------------------------------------------------------
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+import { buildLearningPaths, type LearnPath } from '../../lib/learning-paths';
+
+export async function getStaticPaths() {
+  const PATHS: LearnPath[] = buildLearningPaths();
+  const allRadar = await getCollection('radar', ({ data }) => !data.draft);
+  const allChecklists = await getCollection('checklists');
+  const radarById = new Map(
+    allRadar.map((r) => [r.id.replace(/\.(md|mdx)$/, ''), r])
+  );
+  const checklistById = new Map(
+    allChecklists.map((c) => [c.id, c])
+  );
+
+  return PATHS.map((p) => {
+    // 给每个 step 补强: title 替换成真实 radar/guide 标题
+    const enrichedSteps = p.steps.map((step) => {
+      let realTitle = step.title;
+      // href 形式: /radar/{id} | /guide/{id} | /compare/{id} | /checklists/{id}
+      const m = step.href.match(/^\/(radar|guide|compare|checklists)\/([^/]+)\/?$/);
+      if (m) {
+        const kind = m[1];
+        const id = m[2];
+        if (kind === 'radar' && radarById.has(id)) {
+          realTitle = radarById.get(id)!.data.title;
+        }
+        // guide/compare/checklists 用 step.title 即可(config 已是友好名)
+      }
+      return { ...step, realTitle };
+    });
+
+    return {
+      params: { slug: p.slug },
+      props: { path: { ...p, steps: enrichedSteps } },
+    };
+  });
+}
+
+interface PageProps {
+  path: LearnPath;
+}
+
+const { path: p } = Astro.props as PageProps;
+const siteStr = siteAsDir(Astro.site);
+const pageUrl = siteStr ? `${siteStr}learn/${p.slug}/` : `/learn/${p.slug}/`;
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '学习路径', item: siteStr ? `${siteStr}learn/` : undefined },
+    { '@type': 'ListItem', position: 3, name: p.title, item: pageUrl },
+  ],
+};
+
+const totalSteps = p.steps.filter((s) => !s.isOptional).length;
+---
+
+<BaseLayout
+  title={p.title}
+  description={`${p.subtitle}。${p.steps.length} 步,约 ${p.estTotalMinutes} 分钟。完成后:${p.finalReward}`}
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/learn/')}>学习路径</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>{p.title}</span>
+    </nav>
+
+    <!-- Hero -->
+    <header class="learn-hero">
+      <p class="learn-eyebrow">学习路径 · {p.icon}</p>
+      <h1>{p.title}</h1>
+      <p class="learn-subtitle">{p.subtitle}</p>
+      <p class="learn-meta">适合:<strong>{p.audience}</strong> · 共 {p.steps.length} 步 · 约 {p.estTotalMinutes} 分钟</p>
+    </header>
+
+    <!-- 进度条 -->
+    <section class="learn-progress" data-path-slug={p.slug} data-total-steps={totalSteps} data-step-ids={JSON.stringify(p.steps.filter((s) => !s.isOptional).map((s) => s.id))}>
+      <div class="learn-progress-row">
+        <span class="learn-progress-label">你的进度</span>
+        <span class="learn-progress-text"><span data-progress-done>0</span> / {totalSteps} 步</span>
+        <span class="learn-progress-pct" data-progress-pct>0%</span>
+      </div>
+      <div class="learn-progress-bar" aria-hidden="true">
+        <div class="learn-progress-fill" data-progress-fill style="width: 0%"></div>
+      </div>
+      <button type="button" class="learn-progress-reset" data-progress-reset>重置进度</button>
+    </section>
+
+    <!-- 为什么需要这条路 -->
+    <section class="learn-why">
+      <h2>为什么需要这条路</h2>
+      <p>{p.whyItMatters}</p>
+    </section>
+
+    <!-- 步骤列表 -->
+    <section class="learn-steps">
+      <h2>走这 {p.steps.length} 步</h2>
+      <ol class="learn-step-list">
+        {p.steps.map((step, i) => (
+          <li class="learn-step-item" data-step-id={step.id}>
+            <div class="learn-step-num-row">
+              <div class="learn-step-num" aria-hidden="true">{i + 1}</div>
+              <div class="learn-step-check">
+                <input
+                  type="checkbox"
+                  class="learn-step-cb"
+                  data-step-cb={step.id}
+                  id={`cb-${step.id}`}
+                  aria-label={`标记完成: ${step.title}`}
+                />
+                <label for={`cb-${step.id}`} class="learn-step-check-label">已完成</label>
+              </div>
+            </div>
+            <div class="learn-step-body">
+              <h3 class="learn-step-title">
+                <a href={withBase(step.href)}>{(step as any).realTitle || step.title}</a>
+                {step.isOptional && <span class="learn-step-optional">可选</span>}
+              </h3>
+              <p class="learn-step-desc">{step.desc}</p>
+              <p class="learn-step-meta">约 {step.estMinutes} 分钟</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <!-- 走完奖励 -->
+    <section class="learn-reward">
+      <h2>走完这条路,你能</h2>
+      <p class="learn-reward-text">{p.finalReward}</p>
+    </section>
+
+    <!-- 后续推荐 -->
+    <section class="learn-next">
+      <h2>走完之后,可以接着看</h2>
+      <div class="learn-next-grid">
+        <a class="learn-next-tile" href={withBase('/self-check/')}>
+          <span class="learn-next-tag">影响自测</span>
+          <p>3 步判断欧洲站适不适合你做,30 秒出结果。</p>
+        </a>
+        <a class="learn-next-tile" href={withBase('/downloads/')}>
+          <span class="learn-next-tag">合规清单 PDF</span>
+          <p>下载一份完整的合规清单,留 email 拿周报更新。</p>
+        </a>
+        <a class="learn-next-tile" href={withBase('/compare/')}>
+          <span class="learn-next-tag">对比指南</span>
+          <p>10 张对比页,高频搜索问题 1 屏判断。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .learn-hero { margin: 0.5rem 0 1.5rem 0; }
+  .learn-eyebrow {
+    display: inline-block;
+    margin: 0 0 0.5em 0;
+    padding: 0.2em 0.7em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 999px;
+  }
+  .learn-hero h1 {
+    margin: 0 0 0.3em 0;
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  }
+  .learn-subtitle {
+    color: var(--color-ink-700);
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin: 0 0 0.4em 0;
+    max-width: 60ch;
+  }
+  .learn-meta {
+    color: var(--color-ink-500);
+    font-size: 0.92rem;
+    margin: 0;
+  }
+  .learn-meta strong {
+    color: var(--color-ink-800);
+    font-weight: 500;
+  }
+
+  /* 进度条 */
+  .learn-progress {
+    margin: 1.5rem 0;
+    padding: 1rem 1.2rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+  }
+  .learn-progress-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 0.6rem;
+  }
+  .learn-progress-label {
+    font-weight: 600;
+    color: var(--color-ink-900);
+  }
+  .learn-progress-text {
+    color: var(--color-ink-700);
+    font-size: 0.95rem;
+  }
+  .learn-progress-pct {
+    margin-left: auto;
+    color: var(--color-primary-700);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .learn-progress-bar {
+    height: 8px;
+    background: var(--color-ink-100);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .learn-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-700));
+    transition: width 0.3s ease-out;
+  }
+  .learn-progress-reset {
+    margin-top: 0.6rem;
+    background: transparent;
+    border: 1px solid var(--color-ink-200);
+    color: var(--color-ink-600);
+    font-size: 0.82rem;
+    padding: 0.3em 0.8em;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  .learn-progress-reset:hover {
+    color: var(--color-danger, #b91c1c);
+    border-color: var(--color-danger, #b91c1c);
+  }
+
+  .learn-why { margin: 2rem 0 1.5rem 0; }
+  .learn-why h2 { font-size: 1.3rem; margin-bottom: 0.5em; }
+  .learn-why p { color: var(--color-ink-700); line-height: 1.75; max-width: 65ch; }
+
+  /* 步骤 */
+  .learn-steps { margin: 2.5rem 0 1rem 0; }
+  .learn-steps h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .learn-step-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .learn-step-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--color-ink-200);
+    align-items: flex-start;
+  }
+  .learn-step-item:last-child { border-bottom: none; }
+  .learn-step-item.is-done {
+    background: #f0fdf4;
+    border-radius: var(--radius);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    margin: 0.4rem 0;
+    border-bottom-color: transparent;
+  }
+  .learn-step-item.is-done .learn-step-title a {
+    color: var(--color-ink-500);
+    text-decoration: line-through;
+  }
+  .learn-step-num-row {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .learn-step-num {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--color-primary-700);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+  .learn-step-item.is-done .learn-step-num {
+    background: #16a34a;
+  }
+  .learn-step-check {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+  }
+  .learn-step-cb {
+    width: 1.3rem;
+    height: 1.3rem;
+    cursor: pointer;
+    accent-color: var(--color-primary-700);
+  }
+  .learn-step-check-label {
+    font-size: 0.7rem;
+    color: var(--color-ink-500);
+    cursor: pointer;
+  }
+  .learn-step-body { flex: 1; min-width: 0; }
+  .learn-step-title {
+    margin: 0 0 0.3em 0;
+    font-size: 1.05rem;
+    color: var(--color-ink-900);
+  }
+  .learn-step-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .learn-step-title a:hover {
+    color: var(--color-primary-700);
+    text-decoration: underline;
+  }
+  .learn-step-optional {
+    display: inline-block;
+    margin-left: 0.5em;
+    padding: 0.1em 0.55em;
+    font-size: 0.7rem;
+    color: var(--color-ink-500);
+    background: var(--color-ink-100);
+    border-radius: 999px;
+    font-weight: 500;
+    vertical-align: middle;
+  }
+  .learn-step-desc {
+    color: var(--color-ink-700);
+    line-height: 1.6;
+    margin: 0 0 0.4em 0;
+    font-size: 0.95rem;
+  }
+  .learn-step-meta {
+    color: var(--color-ink-500);
+    font-size: 0.82rem;
+    margin: 0;
+  }
+
+  .learn-reward {
+    margin: 2.5rem 0 1.5rem 0;
+    padding: 1.3rem 1.5rem;
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-lg);
+  }
+  .learn-reward h2 {
+    margin: 0 0 0.4em 0;
+    font-size: 1.1rem;
+    color: var(--color-primary-800);
+  }
+  .learn-reward-text {
+    color: var(--color-ink-800);
+    margin: 0;
+    line-height: 1.7;
+    font-weight: 500;
+  }
+
+  .learn-next { margin: 2.5rem 0 1.5rem 0; }
+  .learn-next h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .learn-next-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .learn-next-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1rem 1.2rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+  }
+  .learn-next-tile:hover {
+    border-color: var(--color-primary-300);
+    color: inherit;
+  }
+  .learn-next-tag {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 0.15em 0.65em;
+    font-size: 0.78rem;
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 999px;
+  }
+  .learn-next-tile p {
+    color: var(--color-ink-700);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  @media (max-width: 720px) {
+    .learn-step-item {
+      gap: 0.7rem;
+    }
+    .learn-step-num {
+      width: 1.7rem;
+      height: 1.7rem;
+      font-size: 0.85rem;
+    }
+    .learn-step-cb {
+      width: 1.1rem;
+      height: 1.1rem;
+    }
+  }
+</style>
+
+<script>
+  // Progress 跟踪: localStorage 存 path slug -> Set<step id>
+  // key 形如 "learn:progress:start-90-days" -> ["start-90-days-01", "start-90-days-02"]
+  const STORAGE_PREFIX = 'learn:progress:';
+
+  function loadDone(slug: string): Set<string> {
+    try {
+      const raw = localStorage.getItem(STORAGE_PREFIX + slug);
+      if (!raw) return new Set();
+      return new Set(JSON.parse(raw));
+    } catch {
+      return new Set();
+    }
+  }
+  function saveDone(slug: string, set: Set<string>) {
+    try {
+      localStorage.setItem(STORAGE_PREFIX + slug, JSON.stringify([...set]));
+    } catch {
+      // ignore
+    }
+  }
+
+  const progressEl = document.querySelector('.learn-progress') as HTMLElement | null;
+  if (progressEl) {
+    const slug = progressEl.dataset.pathSlug!;
+    const total = parseInt(progressEl.dataset.totalSteps || '0', 10);
+    const stepIds: string[] = JSON.parse(progressEl.dataset.stepIds || '[]');
+    const done = loadDone(slug);
+
+    const doneEl = progressEl.querySelector('[data-progress-done]') as HTMLElement;
+    const pctEl = progressEl.querySelector('[data-progress-pct]') as HTMLElement;
+    const fillEl = progressEl.querySelector('[data-progress-fill]') as HTMLElement;
+    const resetBtn = progressEl.querySelector('[data-progress-reset]') as HTMLButtonElement;
+
+    function refreshUI() {
+      const n = done.size;
+      const pct = total > 0 ? Math.round((n / total) * 100) : 0;
+      doneEl.textContent = String(n);
+      pctEl.textContent = pct + '%';
+      fillEl.style.width = pct + '%';
+      // 更新 step 项视觉
+      document.querySelectorAll('.learn-step-item').forEach((item) => {
+        const id = (item as HTMLElement).dataset.stepId;
+        if (id && done.has(id)) {
+          item.classList.add('is-done');
+          const cb = item.querySelector('.learn-step-cb') as HTMLInputElement;
+          if (cb) cb.checked = true;
+        } else {
+          item.classList.remove('is-done');
+          const cb = item.querySelector('.learn-step-cb') as HTMLInputElement;
+          if (cb) cb.checked = false;
+        }
+      });
+    }
+
+    // 初始化
+    refreshUI();
+
+    // 监听 checkbox
+    document.querySelectorAll('.learn-step-cb').forEach((cb) => {
+      cb.addEventListener('change', (e) => {
+        const target = e.target as HTMLInputElement;
+        const id = target.dataset.stepCb!;
+        if (target.checked) {
+          done.add(id);
+        } else {
+          done.delete(id);
+        }
+        saveDone(slug, done);
+        refreshUI();
+      });
+    });
+
+    // 重置
+    resetBtn?.addEventListener('click', () => {
+      if (confirm('重置这条路径的进度?这会清除你浏览器里这条路径的勾选状态。')) {
+        done.clear();
+        saveDone(slug, done);
+        refreshUI();
+      }
+    });
+  }
+</script>

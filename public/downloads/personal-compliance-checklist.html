@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>亚马逊欧洲站个人合规清单 v1.0 · 2026-07 版 · weiread.com</title>
+<style>
+  /* ============================================================
+     基础重置
+     ============================================================ */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 11pt; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue",
+                 Arial, sans-serif;
+    line-height: 1.6;
+    color: #1f2937;
+    background: #ececef;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  .page {
+    max-width: 210mm;
+    margin: 20px auto;
+    background: #ffffff;
+    padding: 25mm 20mm;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  /* ============================================================
+     排版
+     ============================================================ */
+  h1, h2, h3, h4 { line-height: 1.3; font-weight: 700; }
+
+  h1 {
+    font-size: 30pt;
+    color: #14307a;
+    letter-spacing: 1px;
+  }
+  h2 {
+    font-size: 15pt;
+    color: #14307a;
+    background: #e8eef9;
+    padding: 10px 16px;
+    border-left: 5px solid #14307a;
+    margin: 26px 0 14px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  h3 {
+    font-size: 12pt;
+    color: #0f7a3a;
+    margin: 18px 0 8px 0;
+    border-bottom: 1px solid #d1fae5;
+    padding-bottom: 4px;
+  }
+  h4 {
+    font-size: 10.5pt;
+    color: #4b5563;
+    margin: 12px 0 6px 0;
+    font-weight: 600;
+  }
+
+  p { margin: 6px 0; }
+
+  a {
+    color: #14307a;
+    text-decoration: none;
+    border-bottom: 1px dotted #14307a;
+  }
+  a:hover { border-bottom-style: solid; }
+
+  ul, ol { margin: 6px 0 6px 20px; }
+  li { margin: 3px 0; }
+
+  code {
+    font-family: "SF Mono", Consolas, "Courier New", monospace;
+    font-size: 9.5pt;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+    color: #334155;
+  }
+
+  /* ============================================================
+     复选框列表
+     ============================================================ */
+  ul.checklist {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 14px 0;
+  }
+  ul.checklist > li {
+    padding: 8px 0 8px 36px;
+    position: relative;
+    border-bottom: 1px dashed #e5e7eb;
+  }
+  ul.checklist > li:last-child { border-bottom: none; }
+  ul.checklist > li::before {
+    content: "\2610";  /* ☐ */
+    position: absolute;
+    left: 10px;
+    top: 8px;
+    font-size: 18px;
+    line-height: 1;
+    color: #4b5563;
+  }
+  ul.checklist .item-title {
+    font-weight: 600;
+    color: #1f2937;
+  }
+  ul.checklist .item-desc {
+    display: block;
+    font-size: 9.5pt;
+    color: #6b7280;
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+  ul.checklist .item-ref {
+    font-size: 9pt;
+    color: #14307a;
+    margin-left: 4px;
+  }
+
+  /* ============================================================
+     标签系统
+     ============================================================ */
+  .tag {
+    display: inline-block;
+    font-size: 8.5pt;
+    font-weight: 600;
+    padding: 1px 8px;
+    border-radius: 10px;
+    margin-left: 4px;
+    color: #fff;
+    vertical-align: middle;
+    line-height: 1.5;
+  }
+  .tag-required { background: #dc2626; }       /* 必做 */
+  .tag-fba      { background: #2563eb; }       /* FBA */
+  .tag-3pl      { background: #0891b2; }       /* 直邮 */
+  .tag-battery  { background: #f59e0b; }       /* 含电池 */
+  .tag-network  { background: #7c3aed; }       /* 含联网 */
+  .tag-package  { background: #059669; }       /* 包装 */
+  .tag-uk       { background: #be185d; }       /* UK */
+  .tag-de       { background: #fbbf24; color: #1f2937; }  /* DE */
+  .tag-fr       { background: #3b82f6; }       /* FR */
+  .tag-high     { background: #b91c1c; }       /* 高优先级 */
+  .tag-mid      { background: #ea580c; }       /* 中优先级 */
+  .tag-low      { background: #6b7280; }       /* 低优先级 */
+
+  /* ============================================================
+     元数据 / 信息盒
+     ============================================================ */
+  .meta-box {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 10pt;
+  }
+  .meta-box p { margin: 4px 0; }
+  .meta-box strong { color: #14307a; }
+
+  .callout {
+    border-left: 4px solid #14307a;
+    background: #f0f7ff;
+    padding: 10px 14px;
+    margin: 12px 0;
+    border-radius: 0 6px 6px 0;
+    font-size: 10pt;
+  }
+  .callout-warn {
+    border-left-color: #f59e0b;
+    background: #fffbeb;
+  }
+  .callout-danger {
+    border-left-color: #dc2626;
+    background: #fef2f2;
+  }
+  .callout-success {
+    border-left-color: #059669;
+    background: #f0fdf4;
+  }
+
+  /* ============================================================
+     表格
+     ============================================================ */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 10pt;
+  }
+  th, td {
+    border: 1px solid #d1d5db;
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: #14307a;
+    color: #ffffff;
+    font-weight: 600;
+  }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  /* 状态颜色 */
+  .status-active   { color: #047857; font-weight: 600; }
+  .status-upcoming { color: #b45309; font-weight: 600; }
+  .status-delayed  { color: #4338ca; font-weight: 600; }
+
+  /* ============================================================
+     自评卡片
+     ============================================================ */
+  .score-card {
+    border: 2px dashed #9ca3af;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin: 16px 0;
+    background: #fafbfc;
+  }
+  .score-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px dotted #d1d5db;
+  }
+  .score-line:last-child { border-bottom: none; }
+  .score-line .label { font-weight: 600; color: #1f2937; }
+  .score-line .blank {
+    flex: 0 0 55%;
+    border-bottom: 1px solid #6b7280;
+    min-height: 18px;
+  }
+  .score-note {
+    margin-top: 10px;
+    font-size: 9pt;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  /* ============================================================
+     资源链接卡片
+     ============================================================ */
+  .link-card {
+    display: block;
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: #f0f7ff;
+    border-left: 3px solid #14307a;
+    border-radius: 0 6px 6px 0;
+    text-decoration: none;
+    color: #1f2937;
+    border-bottom: none;
+  }
+  .link-card:hover { background: #e0eaff; }
+  .link-card .link-title {
+    font-weight: 600;
+    color: #14307a;
+    font-size: 10.5pt;
+  }
+  .link-card .link-desc {
+    font-size: 9pt;
+    color: #6b7280;
+    margin-top: 2px;
+    line-height: 1.5;
+  }
+
+  /* ============================================================
+     封面
+     ============================================================ */
+  .cover {
+    text-align: center;
+    padding: 30mm 0 24mm 0;
+    border-bottom: 2px solid #14307a;
+    margin-bottom: 20mm;
+  }
+  .cover h1 { font-size: 32pt; margin-bottom: 14px; }
+  .cover .subtitle {
+    font-size: 15pt;
+    color: #4b5563;
+    margin-bottom: 28px;
+    font-weight: 500;
+  }
+  .cover .info {
+    font-size: 11pt;
+    color: #4b5563;
+    line-height: 2.1;
+    max-width: 130mm;
+    margin: 0 auto;
+  }
+  .cover .info .label { color: #14307a; font-weight: 600; }
+  .cover .stamp {
+    display: inline-block;
+    margin-top: 32px;
+    padding: 8px 22px;
+    border: 2px solid #14307a;
+    color: #14307a;
+    font-weight: 600;
+    border-radius: 6px;
+    font-size: 10.5pt;
+  }
+  .cover .url {
+    margin-top: 14px;
+    font-size: 10pt;
+    color: #6b7280;
+  }
+  .cover .timestamp {
+    margin-top: 8px;
+    font-size: 9pt;
+    color: #9ca3af;
+  }
+
+  /* ============================================================
+     免责声明
+     ============================================================ */
+  .disclaimer {
+    margin-top: 24mm;
+    padding: 14px 18px;
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    font-size: 9pt;
+    color: #78350f;
+    border-radius: 0 6px 6px 0;
+    line-height: 1.6;
+  }
+  .disclaimer strong { color: #5b2e0b; }
+
+  /* ============================================================
+     分页 / 小工具
+     ============================================================ */
+  .page-break { page-break-before: always; }
+  .no-break   { page-break-inside: avoid; }
+
+  .section-count {
+    float: right;
+    font-size: 9pt;
+    font-weight: 500;
+    color: #6b7280;
+    background: #fff;
+    padding: 2px 10px;
+    border-radius: 10px;
+    border: 1px solid #d1d5db;
+  }
+
+  .legend {
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 12px 0;
+    font-size: 9pt;
+    color: #4b5563;
+  }
+  .legend strong { color: #14307a; }
+
+  /* ============================================================
+     打印样式
+     ============================================================ */
+  @media print {
+    body { background: #ffffff; }
+    .page {
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+      max-width: 100%;
+    }
+    h2, h3, h4, th, .tag, .cover, .score-card, .disclaimer,
+    .meta-box, .callout, .link-card, .legend, .section-count {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+    ul.checklist > li { page-break-inside: avoid; }
+    h2, h3 { page-break-after: avoid; }
+    table { page-break-inside: auto; }
+    tr { page-break-inside: avoid; }
+    .cover { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ============================================================
+       1. 封面
+       ============================================================ -->
+  <section class="cover">
+    <h1>亚马逊欧洲站<br>个人合规清单 v1.0</h1>
+    <div class="subtitle">2026-07 版本 · 跨境卖家自评工具</div>
+    <div class="info">
+      <p><span class="label">适合人群：</span>亚马逊 EU 5 国（DE / FR / IT / ES / NL）销售卖家</p>
+      <p><span class="label">估　　时：</span>30 分钟自评 + 2 小时补全</p>
+      <p><span class="label">覆盖周期：</span>2024-12 (GPSR) → 2027-12 (CRA)</p>
+      <p><span class="label">更新频率：</span>跟随欧规雷达主站版本，每月小更、季度大更</p>
+      <p><span class="label">使用建议：</span>先做「卖家画像」自勾选，再按章节逐项核对</p>
+    </div>
+    <div class="stamp">📋 单人自评 · 不强制签名 · 可打印归档</div>
+    <div class="url">主站：<a href="https://weiread.com">https://weiread.com</a> · 欧规雷达</div>
+    <div class="timestamp" id="downloadTs">下载时间戳：生成中...</div>
+  </section>
+
+  <script>
+    // 仅用于生成下载时间戳,不影响打印结果(打印时浏览器已固定)
+    document.getElementById('downloadTs').textContent =
+      '下载时间戳：' + new Date().toLocaleString('zh-CN', { hour12: false });
+  </script>
+
+  <!-- ============================================================
+       2. 卖家画像
+       ============================================================ -->
+  <section>
+    <h2>一、你的卖家画像 <span class="section-count">6 项</span></h2>
+    <p>勾选所有适用的项目，后续章节会按你的画像过滤必做项。本节是过滤器，不计入 50 项总分。</p>
+
+    <h3>1.1 产品类目（可多选）</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">电子电气类</span>
+        <span class="item-desc">含电池、电源适配器、灯具、家电、音视频、玩具电子部件。需 CE / RED / RoHS / 电池法规。</span>
+      </li>
+      <li>
+        <span class="item-title">玩具 / 母婴 / 儿童用品</span>
+        <span class="item-desc">适用 EN 71 系列、玩具指令 2009/48/EC。0-14 岁产品需特别注意警告语与年龄标识。</span>
+      </li>
+      <li>
+        <span class="item-title">美妆 / 护肤 / 个人护理</span>
+        <span class="item-desc">适用化妆品法规 1223/2009。需 CPNP 通报、产品信息文件 PIF、责任人。</span>
+      </li>
+      <li>
+        <span class="item-title">服装 / 纺织 / 鞋类</span>
+        <span class="item-desc">需 REACH 限用物质合规、纤维成分标签、纺织品标签法规。皮革类注意偶氮染料。</span>
+      </li>
+      <li>
+        <span class="item-title">食品 / 膳食补充剂 / 接触材料</span>
+        <span class="item-desc">需食品法、Novel Food 申报、EC 1935/2004 食品接触材料合规。审查最严格。</span>
+      </li>
+      <li>
+        <span class="item-title">工业 / 机械 / 建材</span>
+        <span class="item-desc">需机械指令 2006/42/EC、CPR 建材法规、CE 符合性评估模块更深。</span>
+      </li>
+    </ul>
+
+    <h3>1.2 销售方式（可多选）</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">FBA 仓发货</span>
+        <span class="item-desc">Amazon 代存代发。需 FBA 入仓合规文件、危险品审核。VAT 必须注册 5 国。</span>
+        <span class="tag tag-fba">FBA</span>
+      </li>
+      <li>
+        <span class="item-title">跨境直邮（自发物流）</span>
+        <span class="item-desc">单件 €0-150 适用 IOSS 简化申报；超 €150 走正式清关。需 VAT + EORI。</span>
+        <span class="tag tag-3pl">直邮</span>
+      </li>
+      <li>
+        <span class="item-title">海外仓 + 本地配送</span>
+        <span class="item-desc">第三方海外仓代发。注意仓所在国的 EPR 注册与本地合规义务。</span>
+      </li>
+      <li>
+        <span class="item-title">B2B 大宗 / 批发</span>
+        <span class="item-desc">B2B 销售可走反向征税 reverse charge，但需发票链路完整、合同合规。</span>
+      </li>
+    </ul>
+
+    <h3>1.3 销售国家（可多选）</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">德国 DE</span>
+        <span class="item-desc">注册门槛最严：LUCID、EAR、VAT、Verpackungsgesetz 全部必需。</span>
+        <span class="tag tag-de">DE</span>
+      </li>
+      <li>
+        <span class="item-title">法国 FR</span>
+        <span class="item-desc">Citeo 包装回收、DEEE 电子回收、EPR 编号、UFI 毒理中心（化学品类）。</span>
+        <span class="tag tag-fr">FR</span>
+      </li>
+      <li>
+        <span class="item-title">意大利 IT</span>
+        <span class="item-desc">CONAI 包装回收、RAEE 电子、电池 PIB。注意意大利语言警告语强制要求。</span>
+      </li>
+      <li>
+        <span class="item-title">西班牙 ES</span>
+        <span class="item-desc">Sigre / Ecoembes 包装、纺织类注意 RETEX。VAT 注册远程销售阈值 €10k。</span>
+      </li>
+      <li>
+        <span class="item-title">荷兰 NL</span>
+        <span class="item-desc">WEEELABEX 电子回收、ARN 包装回收。VAT 远程销售阈值 €10k 即将降至 €0。</span>
+      </li>
+      <li>
+        <span class="item-title">英国 UK（脱欧后）</span>
+        <span class="item-desc">需 UKCA 标志、英代 UK Responsible Person、UK VAT、UK EPR（包装/电池/电子）。</span>
+        <span class="tag tag-uk">UK</span>
+      </li>
+    </ul>
+
+    <h3>1.4 产品物理属性（可多选）</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">含电池</span>
+        <span class="item-desc">需 UN 38.3 运输测试、电池法规 2023/1542 注册与回收、电池标签 14 符号。</span>
+        <span class="tag tag-battery">电池</span>
+      </li>
+      <li>
+        <span class="item-title">含包装</span>
+        <span class="item-desc">需 EPR 包装注册（5 国各自系统）、PPWR 2026-08-12 后减量/可回收要求。</span>
+        <span class="tag tag-package">包装</span>
+      </li>
+      <li>
+        <span class="item-title">联网产品（IoT / 智能 / 含无线模块）</span>
+        <span class="item-desc">需 RED 2014/53/EU、CRA 2027-12-11 网络安全合规、固件更新承诺。</span>
+        <span class="tag tag-network">联网</span>
+      </li>
+    </ul>
+
+    <div class="callout callout-success">
+      <strong>画像示例：</strong>3C 配件 + FBA + 5 国销售 + 含锂电池 + 联网（蓝牙）<br>
+      后续重点章节：1（VAT 全注册） + 2（CE + 欧代） + 3（LUCID+Citeo+CONAI…）+ 4（电池全链） + 7（应急）
+    </div>
+  </section>
+
+  <div class="page-break"></div>
+
+  <!-- ============================================================
+       3. 必做合规清单
+       ============================================================ -->
+  <section>
+    <h2>二、必做合规清单 <span class="section-count">共 50 项</span></h2>
+    <p>本章是本清单的核心，共 7 大块、50 项 checkbox。完成度直接决定你的风险等级。建议按顺序逐块打勾，不要跳读。</p>
+
+    <div class="legend">
+      <strong>标签含义：</strong>
+      <span class="tag tag-required">必做</span> 缺一不可 ·
+      <span class="tag tag-high">高优</span> 30 天内 ·
+      <span class="tag tag-mid">中优</span> 季度内 ·
+      <span class="tag tag-low">低优</span> 年度内 ·
+      <span class="tag tag-fba">FBA</span> 适用 ·
+      <span class="tag tag-3pl">直邮</span> 适用 ·
+      <span class="tag tag-battery">电池</span> 适用 ·
+      <span class="tag tag-network">联网</span> 适用 ·
+      <span class="tag tag-package">包装</span> 适用 ·
+      <span class="tag tag-uk">UK</span> 适用
+    </div>
+
+    <!-- ========== 3.1 账号与税务 ========== -->
+    <h3>2.1 账号与税务（VAT / IOSS / OSS） · 7 项</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">各国 VAT 增值税号已注册</span>
+        <span class="item-desc">DE / FR / IT / ES / NL 各自注册。FBA 卖家必做。需通过税务代理或本地财务代表。注册周期 2-8 周。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">VAT 申报按周期执行（无逾期）</span>
+        <span class="item-desc">DE 每月申报 + 季度汇总；FR 月报；IT 季度；ES 月报或季报；NL 季度或月报。错过一期即风险。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">IOSS 编号（跨境直邮 < €150）</span>
+        <span class="item-desc">欧盟外直邮 €0-150 订单必走 IOSS。每月申报。Amazon 平台已自动代收代缴可豁免部分。</span>
+        <span class="tag tag-3pl">直邮</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">OSS（One-Stop-Shop）一站式申报</span>
+        <span class="item-desc">欧盟内远程销售年销 > €10k 必走 OSS 或在销售国各自注册。超阈值未注册 = 重大风险。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">EORI 号已申请</span>
+        <span class="item-desc">经济运营商注册识别号。EU 通用 EORI 用于清关；UK 有独立 GB EORI。无 EORI 无法入仓清关。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">远程销售阈值监控</span>
+        <span class="item-desc">DE 已 €0 阈值，NL 即将降至 €0（待定）。超阈值未在当地注册 VAT 后果严重。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">Amazon B2B VAT Calculation Service 已启用</span>
+        <span class="item-desc">Amazon 平台企业对企业自动开票服务。B2B 客户要求合规发票时必启用，否则丢单。</span>
+        <span class="tag tag-fba">FBA</span>
+        <span class="tag tag-low">低优</span>
+      </li>
+    </ul>
+
+    <!-- ========== 3.2 产品合规 ========== -->
+    <h3>2.2 产品合规（CE / GPSR / 欧代 / DoC） · 8 项</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">CE 标志正确使用</span>
+        <span class="item-desc">按比例缩放 ≥ 5mm、不可磨灭、清晰可读。贴在产品本体或包装 / 随附文件。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">EU Declaration of Conformity（DoC）档案</span>
+        <span class="item-desc">每 SKU 单独一份。需含产品信息、适用指令、harmonized standards、签署人。保留 10 年。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">GPSR 欧代（EU Responsible Person）已指定</span>
+        <span class="item-desc">2024-12-13 强制。非食品类几乎所有消费产品必需。欧代信息需印在产品或包装上。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">GPSR 产品标签含欧代信息</span>
+        <span class="item-desc">标签必须含：欧代名称+邮政地址+电子邮箱、制造商信息、原产国（Made in XX）、CE 等。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">符合性测试报告（EN 标准）</span>
+        <span class="item-desc">由公告机构或合规实验室出具。电子需 EN 55032 / EN 55035，玩具需 EN 71，电池需 EN 62133 等。</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">警告语多语言（5 国）</span>
+        <span class="item-desc">DE / FR / IT / ES / NL 至少。意大利对玩具警告语有强制格式要求。需本地化而非直译。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">说明书 + 安全信息 5 国</span>
+        <span class="item-desc">使用说明、安全警示、年龄限制、清洁保养等。电子电气产品必须含 EU 多语种手册。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">REACH / RoHS / 限用物质合规</span>
+        <span class="item-desc">SVHC 通报（>0.1% w/w）、RoHS 10 项、邻苯二甲酸盐、偶氮染料（纺织品）等。需供应链声明。</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+    </ul>
+
+    <!-- ========== 3.3 包装与环保 ========== -->
+    <h3>2.3 包装与环保（LUCID / EPR / PPWR） · 7 项</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">LUCID 注册（DE 包装法）</span>
+        <span class="item-desc">LUCID 号必须印在所有进入德国市场的包装上。注册免费，系统许可后才可分销。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-de">DE</span>
+        <span class="tag tag-package">包装</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">FR / IT / ES / NL 各国 EPR 注册</span>
+        <span class="item-desc">FR Citeo / IT CONAI / ES Ecoembes / NL ARN。各国注册系统独立，需单独注册 + 申报。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-package">包装</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">法国 Citeo / 其他回收组织申报</span>
+        <span class="item-desc">按销售包装重量向 EPR 组织缴费。未申报 = 法国海关 / 平台双重拦截。</span>
+        <span class="tag tag-fr">FR</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">德国 EAR（电子电气 EPR）</span>
+        <span class="item-desc">Stiftung EAR。WEEE 指令覆盖产品必注册。已与 LUCID 联动验证。</span>
+        <span class="tag tag-de">DE</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">PPWR 减量化准备（2026-08-12 生效）</span>
+        <span class="item-desc">最小包装、空隙率 ≤ 50%、免运费包装禁外。需重新设计包装并提供报告。</span>
+        <span class="tag tag-package">包装</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">可回收材料（PPWR 2026-08-12）</span>
+        <span class="item-desc">2030 年前所有包装可回收 ≥ 70%。2030 后部分品类需最少回收材料含量比例。</span>
+        <span class="tag tag-package">包装</span>
+        <span class="tag tag-low">低优</span>
+      </li>
+      <li>
+        <span class="item-title">重复使用 / 再填充包装（PPWR 2030）</span>
+        <span class="item-desc">运输包装、外卖等场景最终需 ≥ 10% 重复使用率。提前规划可节省长期改造成本。</span>
+        <span class="tag tag-package">包装</span>
+        <span class="tag tag-low">低优</span>
+      </li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <!-- ========== 3.4 电池与电子 ========== -->
+    <h3>2.4 电池与电子（CRA / Batteries / RED） · 7 项</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">电池法规 2023/1542 注册与生产者责任</span>
+        <span class="item-desc">2023-08-17 生效。所有含电池产品（含纽扣电池）需在销售国注册生产者延伸责任。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-battery">电池</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">碳足迹声明（LMT）</span>
+        <span class="item-desc">工业电池 / 电动车电池 / LMT 电池（>2kWh）2025 起需碳足迹声明 + 标签。</span>
+        <span class="tag tag-battery">电池</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">废旧电池回收标签</span>
+        <span class="item-desc">产品上必须含「叉轮垃圾桶」符号，可附电池容量标识。纽扣电池警告语强制要求。</span>
+        <span class="tag tag-battery">电池</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">DoC 含电池指令符合性</span>
+        <span class="item-desc">含电池产品的 DoC 需引述 Battery Regulation 2023/1542 作为适用法规之一。</span>
+        <span class="tag tag-battery">电池</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">UN 38.3 电池安全运输测试</span>
+        <span class="item-desc">锂电产品航空 / 海运 / 陆运均需 UN 38.3 测试报告。FBA 入仓审核必查。</span>
+        <span class="tag tag-battery">电池</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">RED 指令合规（含无线模块）</span>
+        <span class="item-desc">2014/53/EU。WiFi / 蓝牙 / 4G / NFC / 433MHz 等无线产品必做。需 RED DoC + 公告机构证书（部分）。</span>
+        <span class="tag tag-network">联网</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">CRA 网络弹性法案（2027-12-11 生效）</span>
+        <span class="item-desc">所有联网产品需：默认安全、5 年补丁支持、SBOM 软件物料清单、安全披露流程。</span>
+        <span class="tag tag-network">联网</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+    </ul>
+
+    <!-- ========== 3.5 平台运营 ========== -->
+    <h3>2.5 平台运营（广告词 / 评论 / 警告信） · 7 项</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">Listing 文案不含违禁词</span>
+        <span class="item-desc">禁：医疗 / 疗效类（治、疗、消炎、止痛）、最佳 / 第一 / 唯一 等最高级词、绝对化承诺。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">关键词不含他人品牌 / 注册商标</span>
+        <span class="item-desc">使用他人品牌词做后端关键词属侵权。Apple / Samsung / Nike 等大牌零容忍。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">评论合规（无诱导好评）</span>
+        <span class="item-desc">禁：返现索评、夹带小卡片要求 5 星、第三方测评机构批量刷评。一经发现即关店。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">A-to-Z 索赔率 &amp; 警告信监控</span>
+        <span class="item-desc">ODR（Order Defect Rate）必须 < 1%。超阈值账户直接 health warning。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">知识产权合规（商标 / 外观 / 专利）</span>
+        <span class="item-desc">上架前查 EUIPO 商标数据库 + Amazon Brand Registry。外观 / 实用新型同样需注意。</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">平台政策更新订阅</span>
+        <span class="item-desc">Amazon Seller News + EU Compliance 邮件订阅。新规常 30-90 天内执行，无通知期。</span>
+        <span class="tag tag-low">低优</span>
+      </li>
+      <li>
+        <span class="item-title">账户健康度仪表盘周度查看</span>
+        <span class="item-desc">登录 Seller Central → Account Health。关注 4 大指标：ODR、Late Shipment、Policy Violations、Customer Service Dissatisfaction。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+    </ul>
+
+    <!-- ========== 3.6 物流与文件 ========== -->
+    <h3>2.6 物流与文件（头程 / EORI / 报关） · 7 项</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">头程物流商具备 EU 清关能力</span>
+        <span class="item-desc">确认货代有 EU IOSS 接入、5 国 VAT 资源、危险品运输资质。FBA 头程必须正报清关。</span>
+        <span class="tag tag-fba">FBA</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">报关 HS Code 正确（6 位 + EU 8 位）</span>
+        <span class="item-desc">TARIC 8 位必填。HS Code 错误 = 关税错缴、海关查验、产品被扣。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">商业发票 + 装箱单 5 国语言版</span>
+        <span class="item-desc">发票含 HS Code、原产国、价值、币种。装箱单含毛重 / 净重 / 体积 / 件数。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">物流商代缴关税凭证保留</span>
+        <span class="item-desc">VAT 申报时需提供进口 VAT 抵扣凭证（IVA a la importación）。建议电子化归档 ≥ 7 年。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">FBA 长期仓储费监控</span>
+        <span class="item-desc">> 365 天库存 $6.90/cu.ft/季，> 180 天分档收费。每月查看 Inventory Age。</span>
+        <span class="tag tag-fba">FBA</span>
+        <span class="tag tag-low">低优</span>
+      </li>
+      <li>
+        <span class="item-title">商品原产地（Made in XX）标注</span>
+        <span class="item-desc">欧盟原产地标识强制。需在产品本体 / 包装 / 随附文件上明示。错误 = 海关扣货 + 罚款。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">临时进口 / ATA 单证册（展销 / 测试）</span>
+        <span class="item-desc">仅展销 / 测试 / 维修用途。需向当地商会申请。商业零售禁止使用。</span>
+        <span class="tag tag-low">低优</span>
+      </li>
+    </ul>
+
+    <!-- ========== 3.7 应急 ========== -->
+    <h3>2.7 应急（48h 通知 / 召回 / 投诉） · 7 项</h3>
+    <ul class="checklist">
+      <li>
+        <span class="item-title">48h 危险产品安全通知流程（GPSR）</span>
+        <span class="item-desc">严重风险产品需 48h 内通报 Safety Business Gateway。各成员国市场监督机构 + 欧代同步。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">产品召回计划与模板</span>
+        <span class="item-desc">含：召回启动条件、消费者通知渠道、退货 / 退款流程、向平台 / 监管同步机制。预设模板不慌乱。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">客户投诉记录（含沟通截图）</span>
+        <span class="item-desc">3 年内可追溯。需含订单号、SKU、问题描述、沟通全程。监管检查时必查。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">欧代紧急联系方式（英语 24h）</span>
+        <span class="item-desc">欧代必须能英语 24h 响应市场监督机构的查询。应急电话 + 邮箱预先登记。</span>
+        <span class="tag tag-required">必做</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">平台账户 suspend 应对流程</span>
+        <span class="item-desc">POA（Plan of Action）模板预先备好、备用账户备案、应急律师联系方式。</span>
+        <span class="tag tag-high">高优</span>
+      </li>
+      <li>
+        <span class="item-title">资金冻结预备金（3-6 月现金流）</span>
+        <span class="item-desc">Amazon 储备金可冻结最长 90 天，平台审核 / 物流商压款叠加。建议预备 3-6 个月运营现金。</span>
+        <span class="tag tag-mid">中优</span>
+      </li>
+      <li>
+        <span class="item-title">法律顾问 / 合规顾问备案</span>
+        <span class="item-desc">专业 EU 合规律师 + 当地会计。提前建立联系，紧急时不再「抓瞎」寻找。</span>
+        <span class="tag tag-low">低优</span>
+      </li>
+    </ul>
+  </section>
+
+  <div class="page-break"></div>
+
+  <!-- ============================================================
+       4. 时间线速查
+       ============================================================ -->
+  <section>
+    <h2>三、时间线速查 <span class="section-count">10 项</span></h2>
+    <p>按状态分类，关注「即将生效」一栏——这是未来 6-18 个月最容易踩坑的部分。</p>
+
+    <h3>3.1 已生效（立即适用，缺则违规）</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 22%;">法规 / 制度</th>
+          <th style="width: 18%;">生效日</th>
+          <th style="width: 35%;">核心要求</th>
+          <th style="width: 25%;">适用对象</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>IOSS 进口一站式</td>
+          <td><span class="status-active">2021-07-01</span></td>
+          <td>跨境直邮 &lt; €150 简化申报</td>
+          <td>直邮卖家</td>
+        </tr>
+        <tr>
+          <td>EPREL 能效标签</td>
+          <td><span class="status-active">2021-03-01 起</span></td>
+          <td>产品 EPREL 注册 + 新版标签</td>
+          <td>能效相关产品</td>
+        </tr>
+        <tr>
+          <td>LUCID 包装法</td>
+          <td><span class="status-active">2022-07-01</span></td>
+          <td>DE 包装 LUCID 号注册</td>
+          <td>所有进入 DE 卖家</td>
+        </tr>
+        <tr>
+          <td>Citeo 包装回收</td>
+          <td><span class="status-active">2022-01-01</span></td>
+          <td>FR 包装回收 + 缴费</td>
+          <td>FR 销售卖家</td>
+        </tr>
+        <tr>
+          <td>GPSR 通用产品安全</td>
+          <td><span class="status-active">2024-12-13</span></td>
+          <td>欧代 + 多语种标签 + 48h 通报</td>
+          <td>几乎所有消费产品</td>
+        </tr>
+        <tr>
+          <td>Batteries 电池法规</td>
+          <td><span class="status-active">2023-08-17</span></td>
+          <td>生产者责任 + 标签 + 回收</td>
+          <td>含电池产品</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.2 即将生效（高优先级，提前 6-12 月准备）</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 22%;">法规 / 制度</th>
+          <th style="width: 18%;">生效日</th>
+          <th style="width: 35%;">核心要求</th>
+          <th style="width: 25%;">适用对象</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>EUDR 反毁林</td>
+          <td><span class="status-upcoming">2025-12-30</span></td>
+          <td>棕榈油、大豆、咖啡、可可、橡胶、牛、木材尽职调查</td>
+          <td>相关农产品/木制品</td>
+        </tr>
+        <tr>
+          <td>PPWR 包装法规</td>
+          <td><span class="status-upcoming">2026-08-12</span></td>
+          <td>减量化 + 可回收 + 重复使用</td>
+          <td>所有含包装产品</td>
+        </tr>
+        <tr>
+          <td>PLD 产品责任指令（修订）</td>
+          <td><span class="status-upcoming">2026-12-09</span></td>
+          <td>软件 / AI 责任 + 举证倒置</td>
+          <td>所有产品（尤其含软件）</td>
+        </tr>
+        <tr>
+          <td>CRA 网络弹性</td>
+          <td><span class="status-upcoming">2027-12-11</span></td>
+          <td>默认安全 + 5 年补丁 + SBOM</td>
+          <td>联网产品</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.3 延后 / 中小企缓冲（关注最新公告）</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 22%;">法规 / 制度</th>
+          <th style="width: 18%;">原定 / 延后日</th>
+          <th style="width: 35%;">缓冲内容</th>
+          <th style="width: 25%;">适用对象</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>EUDR 大型运营商</td>
+          <td><span class="status-delayed">2025-12-30</span></td>
+          <td>最初生效日，未延期</td>
+          <td>大型贸易商</td>
+        </tr>
+        <tr>
+          <td>EUDR 中小型运营商</td>
+          <td><span class="status-delayed">2026-06-30</span></td>
+          <td>中小贸易商额外 6 个月缓冲</td>
+          <td>中小贸易商</td>
+        </tr>
+        <tr>
+          <td>PPWR 部分条款</td>
+          <td><span class="status-delayed">2030 后分阶段</span></td>
+          <td>重复使用 / 再填充分阶段实施</td>
+          <td>所有包装</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warn">
+      <strong>注意：</strong>EUDR 曾在 2024-2025 期间多次讨论延期。2025 年 12 月最新决议大型运营商仍按 2025-12-30 生效，中小型延至 2026-06-30。请定期回访欧规雷达时间线专题。
+    </div>
+  </section>
+
+  <div class="page-break"></div>
+
+  <!-- ============================================================
+       5. 资源链接
+       ============================================================ -->
+  <section>
+    <h2>四、欧规雷达资源链接</h2>
+    <p>本清单是起点，深入每个章节请使用主站工具：</p>
+
+    <a class="link-card" href="https://weiread.com">
+      <div class="link-title">🌐 weiread.com 欧规雷达主站</div>
+      <div class="link-desc">所有法规一站聚合 · 按影响 / 紧迫度 / 类目筛选 · 内置交叉引用</div>
+    </a>
+
+    <a class="link-card" href="https://weiread.com/guide/start/">
+      <div class="link-title">🚀 /guide/start/ 新手起步</div>
+      <div class="link-desc">30 分钟入门的固定路径图 · 4 步：画像 → 优先项 → 注册 → 标签修改</div>
+    </a>
+
+    <a class="link-card" href="https://weiread.com/self-check/">
+      <div class="link-title">🎯 /self-check/ 影响自测</div>
+      <div class="link-desc">20 题速测 · 10 分钟出报告 · 自动排序「你必须先做的 5 件事」</div>
+    </a>
+
+    <a class="link-card" href="https://weiread.com/compare/">
+      <div class="link-title">🆚 /compare/ 法规对比</div>
+      <div class="link-desc">CE / UKCA / EAC 差异 · 5 国 EPR 对比表 · IOSS vs OSS 流程图</div>
+    </a>
+
+    <a class="link-card" href="https://weiread.com/checklists/">
+      <div class="link-title">📋 /checklists/ 行动清单（多版本）</div>
+      <div class="link-desc">本 PDF 即其中一版 · 另有「FBA 仓清单」「含电池清单」「联网产品清单」</div>
+    </a>
+
+    <div class="callout callout-success">
+      <strong>建议使用方式：</strong>先访问 <code>/self-check/</code> 拿到优先级排序 → 再用本 PDF 逐项打勾 → 完成 80% 后访问 <code>/compare/</code> 查漏补缺。
+    </div>
+  </section>
+
+  <!-- ============================================================
+       6. 自评结果
+       ============================================================ -->
+  <section>
+    <h2>五、自评结果 <span class="section-count">空白可填</span></h2>
+    <p>完成所有 50 项 checkbox 后，填写下方数据，给自己一个风险基线。建议每月 1 号重复一次，跟踪趋势。</p>
+
+    <div class="score-card">
+      <div class="score-line">
+        <span class="label">已完成项数</span>
+        <span class="blank"></span>
+        <span style="color:#6b7280;">/ 共 50 项</span>
+      </div>
+      <div class="score-line">
+        <span class="label">完成度百分比</span>
+        <span class="blank"></span>
+        <span style="color:#6b7280;">%</span>
+      </div>
+      <div class="score-line">
+        <span class="label">风险等级</span>
+        <span class="blank"></span>
+      </div>
+      <div class="score-line">
+        <span class="label">距合规目标日期</span>
+        <span class="blank"></span>
+      </div>
+      <div class="score-line">
+        <span class="label">下一步行动 1</span>
+        <span class="blank"></span>
+      </div>
+      <div class="score-line">
+        <span class="label">下一步行动 2</span>
+        <span class="blank"></span>
+      </div>
+      <div class="score-line">
+        <span class="label">下一步行动 3</span>
+        <span class="blank"></span>
+      </div>
+      <div class="score-line">
+        <span class="label">预算预估（EUR）</span>
+        <span class="blank"></span>
+      </div>
+      <div class="score-line">
+        <span class="label">负责人 / 截止日</span>
+        <span class="blank"></span>
+      </div>
+    </div>
+
+    <h3>5.1 风险等级对照</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 20%;">完成度</th>
+          <th style="width: 15%;">风险等级</th>
+          <th style="width: 65%;">应对建议</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>≥ 90%（45/50）</td>
+          <td>🟢 <span class="status-active">低</span></td>
+          <td>优秀。重点维护每月合规日历，监控「即将生效」新规。</td>
+        </tr>
+        <tr>
+          <td>70-89%（35-44/50）</td>
+          <td>🟡 <span class="status-upcoming">中</span></td>
+          <td>良好。按本清单「必做」标签优先补全，季度内闭环。</td>
+        </tr>
+        <tr>
+          <td>50-69%（25-34/50）</td>
+          <td>🟠 <span class="status-upcoming">中高</span></td>
+          <td>警告。立即冻结新品上架，30 天内专项治理「必做 + 高优」。</td>
+        </tr>
+        <tr>
+          <td>&lt; 50%（&lt; 25/50）</td>
+          <td>🔴 <span style="color:#dc2626;font-weight:600;">高</span></td>
+          <td>危险。建议暂停销售 60-90 天全面整改，或引入专业顾问。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>5.2 自评留痕（建议每月 1 号）</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 20%;">日期</th>
+          <th style="width: 15%;">完成项</th>
+          <th style="width: 15%;">完成度</th>
+          <th style="width: 50%;">本周期新完成 / 备注</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>2026 / __ / 01</td><td>__/50</td><td>__%</td><td>&nbsp;</td></tr>
+        <tr><td>2026 / __ / 01</td><td>__/50</td><td>__%</td><td>&nbsp;</td></tr>
+        <tr><td>2026 / __ / 01</td><td>__/50</td><td>__%</td><td>&nbsp;</td></tr>
+        <tr><td>2026 / __ / 01</td><td>__/50</td><td>__%</td><td>&nbsp;</td></tr>
+        <tr><td>2026 / __ / 01</td><td>__/50</td><td>__%</td><td>&nbsp;</td></tr>
+        <tr><td>2026 / __ / 01</td><td>__/50</td><td>__%</td><td>&nbsp;</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="page-break"></div>
+
+  <!-- ============================================================
+       7. 免责声明
+       ============================================================ -->
+  <section>
+    <h2>六、版本 &amp; 免责</h2>
+
+    <h3>6.1 版本信息</h3>
+    <div class="meta-box">
+      <p><strong>版本号：</strong>v1.0</p>
+      <p><strong>发布日期：</strong>2026-07-15</p>
+      <p><strong>下次更新：</strong>2026-08-15（每月小更）/ 2026-10-15（季度大更）</p>
+      <p><strong>编制方：</strong>weiread.com 欧规雷达 · 编辑部</p>
+      <p><strong>适用范围：</strong>亚马逊 EU 5 国（DE / FR / IT / ES / NL）销售卖家</p>
+      <p><strong>勘误反馈：</strong>提交到 <code>https://weiread.com/feedback/</code></p>
+    </div>
+
+    <h3>6.2 免责声明</h3>
+    <div class="disclaimer">
+      <p><strong>重要提示：</strong>本清单为通用自评工具，按截至 2026-07 已公开法规整理而成，仅作信息参考，<strong>不构成法律或税务建议</strong>。欧盟合规涉及 VAT / EPR / GPSR / 电池 / 包装 / 平台规则等多个领域，且各国细则与解读持续更新，<strong>实际合规要求以各国监管机构的最新公告与您聘请的专业顾问意见为准</strong>。使用本清单进行商业决策前，请咨询具备 EU 资质的税务师、合规顾问或律师。weiread.com 不对因使用本清单造成的任何直接或间接损失承担责任。</p>
+      <p style="margin-top: 8px;">本清单中所有网址（weiread.com / 子路径）为欧规雷达主站参考链接，<strong>不构成商业推荐</strong>，第三方平台规则请以官方政策为准。</p>
+    </div>
+
+    <h3>6.3 致谢与来源</h3>
+    <div class="meta-box">
+      <p>本清单基于以下公开信息源整理：</p>
+      <ul style="margin-left: 18px; font-size: 9.5pt;">
+        <li>EUR-Lex 官方法规文本（eur-lex.europa.eu）</li>
+        <li>欧盟委员会官方公告（ec.europa.eu）</li>
+        <li>各国监管机构指南（DE Verpackungsgesetz、FR Code de l'environnement、…）</li>
+        <li>Amazon Seller Central 政策文档</li>
+        <li>欧规雷达主站用户调研与社区贡献</li>
+      </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 9pt;">
+      <p>— 完 —</p>
+      <p>本清单由 weiread.com 欧规雷达编辑部编制 · 仅供个人自评使用</p>
+      <p>如需商用或团队分发，请联系 <code>hello@weiread.com</code></p>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
