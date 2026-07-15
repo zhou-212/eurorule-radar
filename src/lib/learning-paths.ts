@@ -289,5 +289,54 @@ export function buildLearningPaths(): LearnPath[] {
         },
       ],
     },
-  ];
+
+    {
+      slug: 'crisis-compliance',
+      title: '危机公关(收到警告信 / 限流 / 扣货怎么救)',
+      subtitle: '5 步救店:识别 → 48h 应对 → 申诉模板 → 复盘 → 预防',
+      icon: '🚨',
+      audience: '所有遇到 / 可能遇到合规危机的亚马逊欧洲站卖家',
+      estTotalMinutes: 60,
+      whyItMatters:
+        '80% 卖家一生至少遇到 1 次合规危机 —— 警告信、限流、扣货、消费者投诉、监管调查,每一种都能让 listing 在 24-72 小时内下架、库存冻结、资金回不来。危机出现后的 48 小时是黄金窗口,熟悉流程的卖家能压住火情,不熟悉的卖家一拖再拖,损失放大 5-10 倍。\n5 种危机的应对路径完全不同:警告信要分类申诉、限流要找根因补料、扣货要走海关/平台双向流程、消费者投诉要 ADR 调解、监管调查要律师介入。把这 5 条路都走过一遍,危机来时你才能在 24 小时内启动响应,而不是在工单里来回踢皮球。\n预防比救火便宜 10 倍:把识别 → 应对 → 申诉 → 复盘 → 预防 5 步跑通,危机处理时长从 30 天压缩到 7 天,库存冻结资金回款周期从 90 天压缩到 30 天,listing 恢复率从 40% 提升到 80% 以上。',
+      finalReward: '能冷静应对 5 大危机 + 申诉邮件模板 + 48 小时应对清单 + 复盘模板',
+      steps: [
+        {
+          id: 'crisis-compliance-01',
+          title: '5 大警告信类型识别',
+          href: '/guide/amazon-warning-email',
+          estMinutes: 12,
+          desc: '警告信分 5 类(产品安全 / 知识产权 / 假冒伪劣 / 合规文档 / 评论操纵),先识别类型再走申诉流程。'
+        },
+        {
+          id: 'crisis-compliance-02',
+          title: '48 小时应对清单',
+          href: '/checklists/compliance-notice-48h',
+          estMinutes: 15,
+          desc: '收到通知的 48 小时黄金窗口:截图存档、收集证据、起草申诉、内部沟通。错过就很难翻盘。'
+        },
+        {
+          id: 'crisis-compliance-03',
+          title: 'GPSR 邮件怎么回(模板)',
+          href: '/guide/amazon-gpsr-email',
+          estMinutes: 10,
+          desc: 'GPSR 是 2024-12 后最常见的批量通知,3 套中英模板 + 5 步避坑指南。'
+        },
+        {
+          id: 'crisis-compliance-04',
+          title: 'FBA 库存被停 / 扣货',
+          href: '/guide/german-packaging-pitfalls',
+          estMinutes: 12,
+          desc: 'FBA 仓库不让发货 = 库存积压;扣货 = 资金冻结。LUCID/EPR 缺失是常见触发原因,亚马逊仓库逐个审核。'
+        },
+        {
+          id: 'crisis-compliance-05',
+          title: '复盘 + 预防机制',
+          href: '/checklists/pre-listing-documents',
+          estMinutes: 11,
+          desc: '危机处理完后,3 件事必做:1) 内部复盘报告 2) 改进 SOP 3) 季度合规审计。预防比救火便宜 10 倍。'
+        }
+      ],
+    },
+  ];;
 }
