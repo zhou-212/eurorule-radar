@@ -1,0 +1,651 @@
+---
+/**
+ * /compare/{slug} 长尾 SEO 对比页
+ * ------------------------------------------------------------
+ * 调研依据:用户大量搜索 "GPSR vs EPR"、"VAT vs IOSS" 这类对比型问题,
+ * 6 个对比页 = 速查表 + 4 种卖家画像 + 时间线 + 罚款 + FAQ,
+ * 1 屏判断"我属于哪种情况,该做哪个"。
+ *
+ * 配置数据(6 个 compare slug)在 src/lib/compare-config.ts 里
+ * ------------------------------------------------------------
+ */
+import { getCollection, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RadarCard from '../../components/RadarCard.astro';
+import ChecklistCard from '../../components/ChecklistCard.astro';
+import EmailSubscribe from '../../components/EmailSubscribe.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+import { SITE_DEFAULTS } from '../../lib/radar';
+import { buildComparesConfig, type CompareConfig } from '../../lib/compare-config';
+
+export async function getStaticPaths() {
+  const COMPARES: CompareConfig[] = buildComparesConfig();
+
+  const allRadar = await getCollection('radar', ({ data }) => !data.draft);
+  const allChecklists = await getCollection('checklists');
+  const radarById = new Map(
+    allRadar.map((r) => [r.id.replace(/\.(md|mdx)$/, ''), r])
+  );
+
+  return COMPARES.map((c) => {
+    const leftRadar = radarById.get(c.primaryRadarIds[0]) ?? null;
+    const rightRadar = radarById.get(c.primaryRadarIds[1]) ?? null;
+
+    /* --- 相关 Radar(同类目卡) --- */
+    const primaryIds = new Set([leftRadar?.id, rightRadar?.id].filter(Boolean));
+    const relatedRadar = allRadar
+      .filter((r) => !primaryIds.has(r.id))
+      .filter((r) => r.data.categories.some((cat) => c.relatedRadarCategories.includes(cat)))
+      .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate)
+      .slice(0, 4);
+
+    /* --- 相关清单 --- */
+    const relatedChecklists = allChecklists
+      .filter((cl) => cl.data.tags.some((t) => c.relatedChecklistTags.includes(t)))
+      .sort((a, b) => +b.data.verifiedDate - +a.data.verifiedDate)
+      .slice(0, 3);
+    const checklistFinal = relatedChecklists.length > 0
+      ? relatedChecklists
+      : allChecklists.filter((cl) => cl.id === 'new-seller-basics').slice(0, 1);
+
+    return {
+      params: { slug: c.slug },
+      props: {
+        config: c,
+        leftRadar,
+        rightRadar,
+        relatedRadar,
+        relatedChecklists: checklistFinal,
+      },
+    };
+  });
+}
+
+interface PageProps {
+  config: CompareConfig;
+  leftRadar: CollectionEntry<'radar'> | null;
+  rightRadar: CollectionEntry<'radar'> | null;
+  relatedRadar: CollectionEntry<'radar'>[];
+  relatedChecklists: CollectionEntry<'checklists'>[];
+}
+
+const { config, leftRadar, rightRadar, relatedRadar, relatedChecklists } =
+  Astro.props as PageProps;
+
+const siteStr = siteAsDir(Astro.site);
+const pageUrl = siteStr ? `${siteStr}compare/${config.slug}/` : `/compare/${config.slug}/`;
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '对比指南', item: siteStr ? `${siteStr}compare/` : undefined },
+    { '@type': 'ListItem', position: 3, name: `${config.leftName} vs ${config.rightName}`, item: pageUrl },
+  ],
+};
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: `${config.leftName} vs ${config.rightName}:哪个跟你有关`,
+  description: config.seoDescription,
+  inLanguage: 'zh-CN',
+  author: { '@type': 'Organization', name: SITE_DEFAULTS.name },
+  publisher: {
+    '@type': 'Organization',
+    name: SITE_DEFAULTS.name,
+    logo: siteStr ? { '@type': 'ImageObject', url: `${siteStr}favicon.svg` } : undefined,
+  },
+  mainEntityOfPage: pageUrl,
+};
+---
+
+<BaseLayout
+  title={`${config.leftName} vs ${config.rightName} - 哪个跟你有关`}
+  description={config.seoDescription}
+  type="article"
+  jsonLd={[breadcrumb, articleJsonLd]}
+>
+  <article class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <a href={withBase('/compare/')}>对比指南</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>{config.leftName} vs {config.rightName}</span>
+    </nav>
+
+    <!-- Hero -->
+    <header class="compare-hero">
+      <p class="compare-eyebrow">对比指南</p>
+      <h1>{config.leftName} <span class="compare-vs">vs</span> {config.rightName}</h1>
+      <p class="compare-one-liner">{config.oneLiner}</p>
+      <div class="compare-two-cards">
+        <a class="compare-card compare-card-left" href={leftRadar ? withBase(`/radar/${leftRadar.id.replace(/\.(md|mdx)$/, '')}/`) : '#'}>
+          <span class="compare-card-tag">{config.leftName}</span>
+          <h2 class="compare-card-title">{config.leftFullName}</h2>
+          <p class="compare-card-short">{config.leftShort}</p>
+        </a>
+        <div class="compare-vs-divider" aria-hidden="true">VS</div>
+        <a class="compare-card compare-card-right" href={rightRadar ? withBase(`/radar/${rightRadar.id.replace(/\.(md|mdx)$/, '')}/`) : '#'}>
+          <span class="compare-card-tag">{config.rightName}</span>
+          <h2 class="compare-card-title">{config.rightFullName}</h2>
+          <p class="compare-card-short">{config.rightShort}</p>
+        </a>
+      </div>
+    </header>
+
+    <!-- 速查表(最重要) -->
+    <section class="compare-quick">
+      <h2>速查表 · 7 个关键差异</h2>
+      <div class="compare-table-wrap">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th scope="col" class="compare-th-dim">维度</th>
+              <th scope="col" class="compare-th-left">{config.leftName}</th>
+              <th scope="col" class="compare-th-right">{config.rightName}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {config.quickTable.map((row) => (
+              <tr>
+                <th scope="row" class="compare-row-dim">{row.label}</th>
+                <td class="compare-cell-left">{row.left}</td>
+                <td class="compare-cell-right">{row.right}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 各自是什么 -->
+    <section class="compare-what">
+      <h2>各自是什么</h2>
+      <div class="compare-what-grid">
+        <div class="compare-what-card">
+          <h3 class="compare-what-title">📦 {config.leftName}({config.leftFullName})</h3>
+          <p class="compare-what-body">{config.leftWhat}</p>
+          {leftRadar && (
+            <p class="compare-link-row">
+              👉 看完整 <a href={withBase(`/radar/${leftRadar.id.replace(/\.(md|mdx)$/, '')}/`)}>{leftRadar.data.title}</a>
+            </p>
+          )}
+        </div>
+        <div class="compare-what-card">
+          <h3 class="compare-what-title">🔁 {config.rightName}({config.rightFullName})</h3>
+          <p class="compare-what-body">{config.rightWhat}</p>
+          {rightRadar && (
+            <p class="compare-link-row">
+              👉 看完整 <a href={withBase(`/radar/${rightRadar.id.replace(/\.(md|mdx)$/, '')}/`)}>{rightRadar.data.title}</a>
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 种卖家画像 -->
+    {config.personas.length > 0 && (
+      <section class="compare-personas">
+        <h2>你是哪种卖家?选哪个?</h2>
+        <div class="compare-persona-grid">
+          {config.personas.map((p) => (
+            <div class={`compare-persona-card compare-persona-${p.pick}`}>
+              <span class={`compare-persona-pill compare-persona-pill-${p.pick}`}>
+                {p.pick === 'left' ? `选 ${config.leftName}` :
+                 p.pick === 'right' ? `选 ${config.rightName}` :
+                 p.pick === 'both' ? '两个都做' :
+                 '都不做 / 暂不触发'}
+              </span>
+              <h3 class="compare-persona-name">{p.name}</h3>
+              <p class="compare-persona-reason">{p.reason}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- 时间线 -->
+    {config.timeline.length > 0 && (
+      <section class="compare-timeline">
+        <h2>关键时间线</h2>
+        <ol class="compare-timeline-list">
+          {config.timeline.map((t) => (
+            <li class="compare-timeline-item">
+              <time class="compare-timeline-date">{t.date}</time>
+              <span class="compare-timeline-what">{t.what}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+    )}
+
+    <!-- 罚款 / 风险 -->
+    {(config.fineRisk.left || config.fineRisk.right) && (
+      <section class="compare-fine">
+        <h2>不做会怎样?罚款与风险</h2>
+        <div class="compare-fine-grid">
+          <div class="compare-fine-card">
+            <h3 class="compare-fine-title">{config.leftName}</h3>
+            <p class="compare-fine-body">{config.fineRisk.left}</p>
+          </div>
+          <div class="compare-fine-card">
+            <h3 class="compare-fine-title">{config.rightName}</h3>
+            <p class="compare-fine-body">{config.fineRisk.right}</p>
+          </div>
+        </div>
+      </section>
+    )}
+
+    <!-- FAQ -->
+    {config.faq.length > 0 && (
+      <section class="compare-faq">
+        <h2>常见问题</h2>
+        <div class="compare-faq-list">
+          {config.faq.map((f) => (
+            <details class="compare-faq-item">
+              <summary class="compare-faq-q">
+                <span class="compare-faq-q-label">Q</span>
+                {f.q}
+              </summary>
+              <div class="compare-faq-a">
+                <span class="compare-faq-a-label">A</span>
+                <p>{f.a}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- 相关 Radar + Checklist -->
+    {(relatedRadar.length > 0 || relatedChecklists.length > 0) && (
+      <section class="compare-related">
+        <h2>相关法规 / 行动清单</h2>
+        {relatedRadar.length > 0 && (
+          <div class="grid grid-2">
+            {relatedRadar.map((r) => <RadarCard entry={r} />)}
+          </div>
+        )}
+        {relatedChecklists.length > 0 && (
+          <div class="grid grid-2" style="margin-top:1.5rem;">
+            {relatedChecklists.map((cl) => <ChecklistCard entry={cl} />)}
+          </div>
+        )}
+      </section>
+    )}
+
+    <!-- CTA -->
+    <section class="compare-cta">
+      <h2>{config.leftName} / {config.rightName} 后续更新,怎么不错过?</h2>
+      <p>两个法规都在持续修订、亚马逊合规通知在变。每个工作日我们整理一条"今天欧盟发生了什么"给你 —— 每周一条,5 分钟读完。</p>
+      <EmailSubscribe />
+    </section>
+
+    <!-- 免责声明 -->
+    <div class="notice notice-danger">
+      <strong>免责声明:</strong>{SITE_DEFAULTS.name}是<strong>信息整理和辅助判断工具</strong>,
+      <strong>不构成法律、税务、认证或专业合规意见</strong>。
+      {config.leftName} 和 {config.rightName} 涉及的具体执行(尤其产品类目细分、阈值、时限)
+      以你产品适用指令的官方原文为准,或咨询有欧盟 / 成员国资质的律师、合规顾问或认证机构。
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .compare-hero { margin: 0.5rem 0 2rem 0; }
+  .compare-eyebrow {
+    display: inline-block;
+    margin: 0 0 0.5em 0;
+    padding: 0.2em 0.7em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .compare-hero h1 {
+    margin: 0 0 0.3em 0;
+    font-size: clamp(1.5rem, 2.8vw, 2.1rem);
+  }
+  .compare-vs {
+    color: var(--color-ink-400);
+    font-size: 0.8em;
+    font-weight: 400;
+    margin: 0 0.3em;
+  }
+  .compare-one-liner {
+    color: var(--color-ink-700);
+    font-size: 1.1rem;
+    line-height: 1.5;
+    margin: 0 0 1.5rem 0;
+    max-width: 60ch;
+  }
+
+  .compare-two-cards {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .compare-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1.2rem 1.3rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .compare-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-primary-300);
+    box-shadow: var(--shadow);
+    color: inherit;
+  }
+  .compare-card-left { border-left: 4px solid var(--color-primary-500); }
+  .compare-card-right { border-right: 4px solid var(--color-primary-500); }
+  .compare-card-tag {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 0.15em 0.6em;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-primary-800);
+    background: var(--color-primary-50);
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+  }
+  .compare-card-title {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--color-ink-900);
+  }
+  .compare-card-short {
+    color: var(--color-ink-600);
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin: 0;
+  }
+  .compare-vs-divider {
+    align-self: center;
+    padding: 0 0.5em;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-ink-400);
+    letter-spacing: 0.05em;
+  }
+
+  /* 速查表 */
+  .compare-quick { margin: 2.5rem 0 1rem 0; }
+  .compare-quick h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .compare-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+  }
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    background: #fff;
+  }
+  .compare-table th,
+  .compare-table td {
+    padding: 0.75em 1em;
+    text-align: left;
+    border-bottom: 1px solid var(--color-ink-200);
+    vertical-align: top;
+  }
+  .compare-table thead th {
+    background: var(--color-ink-50);
+    font-weight: 600;
+    color: var(--color-ink-900);
+  }
+  .compare-th-dim { width: 12em; }
+  .compare-row-dim {
+    background: var(--color-ink-50);
+    font-weight: 600;
+    color: var(--color-ink-700);
+    width: 12em;
+  }
+  .compare-cell-left,
+  .compare-cell-right {
+    color: var(--color-ink-800);
+    line-height: 1.55;
+  }
+  .compare-cell-left {
+    border-left: 3px solid var(--color-primary-300);
+  }
+  .compare-cell-right {
+    border-left: 3px solid var(--color-primary-500);
+  }
+  .compare-table tbody tr:last-child th,
+  .compare-table tbody tr:last-child td { border-bottom: none; }
+
+  /* 各自是什么 */
+  .compare-what { margin: 2.5rem 0 1rem 0; }
+  .compare-what h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .compare-what-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+  }
+  .compare-what-card {
+    padding: 1.2rem 1.3rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+  }
+  .compare-what-title {
+    margin: 0 0 0.5em 0;
+    font-size: 1.05rem;
+    color: var(--color-ink-900);
+  }
+  .compare-what-body {
+    color: var(--color-ink-700);
+    line-height: 1.7;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+  .compare-link-row {
+    margin: 0.7em 0 0 0;
+    color: var(--color-ink-700);
+    font-size: 0.92rem;
+  }
+
+  /* 4 种卖家画像 */
+  .compare-personas { margin: 2.5rem 0 1rem 0; }
+  .compare-personas h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .compare-persona-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .compare-persona-card {
+    padding: 1.1rem 1.2rem;
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .compare-persona-pill {
+    align-self: flex-start;
+    padding: 0.15em 0.65em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 999px;
+  }
+  .compare-persona-pill-left { background: #dbeafe; color: #1e3a8a; }
+  .compare-persona-pill-right { background: #fef3c7; color: #92400e; }
+  .compare-persona-pill-both { background: #dcfce7; color: #166534; }
+  .compare-persona-pill-neither { background: var(--color-ink-100); color: var(--color-ink-700); }
+  .compare-persona-name {
+    margin: 0.2em 0 0 0;
+    font-size: 1rem;
+    color: var(--color-ink-900);
+  }
+  .compare-persona-reason {
+    color: var(--color-ink-700);
+    line-height: 1.6;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  /* 时间线 */
+  .compare-timeline { margin: 2.5rem 0 1rem 0; }
+  .compare-timeline h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .compare-timeline-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-left: 2px solid var(--color-primary-300);
+  }
+  .compare-timeline-item {
+    padding: 0.6em 0 0.6em 1.2em;
+    position: relative;
+  }
+  .compare-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 1.1em;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary-500);
+  }
+  .compare-timeline-date {
+    display: block;
+    font-weight: 700;
+    color: var(--color-primary-800);
+    font-size: 0.95rem;
+  }
+  .compare-timeline-what {
+    color: var(--color-ink-700);
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  /* 罚款 / 风险 */
+  .compare-fine { margin: 2.5rem 0 1rem 0; }
+  .compare-fine h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .compare-fine-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+  }
+  .compare-fine-card {
+    padding: 1.1rem 1.3rem;
+    background: #fff;
+    border-left: 4px solid #dc2626;
+    border-radius: var(--radius);
+    border-top: 1px solid var(--color-ink-200);
+    border-right: 1px solid var(--color-ink-200);
+    border-bottom: 1px solid var(--color-ink-200);
+  }
+  .compare-fine-title {
+    margin: 0 0 0.4em 0;
+    font-size: 1.05rem;
+    color: #991b1b;
+  }
+  .compare-fine-body {
+    color: var(--color-ink-700);
+    line-height: 1.7;
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  /* FAQ */
+  .compare-faq { margin: 2.5rem 0 1rem 0; }
+  .compare-faq h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+  .compare-faq-list { display: flex; flex-direction: column; gap: 0.5rem; }
+  .compare-faq-item {
+    background: #fff;
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius);
+  }
+  .compare-faq-item[open] { border-color: var(--color-primary-300); }
+  .compare-faq-q {
+    list-style: none;
+    cursor: pointer;
+    padding: 0.8em 1em;
+    font-weight: 500;
+    color: var(--color-ink-900);
+    display: flex;
+    gap: 0.6em;
+    align-items: flex-start;
+  }
+  .compare-faq-q::-webkit-details-marker { display: none; }
+  .compare-faq-q::after {
+    content: '+';
+    margin-left: auto;
+    color: var(--color-ink-500);
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+  .compare-faq-item[open] .compare-faq-q::after { content: '−'; color: var(--color-primary-700); }
+  .compare-faq-q-label,
+  .compare-faq-a-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: 50%;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--color-primary-700);
+  }
+  .compare-faq-a {
+    padding: 0 1em 1em 1em;
+    display: flex;
+    gap: 0.6em;
+    color: var(--color-ink-700);
+    line-height: 1.7;
+  }
+  .compare-faq-a p { margin: 0; }
+
+  .compare-related {
+    margin: 2.5rem 0 1rem 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-ink-200);
+  }
+  .compare-related h2 { font-size: 1.3rem; margin-bottom: 1rem; }
+
+  .compare-cta {
+    margin: 2.5rem 0 2rem 0;
+    padding: 1.5rem 1.5rem;
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: var(--radius-lg);
+  }
+  .compare-cta h2 { font-size: 1.2rem; margin: 0 0 0.4em 0; color: var(--color-primary-800); }
+  .compare-cta p { color: var(--color-ink-700); margin: 0 0 1em 0; line-height: 1.6; }
+
+  @media (max-width: 720px) {
+    .compare-two-cards {
+      grid-template-columns: 1fr;
+    }
+    .compare-vs-divider { padding: 0.3em 0; }
+    .compare-what-grid,
+    .compare-fine-grid {
+      grid-template-columns: 1fr;
+    }
+    .compare-th-dim,
+    .compare-row-dim {
+      width: 8em;
+    }
+  }
+</style>

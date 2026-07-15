@@ -1,0 +1,119 @@
+---
+/**
+ * /compare/ — 对比指南总目录
+ * ------------------------------------------------------------
+ * 给 /compare/{slug} 系列做总入口。
+ * 调研依据:用户大量搜索 "GPSR vs EPR"、"VAT vs IOSS" 这类对比型问题,
+ * 用对比矩阵 + 4 种卖家画像 1 屏判断"我属于哪种情况",SEO 价值高。
+ * ------------------------------------------------------------
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { withBase, siteAsDir } from '../../lib/url';
+import { buildComparesConfig } from '../../lib/compare-config';
+
+const siteStr = siteAsDir(Astro.site);
+
+const compares = buildComparesConfig().map((c) => ({
+  slug: c.slug,
+  title: `${c.leftName} vs ${c.rightName}`,
+  oneLiner: c.oneLiner,
+}));
+
+const breadcrumb = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '首页', item: siteStr || undefined },
+    { '@type': 'ListItem', position: 2, name: '对比指南', item: siteStr ? `${siteStr}compare/` : undefined },
+  ],
+};
+---
+
+<BaseLayout
+  title="对比指南"
+  description="亚马逊欧洲站常见法规对比:GPSR vs EPR、CE vs UKCA、VAT vs IOSS、PPWR vs Batteries 等 6 个对比页,用速查表 + 4 种卖家画像,1 分钟判断你属于哪种情况。"
+  jsonLd={breadcrumb}
+>
+  <div class="container">
+    <nav class="breadcrumb" aria-label="面包屑">
+      <a href={withBase('/')}>首页</a>
+      <span class="breadcrumb-sep">/</span>
+      <span>对比指南</span>
+    </nav>
+
+    <header class="compare-index-head">
+      <h1>对比指南</h1>
+      <p class="page-intro">
+        亚马逊欧洲站卖家最常搜的对比型问题:GPSR 和 EPR 是什么关系?VAT 和 IOSS 怎么选?
+        下面 6 张对比页用"速查表 + 4 种卖家画像"模式,
+        1 屏判断你属于哪种情况、要做什么、先后顺序、花多少钱。
+      </p>
+    </header>
+
+    <div class="grid grid-2">
+      {compares.map((c) => (
+        <a class="compare-tile card card-hover card-link" href={withBase(`/compare/${c.slug}/`)}>
+          <span class="compare-tile-tag">对比指南</span>
+          <h2 class="compare-tile-title">
+            {c.title} →
+          </h2>
+          <p class="compare-tile-desc">{c.oneLiner}</p>
+        </a>
+      ))}
+    </div>
+
+    <div class="notice notice-info">
+      <strong>提示:</strong>看完对比页还是拿不准?
+      直接做我们的
+      <a href={withBase('/self-check/')}>「影响自测」</a>
+      (3 步判断要不要做欧洲站),或从
+      <a href={withBase('/guide/start/')}>「新手起步」</a>
+      开始走 90 天合规路线。
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .compare-index-head { margin: 0.5rem 0 1.5rem 0; }
+  .page-intro {
+    color: var(--color-ink-600);
+    font-size: 1rem;
+    max-width: 60ch;
+    margin: 0 0 2rem 0;
+    line-height: 1.7;
+  }
+
+  .compare-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .compare-tile:hover { color: inherit; }
+  .compare-tile-tag {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 0.15em 0.65em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border: 1px solid var(--color-primary-200);
+    border-radius: 999px;
+  }
+  .compare-tile-title {
+    font-size: 1.05rem;
+    margin: 0;
+    color: var(--color-ink-900);
+  }
+  .compare-tile:hover .compare-tile-title {
+    color: var(--color-primary-700);
+  }
+  .compare-tile-desc {
+    color: var(--color-ink-600);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin: 0;
+  }
+</style>
